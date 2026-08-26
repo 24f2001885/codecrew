@@ -1,0 +1,39 @@
+<!--
+FILE PURPOSE: Base Jinja layout — loader, navbar, footer, and the full
+CSS/JS vendor chain from the Style Guide (Design Plan §7).
+
+PROMPT FOR LLM IMPLEMENTATION:
+1. Standard HTML5 doctype, lang="en", responsive viewport meta.
+2. {% block title %}CodeCrews{% endblock %} and a
+   {% block meta_description %} block with a sensible default.
+3. Load the Poppins Google Font (weights 100-900 per Style Guide §7).
+4. Link Bootstrap 4.3.1, animate.css, AOS 2.3.4 css, Owl Carousel 2.3.4
+   css + theme css, and Magnific Popup css from a CDN as placeholders for
+   the original template's bundled vendor/ folder — comment that these
+   should be swapped for local static/css/*.min.css files once the source
+   "Creative Coder" template assets are dropped in unchanged (Blueprint
+   §1).
+5. Link the project's own static/css/style.css last, so it overrides
+   vendor defaults.
+6. In <body>: {% include "partials/loader.html" %}, then
+   {% include "partials/navbar.html" %}, then
+   {% include "partials/flash_messages.html" %}, then a <main> wrapping
+   {% block content %}{% endblock %}, then
+   {% include "partials/footer.html" %}.
+7. Load jQuery, Popper, Bootstrap JS, AOS JS, Owl Carousel JS,
+   jquery.stellar JS, Magnific Popup JS, and Waypoints JS from a CDN,
+   followed by the project's own static/js/main.js, then a
+   {% block extra_js %}{% endblock %}.
+8. NOTE: url_for('public.index') is defined by Abinhav's
+   task-abhinav-app-core branch — the brand link will only resolve once
+   that branch is merged into phase0.
+
+DEBUGGING:
+<!-- <script>console.log("[DEBUG] base.html rendered");</script> -->
+
+OFFLINE DOCKER TEST CASES:
+- Rendering "base.html" via Flask's test client does not raise a Jinja
+  TemplateNotFound or TemplateSyntaxError.
+- The rendered HTML contains exactly one #ftco-loader, one #ftco-navbar,
+  and one <footer> element.
+-->

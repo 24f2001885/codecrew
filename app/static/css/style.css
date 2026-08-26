@@ -1,0 +1,31 @@
+/*
+FILE PURPOSE: Base project stylesheet — CSS variables from the Style
+Guide (Design Plan §7), plus loader/navbar/footer styling. Extended per
+milestone, never replaced.
+
+PROMPT FOR LLM IMPLEMENTATION:
+1. Define :root CSS variables exactly matching the Style Guide:
+   --cc-color-primary: #ffbd39; --cc-color-secondary: #a0f669;
+   --cc-color-loader: #F96D00; --cc-color-bg: #000000;
+   --cc-color-text: #999999; --cc-color-text-on-light: #212529;
+   --cc-font-family: 'Poppins', Arial, sans-serif.
+2. Apply --cc-color-bg/--cc-color-text/--cc-font-family to body; style
+   links to use --cc-color-primary, hover/focus to --cc-color-secondary.
+3. Style #ftco-loader as a fixed, full-viewport, centered flex container
+   over --cc-color-bg with a `.fadeOut` class transitioning opacity/
+   visibility to 0/hidden; add rotate + dash keyframe animations for the
+   inline SVG spinner.
+4. Style .ftco_navbar as transparent with padding, transitioning to a
+   `.scrolled` state with a near-opaque dark background and reduced
+   padding; nav-links white, hovering to --cc-color-primary.
+5. Style .ftco-footer with a slightly-lighter-than-black background,
+   heading/link colors matching the dark theme, and inline social icons.
+
+DEBUGGING:
+/* console.log("[DEBUG] style.css loaded"); */
+
+OFFLINE DOCKER TEST CASES:
+- The compiled stylesheet defines all six --cc-* custom properties listed
+  above at :root scope.
+- The stylesheet is valid CSS (no unclosed braces).
+*/

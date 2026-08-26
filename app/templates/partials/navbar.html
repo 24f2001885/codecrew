@@ -1,0 +1,24 @@
+<!--
+FILE PURPOSE: Sticky top navbar per Design Plan §2 — gains a `.scrolled`
+state after 150px of scroll (handled by static/js/main.js).
+
+PROMPT FOR LLM IMPLEMENTATION:
+1. A Bootstrap 4 <nav class="navbar navbar-expand-lg navbar-dark
+   ftco_navbar" id="ftco-navbar"> wrapping a .container.
+2. A navbar-brand linking to url_for('public.index') reading "CodeCrews".
+3. A Bootstrap navbar-toggler burger button (data-toggle="collapse",
+   data-target="#ftco-nav") with an aria-label="Toggle navigation" per
+   Design Plan §8's accessibility requirement for icon-only controls.
+4. A collapsible <div id="ftco-nav"> containing nav items in this exact
+   order per Design Plan §2: Home (url_for('public.index')), Groups, Our
+   Members, Request a Project. Groups/Our Members/Request a Project are
+   placeholder href="#" anchors until their routes exist (P2, P5, P4).
+
+DEBUGGING:
+<!-- <script>console.log("[DEBUG] navbar.html included");</script> -->
+
+OFFLINE DOCKER TEST CASES:
+- The rendered navbar contains all four link labels: "Home", "Groups",
+  "Our Members", "Request a Project".
+- The toggler button has a non-empty aria-label attribute.
+-->

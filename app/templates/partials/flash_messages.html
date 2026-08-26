@@ -1,0 +1,24 @@
+<!--
+FILE PURPOSE: Shared Bootstrap alert pattern for flashed messages, reused
+by every form in the project (PDR §5.1 — "auto-dismissing" flash alerts).
+
+PROMPT FOR LLM IMPLEMENTATION:
+1. {% with messages = get_flashed_messages(with_categories=true) %} then
+   loop, rendering each as a Bootstrap
+   <div class="alert alert-{category} alert-dismissible fade show
+   js-flash-alert" role="alert"> with a dismiss button
+   (data-dismiss="alert", aria-label="Close").
+2. Map the flash category "error" to Bootstrap's "danger" class (Bootstrap
+   has no built-in "error" alert class); pass every other category
+   through unchanged (e.g. "success", "warning", "info").
+3. Wrap the block in a .container with a top margin so it doesn't collide
+   with the fixed navbar.
+
+DEBUGGING:
+<!-- <script>console.log("[DEBUG] flash_messages.html included");</script> -->
+
+OFFLINE DOCKER TEST CASES:
+- Flashing a message with category "error" before rendering produces an
+  element with class "alert-danger" (not "alert-error").
+- No messages flashed => the partial renders no .alert elements at all.
+-->

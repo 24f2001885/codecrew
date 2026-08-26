@@ -1,0 +1,20 @@
+<!--
+FILE PURPOSE: 4-column footer widget block per Design Plan §2 wireframe
+reference.
+
+PROMPT FOR LLM IMPLEMENTATION:
+1. A <footer class="ftco-footer"> with a .container > .row containing
+   four .col-md-3 columns: "CodeCrews" (blurb), "Explore" (Home/Groups/
+   Our Members links), "Get in Touch" (Request a Project link), and
+   "Follow" (social icon placeholders — note these become dynamic from
+   SiteSettings.footer_social_links in P6).
+2. A closing full-width row with a copyright line using the `now`
+   context variable's year (guard with `{{ now.year if now else "" }}`).
+
+DEBUGGING:
+<!-- <script>console.log("[DEBUG] footer.html included");</script> -->
+
+OFFLINE DOCKER TEST CASES:
+- The rendered footer contains a <footer> tag and exactly four
+  .col-md-3 columns.
+-->
