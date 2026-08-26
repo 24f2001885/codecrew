@@ -1,0 +1,24 @@
+# FILE PURPOSE: Local dev orchestration — web + db services (TDR §2, §9).
+#
+# PROMPT FOR LLM IMPLEMENTATION:
+# 1. version: "3.9".
+# 2. `web` service: build: . ; command overrides the Dockerfile CMD to run
+#    `flask --app wsgi:app run --host=0.0.0.0 --port=5000 --debug` for
+#    live reload; bind-mount the repo (`.:/code`); expose port 5000;
+#    env_file: .env; environment FLASK_ENV=development; depends_on db.
+# 3. `db` service: postgres:16-alpine, present from P0 onward so the
+#    M6/P6 swap to Postgres is just a DATABASE_URL change rather than a
+#    compose rewrite (TDR §2) — NOT used by default in dev, since
+#    DATABASE_URL defaults to a SQLite file per .env.example. Set
+#    POSTGRES_USER/PASSWORD/DB to "codecrews", mount a named volume, and
+#    expose 5432.
+# 4. Declare the named volume used by `db` under a top-level `volumes:` key.
+#
+# DEBUGGING:
+# # command: sh -c "echo '[DEBUG] web service starting' && flask run ..."
+#
+# OFFLINE DOCKER TEST CASES:
+# - `docker-compose config` parses this file without error.
+# - `docker-compose up` serves the app at localhost:5000 without the `db`
+#   service being reachable (proving the app doesn't hard-require
+#   Postgres in dev).

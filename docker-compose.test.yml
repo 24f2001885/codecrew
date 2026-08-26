@@ -1,0 +1,21 @@
+# FILE PURPOSE: Offline test overlay — mail suppressed, disposable SQLite
+# test DB, zero external network calls (TDR §10, Blueprint §2).
+#
+# PROMPT FOR LLM IMPLEMENTATION:
+# 1. version: "3.9".
+# 2. A single `web` service — deliberately NOT the `db` service from
+#    docker-compose.yml, since the suite must run fully offline against a
+#    disposable SQLite file, not Postgres.
+# 3. build: . ; command: pytest ; bind-mount the repo.
+# 4. environment: FLASK_ENV=testing, DATABASE_URL=sqlite:///test.db,
+#    MAIL_SUPPRESS_SEND=True, SECRET_KEY and WTF_CSRF_SECRET_KEY test
+#    values, SESSION_COOKIE_SECURE=False.
+# 5. Add a one-line comment above `services:` documenting the invocation:
+#    docker-compose -f docker-compose.test.yml run --rm web pytest
+#
+# DEBUGGING:
+# # environment: - DEBUG_SEED_STAGE=P0
+#
+# OFFLINE DOCKER TEST CASES:
+# - Running the documented invocation exits 0 once tests/test_app_factory.py
+#   passes, with no external network access attempted at any point.
