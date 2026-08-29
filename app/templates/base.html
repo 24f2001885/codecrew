@@ -37,3 +37,40 @@ OFFLINE DOCKER TEST CASES:
 - The rendered HTML contains exactly one #ftco-loader, one #ftco-navbar,
   and one <footer> element.
 -->
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset = "UTF-8">
+      <meta name = "viewport" content = "width=device-width, initial-scale=1, shrink-to-fit=no">
+      <title>{% block title %}CodeCrews{% endblock %}</title>
+      {%block meta_description %}{% endblock %}
+      <link href = "https://googleapis.com" rel="stylesheet">
+      <link rel = "stylesheet" href = "https://bootstrapcdn.com">
+      <link rel = "stylesheet" href = "https://cloudflare.com">
+      <link rel = "stylesheet" href = "https://cloudflare.com">
+      <link rel = "stylesheet" href = "https://cloudflare.com">
+      <link rel = "stylesheet" href = "https://cloudflare.com">
+      <link rel = "stylesheet" href = "https://cloudflare.com">
+      <link rel = "stylesheet" href = "{{ url_for('static', filename='css/style.css') }}">
+   </head>
+   <body>
+      {% include "partials/loader.html" %}
+      {% include "partials/navbar.html" %}
+      {% include "partials/flash_messages.html" %}
+      <main>
+         {% block content %}{% endblock %}
+      </main>
+      {% include "partials/footer.html" %}
+      <script src = "https://jquery.com"></script>
+      <script src = "https://cloudflare.com"></script>
+      <script src = "https://bootstrapcdn.com"></script>
+      <script src = "https://cloudflare.com"></script>
+      <script src = "https://cloudflare.com"></script>
+      <script src = "https://cloudflare.com"></script>
+      <script src = "https://cloudflare.com"></script>
+      <script src = "https://cloudflare.com"></script>
+
+      <script src = "{{ url_for('static', filename='js/main.js') }}"></script>
+      {% block extra_js %}{% endblock %}
+   </body>
+</html>

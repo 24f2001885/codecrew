@@ -22,3 +22,17 @@ OFFLINE DOCKER TEST CASES:
   element with class "alert-danger" (not "alert-error").
 - No messages flashed => the partial renders no .alert elements at all.
 -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+   <div class="container mt-3">
+      {% for category, message in messages %}
+         <div class="alert alert-{% if category == 'error' else category %}danger{% else %}{{ category }}{% endif %} alert-dismissible fade show js-flash-alert" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+               <span aria-hidden="true">&times;</span>
+            </button>
+         </div>
+      {% endfor %}
+   </div>
+{% endif %}
+{% endwith %}

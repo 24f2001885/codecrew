@@ -29,3 +29,107 @@ OFFLINE DOCKER TEST CASES:
   above at :root scope.
 - The stylesheet is valid CSS (no unclosed braces).
 */
+:root {
+   --cc-color-primery: #ffbd39;
+   --cc-color-secondary: #a0f669;
+   --cc-color-loader: #f96d00;
+   --cc-color-bg: #000000;
+   --cc-color-text: #999999;
+   --cc-color-text-on-light: #212529;
+   --cc-font-family: 'Poppins', Arial, sans-serif;
+}
+body {
+   background-color: var(--cc-color-bg);
+   color: var(--cc-color-text);
+   font-family: var(--cc-font-family);
+}
+a {
+   color: var(--cc-color-primary);
+   transition: 0.3s all ease;
+}
+#ftco-loader {
+   position: fixed;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   background: var(--cc-color-bg);
+   z-index: 9999;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+#ftco-loader .fadeOut {
+   opacity: 0;
+   visibility: hidden;
+}
+#ftco-loader .circular {
+   animation: rotate 2s linear infinite;
+   height:50px;
+   width:50px;
+}
+#facto-loader .path-bg{
+   stroke: #eeeeee;
+   stroke-width:4;
+   fill:none;
+}
+#facto-loader .path-animate {
+   stroke: var(--cc-color-loader);
+   stroke-width:4;
+   fill:none;
+   stroke-dasharray: 1,200;
+   stroke-dashoffset: 0;
+   animation: dash 1.5s ease-in-out infinite;
+}
+@keyframes rotate {
+   100% {
+      transform: rotate(360deg);
+   }
+}
+@keyframes dash {
+   0% {
+      stroke-dasharray: 1,200;
+      stroke-dashoffset: 0;
+   }
+   50% {
+      stroke-dasharray: 89,200;
+      stroke-dashoffset: -35px;
+   }
+   100% {
+      stroke-dasharray: 89,200;
+      stroke-dashoffset: -124px;
+   }
+}
+.ftco_navbar {
+   background: transparent !important;
+   position: fixed;
+   width: 100%;
+   z-index: 1000;
+   transition: 0.3s all ease;
+   padding: 20px 0;
+}
+.ftco_navbar.scrolled {
+   background: rgba(0, 0, 0, 0.9) !important;
+   padding: 10px 0;
+   box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+.ftco_navbar .navbar-nav .nav-link {
+   color: #ffffff !important;
+}
+.ftco_navbar .navbar-nav .nav-link:hover {
+   color: var(--cc-color-primary) !important;
+}
+.ftco-footer {
+   background: #111111;
+   padding: 6em 0 3em 0;
+   font-size: 16px;
+}
+.ftco-footer h2 {
+   color: #ffffff;
+}
+.ftco-footer .footer-social-links a {
+   display:inline-block;
+   margin-right: 10px;
+   color: var(--cc-color-primary);
+}

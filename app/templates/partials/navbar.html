@@ -22,3 +22,19 @@ OFFLINE DOCKER TEST CASES:
   "Our Members", "Request a Project".
 - The toggler button has a non-empty aria-label attribute.
 -->
+<nav class = "navbar navbar-expand-lg navbar-dark ftco_navbar" id = "ftco-navbar">
+  <div class = "container">
+    <a class = "navbar-brand" href = "{{url_for('public.index')}}">CodeCrews</a>
+    <button class = "navbar-toggler" type = "button" data-toggle = "collapse" data-target = "#ftco-nav" aria-controls = "ftco-nav" aria-expanded = "false" aria-label = "Toggle navigation">
+      <span class = "navbar-toggler-icon"></span> 
+    </button>
+    <div class = "collapse navbar-collapse" id = "ftco-nav">
+      <ul class = "navbar-nav ml-auto">
+        <li class = "nav-item"><a href = "{{url_for('public.index')}}" class = "nav-link">Home</a></li>
+        <li class = "nav-item"><a href = "#" class = "nav-link">Groups</a></li>
+        <li class = "nav-item"><a href = "#" class = "nav-link">Our Members</a></li>
+        <li class = "nav-item"><a href = "#" class = "nav-link">Request a Project</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
