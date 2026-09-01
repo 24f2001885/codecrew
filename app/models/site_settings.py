@@ -18,3 +18,25 @@ OFFLINE DOCKER TEST CASES:
 - "site_settings" is present in db.metadata.tables after the app is
   created.
 """
+"""FILE PURPOSE: SiteSettings model stub (TDR §4 table: site_settings) —
+singleton row, Integer PK always 1 (NOT a UUID like the other models).
+"""
+
+from app.extensions import db
+
+
+class SiteSettings(db.Model):
+    __tablename__ = "site_settings"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+        default=1,
+    )
+
+    def __repr__(self) -> str:
+        return f"<SiteSettings {self.id}>"
+
+
+# DEBUGGING:
+# print(f"[DEBUG] SiteSettings stub registered: {SiteSettings.__tablename__}")

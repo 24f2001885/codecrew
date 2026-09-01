@@ -19,3 +19,26 @@ OFFLINE DOCKER TEST CASES:
 - "contact_messages" is present in db.metadata.tables after the app is
   created.
 """
+"""FILE PURPOSE: ContactMessage model stub (TDR §4 table: contact_messages)
+— group_id is NOT NULL as of v2, no more nullable "suggestion" case.
+"""
+
+import uuid
+from app.extensions import db
+
+
+class ContactMessage(db.Model):
+    __tablename__ = "contact_messages"
+
+    id = db.Column(
+        db.String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+
+    def __repr__(self) -> str:
+        return f"<ContactMessage {self.id}>"
+
+
+# DEBUGGING:
+# print(f"[DEBUG] ContactMessage stub registered: {ContactMessage.__tablename__}")

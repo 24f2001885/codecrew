@@ -17,3 +17,24 @@ OFFLINE DOCKER TEST CASES:
 - Project.__tablename__ == "projects".
 - "projects" is present in db.metadata.tables after the app is created.
 """
+"""FILE PURPOSE: Project model stub (TDR §4 table: projects)."""
+
+import uuid
+from app.extensions import db
+
+
+class Project(db.Model):
+    __tablename__ = "projects"
+
+    id = db.Column(
+        db.String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+
+    def __repr__(self) -> str:
+        return f"<Project {self.id}>"
+
+
+# DEBUGGING:
+# print(f"[DEBUG] Project stub registered: {Project.__tablename__}")

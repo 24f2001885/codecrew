@@ -16,3 +16,22 @@ OFFLINE DOCKER TEST CASES:
 - AdminUser.__tablename__ == "admin_users".
 - "admin_users" is present in db.metadata.tables after the app is created.
 """
+import uuid
+from app.extensions import db
+
+
+class AdminUser(db.Model):
+    __tablename__ = "admin_users"
+
+    id = db.Column(
+        db.String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+
+    def __repr__(self) -> str:
+        return f"<AdminUser {self.id}>"
+
+
+# DEBUGGING:
+# print(f"[DEBUG] AdminUser stub registered: {AdminUser.__tablename__}")

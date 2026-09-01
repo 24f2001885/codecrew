@@ -17,3 +17,24 @@ OFFLINE DOCKER TEST CASES:
 - Member.__tablename__ == "members".
 - "members" is present in db.metadata.tables after the app is created.
 """
+"""FILE PURPOSE: Member model stub (TDR §4 table: members)."""
+
+import uuid
+from app.extensions import db
+
+
+class Member(db.Model):
+    __tablename__ = "members"
+
+    id = db.Column(
+        db.String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+
+    def __repr__(self) -> str:
+        return f"<Member {self.id}>"
+
+
+# DEBUGGING:
+# print(f"[DEBUG] Member stub registered: {Member.__tablename__}")

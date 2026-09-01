@@ -20,3 +20,26 @@ OFFLINE DOCKER TEST CASES:
 - "project_requests" is present in db.metadata.tables after the app is
   created.
 """
+"""FILE PURPOSE: ProjectRequest model stub (TDR §4 table: project_requests)
+— platform-wide, new in v2.
+"""
+
+import uuid
+from app.extensions import db
+
+
+class ProjectRequest(db.Model):
+    __tablename__ = "project_requests"
+
+    id = db.Column(
+        db.String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+
+    def __repr__(self) -> str:
+        return f"<ProjectRequest {self.id}>"
+
+
+# DEBUGGING:
+# print(f"[DEBUG] ProjectRequest stub registered: {ProjectRequest.__tablename__}")

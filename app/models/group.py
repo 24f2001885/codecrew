@@ -19,3 +19,26 @@ OFFLINE DOCKER TEST CASES:
 - Group.__tablename__ == "groups".
 - "groups" is present in db.metadata.tables after the app is created.
 """
+"""FILE PURPOSE: Group model stub (TDR §4 table: groups) — the central
+entity of the platform.
+"""
+
+import uuid
+from app.extensions import db
+
+
+class Group(db.Model):
+    __tablename__ = "groups"
+
+    id = db.Column(
+        db.String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+
+    def __repr__(self) -> str:
+        return f"<Group {self.id}>"
+
+
+# DEBUGGING:
+# print(f"[DEBUG] Group stub registered: {Group.__tablename__}")
