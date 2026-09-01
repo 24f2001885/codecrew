@@ -1,0 +1,36 @@
+<!--
+FILE PURPOSE: Admin login screen — Design Plan §4.1: "themed form (same
+dark background, Poppins font, amber accent, and loader spinner as the
+public site)" even though this page does NOT extend admin_base.html
+(it renders before there's a session, so the sidebar shell makes no
+sense here).
+
+PROMPT FOR LLM IMPLEMENTATION:
+1. Standalone HTML5 page (does not extend admin_base.html OR base.html)
+   using the public site's dark background / Poppins font / amber accent
+   CSS variables from static/css/style.css, plus {% include
+   "partials/loader.html" %} for visual continuity with the public site
+   per Design Plan §4.1.
+2. A centered card containing the CodeCrews wordmark, a <form
+   method="POST"> with {{ form.hidden_tag() }} (CSRF), username field,
+   password field, and a submit button styled with the amber primary
+   button class.
+3. {% include "partials/flash_messages.html" %} above the form, so a
+   failed-login inline error "uses the same Bootstrap alert styling as
+   the public contact form" (PDR §5.2) — render field-level WTForms
+   errors (form.username.errors / form.password.errors) inline too, not
+   just the flash.
+4. No sidebar, no nav, no footer — this page's only job is the login
+   form.
+
+DEBUGGING:
+<!-- <script>console.log("[DEBUG] login.html rendered");</script> -->
+
+OFFLINE DOCKER TEST CASES:
+- The rendered form contains a hidden csrf_token input.
+- Submitting the form with an intentionally wrong password (once
+  Utkarsh's auth route is merged) re-renders this same template with a
+  visible alert-danger element, not a raw 500.
+- The page contains id="ftco-loader" (loader partial reused) but no
+  admin-sidebar markup.
+-->

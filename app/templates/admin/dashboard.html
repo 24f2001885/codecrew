@@ -1,0 +1,28 @@
+<!--
+FILE PURPOSE: Empty Dashboard — Master Project Blueprint P1 goal is
+explicitly "the admin can log in, out, and reset a forgotten password;
+no manageable content exists yet." This page exists to prove the
+sidebar shell + auth gate work end to end, nothing more.
+
+PROMPT FOR LLM IMPLEMENTATION:
+1. {% extends "admin/admin_base.html" %}.
+2. {% block page_title %}Dashboard{% endblock %}.
+3. {% block content %}: a single welcome card ("Welcome back,
+   {{ current_user.username }}.") and a placeholder note ("Group,
+   Member, Project, Message, and Project Request summary cards land in
+   later milestones — see Master Project Blueprint P3/P4.") — NO live
+   counts/queries here, since admin.py's dashboard() view intentionally
+   passes no extra context in P1.
+4. Nothing else — no charts, no tables, no carousels (Design Plan §2:
+   admin screens have no marketing chrome).
+
+DEBUGGING:
+<!-- <script>console.log("[DEBUG] dashboard.html rendered");</script> -->
+
+OFFLINE DOCKER TEST CASES:
+- Rendering this template with a logged-in current_user does not raise
+  a Jinja UndefinedError on current_user.username.
+- The rendered output contains the admin-sidebar markup from
+  admin_base.html (proves the extends chain works) and no
+  <table>/<canvas> elements (proves no premature data wiring).
+-->

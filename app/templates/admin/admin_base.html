@@ -1,0 +1,44 @@
+<!--
+FILE PURPOSE: Fixed-sidebar admin layout — Design Plan §2/§3.2: visually
+distinct from the public base.html, "no hero, no parallax, no Owl
+Carousel anywhere in /admin/*" (PDR §5.1).
+
+PROMPT FOR LLM IMPLEMENTATION:
+1. {% extends nothing %} — this is its OWN base (not base.html), per
+   Design Plan §1 principle 4 ("two visually distinct modes"). Standard
+   HTML5 doctype, lang="en", responsive viewport meta.
+2. Load the same Poppins Google Font as the public site (Style Guide §7
+   consistency) plus Bootstrap 4.3.1 css, then the project's own
+   static/css/admin.css last.
+3. {% block title %}Admin — CodeCrews{% endblock %}.
+4. Body layout: a fixed left <nav class="admin-sidebar"> containing the
+   "CodeCrews" wordmark and a nav list in this exact order (Design Plan
+   §3.2): Dashboard, Groups, Members, Projects, Blog, Messages, Project
+   Requests, Settings, Logout. Only Dashboard (url_for('admin.dashboard'))
+   and Logout (a POST form calling url_for('auth.logout'), CSRF-token
+   included, since logout must never be a bare GET link) are real links
+   in P1 — every other item is a disabled/placeholder <span> with a
+   code comment noting which milestone wires it up (Groups/Members/
+   Projects P3, Blog P5, Messages/Project Requests P4, Settings P6).
+5. A top bar with {% block page_title %}{% endblock %} and a
+   breadcrumb-style {% block breadcrumb %}{% endblock %}.
+6. {% include "partials/flash_messages.html" %} (reused as-is from the
+   public partials — Design Plan §1 principle 3: one shared flash
+   pattern everywhere).
+7. A <main class="admin-content"> wrapping {% block content %}{% endblock %}.
+8. Load jQuery + Bootstrap JS + the project's own static/js/admin.js at
+   the bottom, then {% block extra_js %}{% endblock %}.
+
+DEBUGGING:
+<!-- <script>console.log("[DEBUG] admin_base.html rendered");</script> -->
+
+OFFLINE DOCKER TEST CASES:
+- Rendering any template that extends "admin/admin_base.html" does not
+  raise TemplateNotFound/TemplateSyntaxError.
+- The rendered HTML contains a <nav class="admin-sidebar"> with all nine
+  labels: "Dashboard", "Groups", "Members", "Projects", "Blog",
+  "Messages", "Project Requests", "Settings", "Logout".
+- No #ftco-loader, #ftco-navbar, or Owl Carousel markup appears anywhere
+  in the rendered output (proves the two-mode separation from Design
+  Plan §1).
+-->
