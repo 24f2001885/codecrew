@@ -39,38 +39,96 @@ OFFLINE DOCKER TEST CASES:
 -->
 <!DOCTYPE html>
 <html lang="en">
-   <head>
-      <meta charset = "UTF-8">
-      <meta name = "viewport" content = "width=device-width, initial-scale=1, shrink-to-fit=no">
-      <title>{% block title %}CodeCrews{% endblock %}</title>
-      {%block meta_description %}{% endblock %}
-      <link href = "https://googleapis.com" rel="stylesheet">
-      <link rel = "stylesheet" href = "https://bootstrapcdn.com">
-      <link rel = "stylesheet" href = "https://cloudflare.com">
-      <link rel = "stylesheet" href = "https://cloudflare.com">
-      <link rel = "stylesheet" href = "https://cloudflare.com">
-      <link rel = "stylesheet" href = "https://cloudflare.com">
-      <link rel = "stylesheet" href = "https://cloudflare.com">
-      <link rel = "stylesheet" href = "{{ url_for('static', filename='css/style.css') }}">
-   </head>
-   <body>
-      {% include "partials/loader.html" %}
-      {% include "partials/navbar.html" %}
-      {% include "partials/flash_messages.html" %}
-      <main>
-         {% block content %}{% endblock %}
-      </main>
-      {% include "partials/footer.html" %}
-      <script src = "https://jquery.com"></script>
-      <script src = "https://cloudflare.com"></script>
-      <script src = "https://bootstrapcdn.com"></script>
-      <script src = "https://cloudflare.com"></script>
-      <script src = "https://cloudflare.com"></script>
-      <script src = "https://cloudflare.com"></script>
-      <script src = "https://cloudflare.com"></script>
-      <script src = "https://cloudflare.com"></script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-      <script src = "{{ url_for('static', filename='js/main.js') }}"></script>
-      {% block extra_js %}{% endblock %}
-   </body>
+    <title>{% block title %}CodeCrews{% endblock %}</title>
+
+    {% block meta_description %}
+    <meta name="description" content="CodeCrews - Building high-quality collaborative applications and learning modern full-stack engineering together.">
+    {% endblock %}
+
+    <!-- Poppins Google Font (weights 100-900) -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!--
+        Vendor CSS CDN placeholders.
+        Once the original "Creative Coder" template assets are available,
+        swap these CDN files for the corresponding local
+        static/css/*.min.css files without changing the project structure.
+    -->
+
+    <!-- Bootstrap 4.3.1 -->
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+    <!-- animate.css -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+    <!-- AOS 2.3.4 -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+
+    <!-- Owl Carousel 2.3.4 -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
+
+    <!-- Magnific Popup -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css">
+
+    <!-- Project CSS - loaded last to override vendor defaults -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    {% include "partials/loader.html" %}
+
+    {% include "partials/navbar.html" %}
+
+    {% include "partials/flash_messages.html" %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    {% include "partials/footer.html" %}
+
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+    <!-- Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"></script>
+
+    <!-- Bootstrap 4.3.1 -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <!-- AOS 2.3.4 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+
+    <!-- Owl Carousel 2.3.4 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+
+    <!-- jquery.stellar -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stellar.js/0.6.2/jquery.stellar.min.js"></script>
+
+    <!-- Magnific Popup -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
+
+    <!-- Waypoints -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.min.js"></script>
+
+    <!-- Project JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
 </html>

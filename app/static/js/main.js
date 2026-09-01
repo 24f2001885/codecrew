@@ -24,3 +24,41 @@ OFFLINE DOCKER TEST CASES:
 - Setting window scrollTop above 150 and firing "scroll" adds "scrolled"
   to #ftco-navbar; scrolling back to 0 removes it.
 */
+(function($) {
+   "use strict";
+
+   $(window).on("load", function() {
+      var loader = $("#ftco-loader");
+
+      if (loader.length > 0) {
+         loader.addClass("fadeOut");
+      }
+   });
+
+   var checkScroll = function() {
+      var navbar = $("#ftco-navbar");
+      var st = $(window).scrollTop();
+
+      if (st > 150) {
+         navbar.addClass("scrolled");
+      } else {
+         navbar.removeClass("scrolled");
+      }
+   };
+
+   $(window).on("scroll", checkScroll);
+
+   checkScroll();
+
+   setTimeout(function() {
+      $(".js-flash-alert").alert("close");
+   }, 5000);
+
+   if (typeof AOS !== "undefined") {
+      AOS.init({
+         duration: 800,
+         once: true
+      });
+   }
+
+})(jQuery);
