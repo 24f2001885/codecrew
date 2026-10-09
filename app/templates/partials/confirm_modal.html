@@ -1,0 +1,22 @@
+<div class="modal fade" id="confirm-modal" tabindex="-1" role="dialog" aria-labelledby="confirm-modal-title" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title font-weight-bold" id="confirm-modal-title">Confirm Action</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-modal-body" class="text-light mb-0">Are you sure you want to proceed?</p>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <form id="confirm-modal-form" method="POST" action="">
+          <input type="hidden" name="csrf_token" id="confirm-modal-csrf" value="{{ csrf_token() }}">
+          <button type="submit" id="confirm-modal-submit" class="btn btn-danger font-weight-bold">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -33,45 +33,42 @@
             Dashboard
           </a>
         </li>
-        <!-- Groups CRUD wired in P3 -->
         <li class="nav-item">
-          <a class="nav-link" href="/admin/groups">
+          <a class="nav-link {% if request.endpoint == 'admin.groups' and not request.args.get('pick') %}active{% endif %}" href="{{ url_for('admin.groups') }}">
             Groups
           </a>
         </li>
-        <!-- Members CRUD wired in P3 -->
         <li class="nav-item">
-          <a class="nav-link" href="/admin/members">
+          <a class="nav-link {% if request.args.get('pick') == 'members' or 'member' in request.endpoint %}active{% endif %}" href="{{ url_for('admin.groups', pick='members') }}">
             Members
           </a>
         </li>
-        <!-- Projects CRUD wired in P3 -->
         <li class="nav-item">
-          <a class="nav-link" href="/admin/projects">
+          <a class="nav-link {% if request.args.get('pick') == 'projects' or 'project' in request.endpoint %}active{% endif %}" href="{{ url_for('admin.groups', pick='projects') }}">
             Projects
           </a>
         </li>
         <!-- Blog CRUD wired in P5 -->
         <li class="nav-item">
-          <a class="nav-link" href="/admin/blog">
+          <a class="nav-link text-muted" href="#">
             Blog
           </a>
         </li>
         <!-- Messages inbox wired in P4 -->
         <li class="nav-item">
-          <a class="nav-link" href="/admin/messages">
+          <a class="nav-link text-muted" href="#">
             Messages
           </a>
         </li>
         <!-- Project Requests inbox wired in P4 -->
         <li class="nav-item">
-          <a class="nav-link" href="/admin/project-requests">
+          <a class="nav-link text-muted" href="#">
             Project Requests
           </a>
         </li>
         <!-- Settings wired in P6 -->
         <li class="nav-item">
-          <a class="nav-link" href="/admin/settings">
+          <a class="nav-link text-muted" href="#">
             Settings
           </a>
         </li>
@@ -102,7 +99,7 @@
           </nav>
         </div>
         <div class="user-badge">
-          <span class="badge badge-warning text-dark px-2 py-1">Super Admin</span>
+          <span class="badge badge-warning text-dark px-2 py-1 font-weight-bold">Super Admin</span>
         </div>
       </header>
 
@@ -113,6 +110,8 @@
       </main>
     </div>
   </div>
+
+  {% include "partials/confirm_modal.html" %}
 
   <!-- Scripts -->
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
