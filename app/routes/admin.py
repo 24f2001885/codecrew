@@ -8,10 +8,12 @@ from app.models.project import Project
 from app.models.contact_message import ContactMessage
 from app.models.project_request import ProjectRequest
 from app.models.blog_post import BlogPost
+from app.models.site_settings import SiteSettings
 from app.forms.group_forms import GroupForm
 from app.forms.member_forms import MemberForm
 from app.forms.project_forms import ProjectForm
 from app.forms.blog_forms import BlogPostForm
+from app.forms.settings_forms import SettingsForm
 from app.security.decorators import super_admin_required, apply_guard_to_blueprint
 from app.services.slugs import unique_slug
 from app.services.uploads import save_upload, delete_upload, replace_upload, UploadError
@@ -686,3 +688,106 @@ def blog_delete(id):
         flash(f"Failed to delete blog post: {e}", "danger")
 
     return redirect(url_for("admin.blog"))
+
+
+# -----------------------------------------------------------------------------
+# Site Settings (P6)
+# -----------------------------------------------------------------------------
+@admin_bp.route("/settings", methods=["GET", "POST"], endpoint="settings")
+def settings():
+    settings_obj = SiteSettings.get_singleton()
+    form = SettingsForm()
+
+    if request.method == "GET":
+        form.hero_headline.data = settings_obj.hero_headline
+        form.hero_subheadline.data = settings_obj.hero_subheadline
+        form.hero_cta_text.data = settings_obj.hero_cta_text
+
+        # Social links
+        socials = settings_obj.footer_social_links or {}
+        form.github_url.data = socials.get("github")
+        form.twitter_url.data = socials.get("twitter")
+        form.linkedin_url.data = socials.get("linkedin")
+        form.instagram_url.data = socials.get("instagram")
+
+        # SEO defaults
+        form.seo_default_title.data = settings_obj.seo_default_title
+        form.seo_default_description.data = settings_obj.seo_default_description
+
+        # Stats override
+        stats = settings_obj.stats_override
+        if stats:
+            form.override_stats.data = True
+            form.stats_groups.data = stats.get("total_groups")
+            form.stats_members.data = stats.get("total_members")
+            form.stats_projects.data = stats.get("total_projects")
+        else:
+            form.override_stats.data = False
+
+    if form.validate_on_submit():
+        settings_obj.hero_headline = form.hero_headline.data.strip() if form.hero_headline.data else None
+        settings_obj.hero_subheadline = form.hero_subheadline.data.strip() if form.hero_subheadline.data else None
+        settings_obj.hero_cta_text = form.hero_cta_text.data.strip() if form.hero_cta_text.data else None
+
+        # Handle removals
+        remove_paths = request.form.getlist("remove_hero_images")
+        current_images = [img for img in (settings_obj.hero_images or []) if img.get("path") not in remove_paths]
+        for p in remove_paths:
+            try:
+                delete_upload(p)
+            except Exception:
+                pass
+
+        # Handle new hero uploads
+        new_files = [f for f in (form.hero_images.data or []) if getattr(f, "filename", None)]
+        alts = [line.strip() for line in (form.hero_image_alts.data or "").splitlines() if line.strip()]
+        for idx, file_storage in enumerate(new_files):
+            try:
+                saved_path = save_upload(file_storage, subfolder="covers")
+                alt_text = alts[idx] if idx < len(alts) else "Hero image"
+                current_images.append({"path": saved_path, "alt": alt_text})
+            except UploadError as e:
+                flash(f"Error uploading hero image: {e}", "danger")
+                return render_template("admin/settings.html", form=form, settings=settings_obj)
+
+        settings_obj.hero_images = current_images
+
+        # Footer social links
+        socials = {}
+        if form.github_url.data and form.github_url.data.strip():
+            socials["github"] = form.github_url.data.strip()
+        if form.twitter_url.data and form.twitter_url.data.strip():
+            socials["twitter"] = form.twitter_url.data.strip()
+        if form.linkedin_url.data and form.linkedin_url.data.strip():
+            socials["linkedin"] = form.linkedin_url.data.strip()
+        if form.instagram_url.data and form.instagram_url.data.strip():
+            socials["instagram"] = form.instagram_url.data.strip()
+        settings_obj.footer_social_links = socials
+
+        # SEO defaults
+        settings_obj.seo_default_title = form.seo_default_title.data.strip() if form.seo_default_title.data else None
+        settings_obj.seo_default_description = form.seo_default_description.data.strip() if form.seo_default_description.data else None
+        if form.seo_default_og_image.data and getattr(form.seo_default_og_image.data, "filename", None):
+            try:
+                settings_obj.seo_default_og_image = replace_upload(form.seo_default_og_image.data, old_path=settings_obj.seo_default_og_image, subfolder="covers")
+            except UploadError as e:
+                flash(f"Error uploading OG image: {e}", "danger")
+                return render_template("admin/settings.html", form=form, settings=settings_obj)
+
+        # Stats override
+        if form.override_stats.data:
+            settings_obj.stats_override = {
+                "total_groups": form.stats_groups.data,
+                "total_members": form.stats_members.data,
+                "total_projects": form.stats_projects.data,
+            }
+        else:
+            settings_obj.stats_override = None
+
+        settings_obj.updated_at = datetime.utcnow()
+        db.session.commit()
+        flash("Settings saved.", "success")
+        return redirect(url_for("admin.settings"))
+
+    return render_template("admin/settings.html", form=form, settings=settings_obj)
+

@@ -26,6 +26,24 @@
           </ul>
         </div>
       </div>
+      <div class="col-md">
+        <div class="ftco-footer-widget mb-4">
+          <h2 class="ftco-heading-2">Follow Us</h2>
+          {% if site_settings and site_settings.footer_social_links and site_settings.footer_social_links|length > 0 %}
+            <ul class="ftco-footer-social list-unstyled float-md-left float-lft mt-3">
+              {% for network, url in site_settings.footer_social_links.items() %}
+                {% if url %}
+                  <li class="ftco-animate">
+                    <a href="{{ url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ 'GitHub' if network == 'github' else ('LinkedIn' if network == 'linkedin' else network|capitalize) }}">
+                      <span class="icon-{{ network }}"></span>
+                    </a>
+                  </li>
+                {% endif %}
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </div>
+      </div>
     </div>
     <div class="row">
       <div class="col-md-12 text-center">

@@ -188,3 +188,79 @@ a:focus, button:focus {
     margin-bottom: 1.5rem;
   }
 }
+
+/* ==========================================================================
+   P6 Accessibility & Polish Pass
+   ========================================================================== */
+
+/* Skip Link */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  background: var(--cc-color-primary, #f1b24b);
+  color: #000000;
+  padding: 0.75rem 1.25rem;
+  font-weight: 700;
+  z-index: 9999;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: top 0.2s ease-in-out;
+}
+.skip-link:focus {
+  top: 1rem;
+  outline: 3px solid #ffffff;
+  color: #000000;
+}
+
+/* Screen Reader Only Utility */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Focus Visible Outlines */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--cc-color-primary, #f1b24b);
+  outline-offset: 2px;
+}
+
+/* Color contrast note: body text #999 on #000 passes AA; raising dimmer/smaller text to at least #b3b3b3 */
+.text-muted,
+.ftco-footer,
+.small {
+  color: #b3b3b3 !important;
+}
+
+/* Prefers-reduced-motion media query */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .owl-carousel,
+  .owl-stage,
+  .hero-wrap,
+  .ftco-animate,
+  [data-aos] {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+}
+

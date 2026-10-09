@@ -1,0 +1,210 @@
+{% extends "admin/admin_base.html" %}
+
+{% block page_title %}Site Settings{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Settings</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-3">
+        <h4 class="card-title font-weight-bold mb-0">Platform Settings</h4>
+        <p class="text-muted small mb-0">Configure site-wide headlines, branding, footer socials, SEO metadata, and stats overrides.</p>
+      </div>
+      <div class="card-body p-4">
+        <form method="POST" enctype="multipart/form-data" novalidate>
+          {{ form.hidden_tag() }}
+
+          {# 1. Hero Fieldset #}
+          <fieldset class="mb-5 pb-3 border-bottom">
+            <legend class="h5 font-weight-bold text-primary mb-3">Hero Banner</legend>
+            
+            <div class="form-group mb-3">
+              <label for="hero_headline" class="font-weight-bold small">Hero Headline</label>
+              {{ form.hero_headline(class="form-control" + (" is-invalid" if form.hero_headline.errors else ""), id="hero_headline", placeholder="e.g. Autonomous Student Engineering Collectives") }}
+              {% for error in form.hero_headline.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="hero_subheadline" class="font-weight-bold small">Hero Subheadline</label>
+              {{ form.hero_subheadline(class="form-control" + (" is-invalid" if form.hero_subheadline.errors else ""), id="hero_subheadline", rows="2", placeholder="e.g. CodeCrews connects high-impact student software teams with real-world software projects.") }}
+              {% for error in form.hero_subheadline.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="hero_cta_text" class="font-weight-bold small">Hero CTA Button Text</label>
+              {{ form.hero_cta_text(class="form-control" + (" is-invalid" if form.hero_cta_text.errors else ""), id="hero_cta_text", placeholder="e.g. Browse Groups") }}
+              {% for error in form.hero_cta_text.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            {# Current Hero Images #}
+            {% if settings and settings.hero_images %}
+              <div class="mb-3">
+                <label class="font-weight-bold small">Current Hero Slides</label>
+                <div class="row">
+                  {% for img in settings.hero_images %}
+                    <div class="col-md-4 mb-3">
+                      <div class="card h-100 bg-light p-2 border">
+                        <img src="{{ url_for('static', filename=img.path) }}" alt="{{ img.alt }}" class="img-fluid rounded mb-2" style="max-height: 120px; object-fit: cover;">
+                        <div class="small text-muted mb-2"><strong>Alt:</strong> {{ img.alt }}</div>
+                        <div class="form-check mt-auto">
+                          <input type="checkbox" name="remove_hero_images" value="{{ img.path }}" id="remove_hero_{{ loop.index }}" class="form-check-input">
+                          <label for="remove_hero_{{ loop.index }}" class="form-check-label text-danger small font-weight-bold">Remove slide</label>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            <div class="form-group mb-3">
+              <label for="hero_images" class="font-weight-bold small">Add New Hero Slides</label>
+              {{ form.hero_images(class="form-control-file" + (" is-invalid" if form.hero_images.errors else ""), id="hero_images", multiple=True) }}
+              {% for error in form.hero_images.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+              <small class="form-text text-muted">Upload one or more images (JPEG, PNG, WEBP, GIF).</small>
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="hero_image_alts" class="font-weight-bold small">Slide Descriptions (one line per uploaded image)</label>
+              {{ form.hero_image_alts(class="form-control" + (" is-invalid" if form.hero_image_alts.errors else ""), id="hero_image_alts", rows="2", placeholder="Alt description for slide 1&#10;Alt description for slide 2") }}
+              {% for error in form.hero_image_alts.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+              <small class="form-text text-muted">Required for accessibility: each newly uploaded image must have a corresponding description line.</small>
+            </div>
+          </fieldset>
+
+          {# 2. Footer & Social Links Fieldset #}
+          <fieldset class="mb-5 pb-3 border-bottom">
+            <legend class="h5 font-weight-bold text-primary mb-3">Footer & Social Links</legend>
+            <div class="row">
+              <div class="col-md-6 form-group mb-3">
+                <label for="github_url" class="font-weight-bold small">GitHub Profile URL</label>
+                {{ form.github_url(class="form-control" + (" is-invalid" if form.github_url.errors else ""), id="github_url", placeholder="https://github.com/codecrews") }}
+                {% for error in form.github_url.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6 form-group mb-3">
+                <label for="twitter_url" class="font-weight-bold small">Twitter / X URL</label>
+                {{ form.twitter_url(class="form-control" + (" is-invalid" if form.twitter_url.errors else ""), id="twitter_url", placeholder="https://x.com/codecrews") }}
+                {% for error in form.twitter_url.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6 form-group mb-3">
+                <label for="linkedin_url" class="font-weight-bold small">LinkedIn URL</label>
+                {{ form.linkedin_url(class="form-control" + (" is-invalid" if form.linkedin_url.errors else ""), id="linkedin_url", placeholder="https://linkedin.com/company/codecrews") }}
+                {% for error in form.linkedin_url.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6 form-group mb-3">
+                <label for="instagram_url" class="font-weight-bold small">Instagram URL</label>
+                {{ form.instagram_url(class="form-control" + (" is-invalid" if form.instagram_url.errors else ""), id="instagram_url", placeholder="https://instagram.com/codecrews") }}
+                {% for error in form.instagram_url.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+          </fieldset>
+
+          {# 3. SEO Defaults Fieldset #}
+          <fieldset class="mb-5 pb-3 border-bottom">
+            <legend class="h5 font-weight-bold text-primary mb-3">SEO Defaults</legend>
+            
+            <div class="form-group mb-3">
+              <label for="seo_default_title" class="font-weight-bold small">Default Page Title</label>
+              {{ form.seo_default_title(class="form-control" + (" is-invalid" if form.seo_default_title.errors else ""), id="seo_default_title", placeholder="CodeCrews — Multi-Tenant Student Developer Agency") }}
+              {% for error in form.seo_default_title.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="seo_default_description" class="font-weight-bold small">Default Meta Description</label>
+              {{ form.seo_default_description(class="form-control" + (" is-invalid" if form.seo_default_description.errors else ""), id="seo_default_description", rows="2", placeholder="CodeCrews platform showcasing student software engineering groups...") }}
+              {% for error in form.seo_default_description.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="seo_default_og_image" class="font-weight-bold small">Default OpenGraph Image</label>
+              {% if settings and settings.seo_default_og_image %}
+                <div class="mb-2">
+                  <img src="{{ url_for('static', filename=settings.seo_default_og_image) }}" alt="Default OG Image" class="img-thumbnail" style="max-height: 120px;">
+                </div>
+              {% endif %}
+              {{ form.seo_default_og_image(class="form-control-file" + (" is-invalid" if form.seo_default_og_image.errors else ""), id="seo_default_og_image") }}
+              {% for error in form.seo_default_og_image.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </fieldset>
+
+          {# 4. Home Stats Override Fieldset #}
+          <fieldset class="mb-5 pb-3 border-bottom">
+            <legend class="h5 font-weight-bold text-primary mb-3">Home Stats Override</legend>
+            <div class="form-group form-check mb-3">
+              {{ form.override_stats(class="form-check-input", id="override_stats") }}
+              <label class="form-check-label font-weight-bold" for="override_stats">
+                Override live counter metrics on homepage
+              </label>
+              <small class="form-text text-muted">When checked, the homepage displays the three fixed counts below instead of live database counts.</small>
+            </div>
+
+            <div class="row">
+              <div class="col-md-4 form-group mb-3">
+                <label for="stats_groups" class="font-weight-bold small">Groups Count Override</label>
+                {{ form.stats_groups(class="form-control" + (" is-invalid" if form.stats_groups.errors else ""), id="stats_groups", placeholder="e.g. 15") }}
+                {% for error in form.stats_groups.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-4 form-group mb-3">
+                <label for="stats_members" class="font-weight-bold small">Members Count Override</label>
+                {{ form.stats_members(class="form-control" + (" is-invalid" if form.stats_members.errors else ""), id="stats_members", placeholder="e.g. 80") }}
+                {% for error in form.stats_members.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-4 form-group mb-3">
+                <label for="stats_projects" class="font-weight-bold small">Projects Count Override</label>
+                {{ form.stats_projects(class="form-control" + (" is-invalid" if form.stats_projects.errors else ""), id="stats_projects", placeholder="e.g. 45") }}
+                {% for error in form.stats_projects.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+          </fieldset>
+
+          {# 5. Coder & Alerts Fieldset (Placeholder for P7/P8) #}
+          <!-- Coder & Alerts settings fieldset — reserved for P7 and P8 -->
+          <fieldset class="mb-4">
+            <legend class="h5 font-weight-bold text-muted mb-2">Coder & Alerts</legend>
+            <p class="text-muted small">Application intake status and domain alert preferences will be configurable here in P7 &amp; P8.</p>
+          </fieldset>
+
+          <div class="d-flex justify-content-end">
+            {{ form.submit(class="btn btn-warning font-weight-bold px-4") }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

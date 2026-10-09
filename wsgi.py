@@ -1,3 +1,12 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Default FLASK_ENV to "production" when unset in wsgi.py
+if not os.environ.get("FLASK_ENV"):
+    os.environ["FLASK_ENV"] = "production"
+
 from app import create_app
 
 app = create_app()
