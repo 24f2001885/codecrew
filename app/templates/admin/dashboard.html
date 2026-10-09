@@ -58,6 +58,16 @@
         </div>
       </div>
     </div>
+
+    <div class="col-md-3 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="text-muted text-uppercase font-weight-bold mb-2">Blog Posts</h6>
+          <h3 class="font-weight-bold text-warning mb-0">{{ published_posts_count|default(0) }}</h3>
+          <small class="text-muted">Published ({{ draft_posts_count|default(0) }} draft{{ 's' if draft_posts_count|default(0) != 1 else '' }})</small>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

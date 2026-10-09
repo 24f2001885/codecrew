@@ -13,9 +13,8 @@
         <li class="nav-item {% if request.endpoint == 'public.groups' %}active{% endif %}">
           <a href="{{ url_for('public.groups') }}" class="nav-link">Groups</a>
         </li>
-        <!-- P5 wires Our Members to /members -->
-        <li class="nav-item">
-          <a href="#" class="nav-link">Our Members</a>
+        <li class="nav-item {% if request.endpoint == 'public.members' %}active{% endif %}">
+          <a href="{{ url_for('public.members') }}" class="nav-link">Our Members</a>
         </li>
         <li class="nav-item cta mr-md-2 {% if request.endpoint == 'requests.request_project' %}active{% endif %}">
           <a href="{{ url_for('requests.request_project') }}" class="nav-link"><span>Request a Project</span></a>

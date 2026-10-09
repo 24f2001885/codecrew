@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import member_card %}
+
+{% block title %}Members Directory — CodeCrews{% endblock %}
+
+{% block content %}
+<section class="hero-wrap hero-wrap-2" style="background: #0b1120; padding: 70px 0 40px;">
+  <div class="container text-center">
+    <h1 class="text-white font-weight-bold mb-2">Our Members</h1>
+    <p class="text-muted mb-0">Meet the talented student engineers, developers, and designers of CodeCrews.</p>
+  </div>
+</section>
+
+<section class="ftco-section py-5" style="background-color: #0b1120;">
+  <div class="container">
+    {# Live filter bar #}
+    <div id="directory-filter" data-endpoint="{{ url_for('api.members') }}" data-kind="members" class="mb-4">
+      <div class="row">
+        <div class="col-md-5 mb-3 mb-md-0">
+          <input type="text" id="filter-q" class="form-control bg-dark text-white border-secondary" placeholder="Search members by name or role..." aria-label="Search members" value="{{ q or '' }}">
+        </div>
+        <div class="col-md-3 mb-3 mb-md-0">
+          <select id="filter-group" class="form-control bg-dark text-white border-secondary" aria-label="Filter by group">
+            <option value="">All groups</option>
+            {% for g in all_groups %}
+              <option value="{{ g.slug }}" {% if group_slug == g.slug %}selected{% endif %}>{{ g.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <input type="text" id="filter-skill" class="form-control bg-dark text-white border-secondary" placeholder="Filter by skill tag (e.g. Python)..." aria-label="Filter by skill" value="{{ skill or '' }}">
+        </div>
+      </div>
+    </div>
+
+    {# Aria-live status line #}
+    <div id="directory-status" class="text-muted small mb-4" aria-live="polite">
+      {% if total_count > 0 %}
+        {{ total_count }} member{{ 's' if total_count != 1 else '' }}
+      {% else %}
+        No members match your search.
+      {% endif %}
+    </div>
+
+    {# Results container #}
+    <div class="row" id="directory-results">
+      {% if members %}
+        {% for member in members %}
+          {{ member_card(member) }}
+        {% endfor %}
+      {% else %}
+        <div class="col-12 text-center py-5">
+          <p class="h4 text-muted font-weight-normal">No members match your search.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    {# Server-rendered pagination #}
+    <nav id="directory-pagination" aria-label="Pagination" class="mt-5">
+      {% if pagination.pages > 1 %}
+        <ul class="pagination justify-content-center">
+          {% if pagination.has_prev %}
+            <li class="page-item">
+              <a class="page-link bg-dark text-warning border-secondary" href="{{ url_for('public.members', page=pagination.prev_num, q=q, group=group_slug, skill=skill) }}" aria-label="Previous">
+                &laquo; Prev
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link bg-dark text-muted border-secondary">&laquo; Prev</span>
+            </li>
+          {% endif %}
+
+          {% for p in pagination.iter_pages(left_edge=2, left_current=2, right_current=2, right_edge=2) %}
+            {% if p %}
+              {% if p == pagination.page %}
+                <li class="page-item active" aria-current="page">
+                  <span class="page-link bg-warning text-dark border-warning font-weight-bold">{{ p }}</span>
+                </li>
+              {% else %}
+                <li class="page-item">
+                  <a class="page-link bg-dark text-light border-secondary" href="{{ url_for('public.members', page=p, q=q, group=group_slug, skill=skill) }}">{{ p }}</a>
+                </li>
+              {% endif %}
+            {% else %}
+              <li class="page-item disabled"><span class="page-link bg-dark text-muted border-secondary">&hellip;</span></li>
+            {% endif %}
+          {% endfor %}
+
+          {% if pagination.has_next %}
+            <li class="page-item">
+              <a class="page-link bg-dark text-warning border-secondary" href="{{ url_for('public.members', page=pagination.next_num, q=q, group=group_slug, skill=skill) }}" aria-label="Next">
+                Next &raquo;
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link bg-dark text-muted border-secondary">Next &raquo;</span>
+            </li>
+          {% endif %}
+        </ul>
+      {% endif %}
+    </nav>
+  </div>
+</section>
+{% endblock %}

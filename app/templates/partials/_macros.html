@@ -55,7 +55,11 @@
       {% endif %}
     </div>
 
-    <h5 class="font-weight-bold text-white mb-1">{{ member.name }}</h5>
+    <h5 class="font-weight-bold text-white mb-1">
+      <a href="#member-popup-{{ member.id }}" class="js-member-popup text-white text-decoration-none">
+        {{ member.name }}
+      </a>
+    </h5>
     <p class="text-warning small mb-2">{{ member.role or 'Member' }}</p>
 
     {% if member.group %}
@@ -70,7 +74,7 @@
       {{ member.bio or 'Software developer crafting robust systems.' }}
     </p>
 
-    {% if member.skill_tags %}
+    {% if member.skill_tags and member.skill_tags|length > 0 %}
       <div class="skill-tags mb-3">
         {% for skill in member.skill_tags[:4] %}
           <span class="badge cc-tag mr-1 mb-1">{{ skill }}</span>
@@ -79,6 +83,9 @@
     {% endif %}
 
     <div class="member-actions d-flex justify-content-center align-items-center gap-2 mt-auto pt-2">
+      <a href="#member-popup-{{ member.id }}" class="btn btn-sm btn-outline-info js-member-popup mx-1" aria-label="View {{ member.name }}'s profile">
+        Profile
+      </a>
       {% if member.github_url %}
         <a href="{{ member.github_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mx-1 text-light" aria-label="{{ member.name }} GitHub">
           GH
@@ -95,6 +102,74 @@
         </a>
       {% endif %}
     </div>
+  </div>
+
+  {# Inline hidden Magnific Popup content #}
+  <div id="member-popup-{{ member.id }}" class="mfp-hide cc-member-modal bg-dark text-white p-4 mx-auto rounded shadow-lg" style="max-width: 600px; text-align: left;">
+    <div class="d-flex align-items-center mb-4">
+      <div class="mr-3" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; background: #1e293b; flex-shrink: 0;">
+        {% if member.photo %}
+          <img src="{{ url_for('static', filename=member.photo) }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ member.name }} photo">
+        {% else %}
+          <div class="d-flex align-items-center justify-content-center h-100 text-warning font-weight-bold h4 mb-0">
+            {{ member.name[:2]|upper }}
+          </div>
+        {% endif %}
+      </div>
+      <div>
+        <h4 class="font-weight-bold text-white mb-1">{{ member.name }}</h4>
+        <p class="text-warning mb-1">{{ member.role or 'Member' }}</p>
+        {% if member.group %}
+          <a href="{{ url_for('public.group_detail', slug=member.group.slug) }}" class="badge badge-secondary">
+            {{ member.group.name }}
+          </a>
+        {% endif %}
+      </div>
+    </div>
+    
+    <div class="mb-3">
+      <h6 class="text-muted text-uppercase small font-weight-bold">Bio</h6>
+      <p class="text-light" style="white-space: pre-line;">{{ member.bio or 'Software developer crafting robust systems.' }}</p>
+    </div>
+
+    {% if member.skill_tags and member.skill_tags|length > 0 %}
+      <div class="mb-3">
+        <h6 class="text-muted text-uppercase small font-weight-bold">Skills</h6>
+        <div>
+          {% for skill in member.skill_tags %}
+            <span class="badge cc-tag mr-1 mb-1">{{ skill }}</span>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="d-flex align-items-center gap-2 mb-3">
+      {% if member.github_url %}
+        <a href="{{ member.github_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mr-2 text-light" aria-label="{{ member.name }} GitHub">GitHub</a>
+      {% endif %}
+      {% if member.linkedin_url %}
+        <a href="{{ member.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mr-2 text-light" aria-label="{{ member.name }} LinkedIn">LinkedIn</a>
+      {% endif %}
+      {% if member.twitter_url %}
+        <a href="{{ member.twitter_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mr-2 text-light" aria-label="{{ member.name }} Twitter">Twitter</a>
+      {% endif %}
+      {% if member.resume_pdf %}
+        <a href="{{ url_for('static', filename=member.resume_pdf) }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-warning font-weight-bold" aria-label="Download {{ member.name }}'s resume">Download Resume</a>
+      {% endif %}
+    </div>
+
+    {% if member.group and member.group.projects %}
+      <div class="mt-4 pt-3 border-top border-secondary">
+        <h6 class="text-muted text-uppercase small font-weight-bold mb-2">Group Projects</h6>
+        <ul class="list-unstyled mb-0">
+          {% for proj in member.group.projects %}
+            <li class="mb-1">
+              <a href="{{ url_for('public.group_detail', slug=member.group.slug) }}#projects" class="text-info">{{ proj.title }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
   </div>
 </div>
 {% endmacro %}

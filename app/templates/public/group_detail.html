@@ -22,6 +22,9 @@
           <a href="#team" class="btn btn-sm btn-outline-warning mr-2 mb-2">Team</a>
           <a href="#tech-stack" class="btn btn-sm btn-outline-warning mr-2 mb-2">Tech Stack</a>
           <a href="#projects" class="btn btn-sm btn-outline-warning mr-2 mb-2">Projects</a>
+          {% if blog_posts %}
+            <a href="#blog" class="btn btn-sm btn-outline-warning mr-2 mb-2">Blog</a>
+          {% endif %}
           <a href="#contact" class="btn btn-sm btn-warning font-weight-bold mb-2">Contact</a>
         </div>
       </div>
@@ -171,8 +174,77 @@
   </div>
 </section>
 
-<!-- Blog Section Placeholder (Filled in P5) -->
-<section id="blog" class="d-none"></section>
+{% if blog_posts %}
+<!-- Blog Section (Dev Log) -->
+<section class="ftco-section py-5" id="blog" style="background-color: #0b1120;">
+  <div class="container">
+    <div class="row mb-4">
+      <div class="col-12" data-aos="fade-up">
+        <h2 class="text-white font-weight-bold mb-1 border-left pl-3" style="border-left: 4px solid #f1b24b !important;">
+          Dev Log
+        </h2>
+        <p class="text-muted mb-0">Engineering insights, updates, and articles from {{ group.name }}.</p>
+      </div>
+    </div>
+
+    <div class="row">
+      {% for post in blog_posts %}
+        <div class="col-md-6 col-lg-4 mb-4" data-aos="fade-up">
+          <div class="card h-100 cc-card border-0 shadow-sm overflow-hidden">
+            {% if post.cover_image_path %}
+              <div class="card-img-wrapper" style="height: 180px; overflow: hidden; background: #1e293b;">
+                <img src="{{ url_for('static', filename=post.cover_image_path) }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ post.title }}">
+              </div>
+            {% endif %}
+            <div class="card-body d-flex flex-column p-4">
+              <span class="text-warning small mb-1">{{ post.published_at.strftime('%b %d, %Y') if post.published_at else post.created_at.strftime('%b %d, %Y') }}</span>
+              <h5 class="font-weight-bold text-white mb-2">
+                <a href="#blog-modal-{{ post.id }}" class="js-blog-popup text-white text-decoration-none">
+                  {{ post.title }}
+                </a>
+              </h5>
+              <p class="text-muted small flex-grow-1 mb-3">
+                {{ (post.content[:160] ~ '...') if post.content|length > 160 else post.content }}
+              </p>
+
+              {% if post.tags %}
+                <div class="blog-tags mb-3">
+                  {% for t in post.tags[:3] %}
+                    <span class="badge cc-tag mr-1 mb-1">{{ t }}</span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+
+              <div class="mt-auto pt-2">
+                <a href="#blog-modal-{{ post.id }}" class="js-blog-popup text-warning small font-weight-bold">Read Post &rarr;</a>
+              </div>
+            </div>
+          </div>
+
+          {# Inline Magnific Popup for full post #}
+          <div id="blog-modal-{{ post.id }}" class="mfp-hide bg-dark text-white p-4 p-md-5 mx-auto rounded shadow-lg" style="max-width: 750px; text-align: left;">
+            {% if post.cover_image_path %}
+              <div class="mb-4" style="max-height: 280px; overflow: hidden; border-radius: 8px;">
+                <img src="{{ url_for('static', filename=post.cover_image_path) }}" class="w-100" style="object-fit: cover;" alt="{{ post.title }}">
+              </div>
+            {% endif %}
+            <span class="text-warning small font-weight-bold text-uppercase">{{ post.published_at.strftime('%B %d, %Y') if post.published_at else post.created_at.strftime('%B %d, %Y') }}</span>
+            <h3 class="font-weight-bold text-white mt-1 mb-3">{{ post.title }}</h3>
+            {% if post.tags %}
+              <div class="mb-4">
+                {% for t in post.tags %}
+                  <span class="badge cc-tag mr-1 mb-1">{{ t }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="blog-content text-light mb-4" style="line-height: 1.8; white-space: pre-line;">{{ post.content }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
 
 <!-- Contact Form Section -->
 <section class="ftco-section py-5" id="contact" style="background-color: #0b1120;">
