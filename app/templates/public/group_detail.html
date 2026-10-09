@@ -2,6 +2,34 @@
 {% from "partials/_macros.html" import member_card, project_card %}
 
 {% block title %}{{ group.name }} — CodeCrews{% endblock %}
+{% block meta_description %}{{ group.tagline or (group.description[:150] if group.description else seo_for().description) }}{% endblock %}
+{% block og_title %}{{ group.name }} — CodeCrews{% endblock %}
+{% block og_description %}{{ group.tagline or (group.description[:150] if group.description else seo_for().description) }}{% endblock %}
+{% block og_image %}{% if group.cover_image %}{{ url_for('static', filename=group.cover_image, _external=True) }}{% elif group.logo %}{{ url_for('static', filename=group.logo, _external=True) }}{% elif seo_for().og_image %}{{ url_for('static', filename=seo_for().og_image, _external=True) if not seo_for().og_image.startswith('http') else seo_for().og_image }}{% else %}{{ url_for('static', filename='images/bg_1.jpg', _external=True) }}{% endif %}{% endblock %}
+
+{% block extra_head %}
+{% set same_as_links = [] %}
+{% if group.social_links %}
+  {% for key, val in group.social_links.items() %}
+    {% if val %}
+      {% set _ = same_as_links.append(val) %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+<script type="application/ld+json">
+{{ {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": group.name,
+  "description": group.tagline or (group.description[:150] if group.description else ""),
+  "url": request.base_url,
+  "logo": url_for('static', filename=group.logo, _external=True) if group.logo else None,
+  "sameAs": same_as_links
+}|tojson|safe }}
+</script>
+{% endblock %}
+
+
 
 {% block content %}
 <!-- Group Hero Section -->

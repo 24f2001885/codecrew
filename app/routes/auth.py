@@ -36,7 +36,7 @@ def load_user(user_id):
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
-@limiter.limit("15 per minute", methods=["POST"])
+@limiter.limit("10 per minute", methods=["POST"])
 def login():
     if current_user.is_authenticated:
         if getattr(current_user, "role", None) == "super_admin":
