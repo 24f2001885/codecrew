@@ -1,0 +1,10 @@
+Requester: {{ requester_name }} <{{ requester_email }}>
+Company: {{ company or '(none)' }}
+Project Type: {{ project_type }}
+Budget: {{ budget or '(unspecified)' }}
+Timeline: {{ timeline or '(unspecified)' }}
+Attachment included: {{ 'yes' if has_attachment else 'no' }}
+
+{{ excerpt }}
+
+Review it: {{ inbox_url }}

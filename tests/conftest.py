@@ -32,11 +32,12 @@ def admin_user(app):
 
 
 @pytest.fixture
-def logged_in_client(app, client, admin_user):
-    resp = client.post(
+def logged_in_client(app, admin_user):
+    c = app.test_client()
+    resp = c.post(
         "/admin/login",
         data={"username": "testadmin", "password": "AdminPass1234!"},
         follow_redirects=False,
     )
     assert resp.status_code == 302
-    return client
+    return c

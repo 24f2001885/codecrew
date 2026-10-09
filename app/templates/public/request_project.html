@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Request a Project — CodeCrews{% endblock %}
+
+{% block content %}
+<section class="hero-wrap hero-wrap-2" style="background-color: #0b1120; min-height: 240px; padding: 60px 0 30px;">
+  <div class="container text-center">
+    <h1 class="font-weight-bold text-white mb-3">Tell Us What You Want Built</h1>
+    <p class="lead text-light mx-auto" style="max-width: 650px;">
+      Submit your project idea, brief, or requirements. Your submission is sent directly to the CodeCrews platform administration for review and team matching.
+    </p>
+  </div>
+</section>
+
+<section class="ftco-section py-5" style="background-color: #0f172a;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-lg p-4 p-md-5 rounded" style="background-color: #ffffff; color: #212529;">
+          <form method="POST" enctype="multipart/form-data" novalidate>
+            {{ form.hidden_tag() }}
+
+            <!-- Honeypot Field (Hidden from real users) -->
+            <div style="display: none !important;" aria-hidden="true">
+              <label for="website_hp">Leave this empty</label>
+              <input type="text" name="website" id="website_hp" tabindex="-1" autocomplete="off">
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 form-group mb-3">
+                <label for="name" class="font-weight-bold">Your Name <span class="text-danger">*</span></label>
+                {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), id="name", placeholder="e.g. Sarah Connor") }}
+                {% for error in form.name.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6 form-group mb-3">
+                <label for="email" class="font-weight-bold">Email Address <span class="text-danger">*</span></label>
+                {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), id="email", placeholder="sarah@example.com") }}
+                {% for error in form.email.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 form-group mb-3">
+                <label for="company" class="font-weight-bold">Company / Organization</label>
+                {{ form.company(class="form-control" + (" is-invalid" if form.company.errors else ""), id="company", placeholder="Optional company name") }}
+                {% for error in form.company.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6 form-group mb-3">
+                <label for="project_type" class="font-weight-bold">Project Type <span class="text-danger">*</span></label>
+                {{ form.project_type(class="form-control" + (" is-invalid" if form.project_type.errors else ""), id="project_type") }}
+                {% for error in form.project_type.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 form-group mb-3">
+                <label for="budget_range" class="font-weight-bold">Estimated Budget Range</label>
+                {{ form.budget_range(class="form-control" + (" is-invalid" if form.budget_range.errors else ""), id="budget_range", placeholder="e.g. $5,000 - $10,000") }}
+                {% for error in form.budget_range.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6 form-group mb-3">
+                <label for="timeline" class="font-weight-bold">Target Timeline</label>
+                {{ form.timeline(class="form-control" + (" is-invalid" if form.timeline.errors else ""), id="timeline", placeholder="e.g. 2 - 3 months") }}
+                {% for error in form.timeline.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="description" class="font-weight-bold">Project Description <span class="text-danger">*</span></label>
+              {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), id="description", rows=5, placeholder="Detail what you need built, key features, business goals, and tech stack preferences...") }}
+              {% for error in form.description.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-group mb-4">
+              <label for="attachment" class="font-weight-bold">Project Brief or Specifications File</label>
+              {{ form.attachment(class="form-control-file", id="attachment", accept=".pdf,.docx") }}
+              <small class="form-text text-muted">PDF or DOCX, up to 5 MB.</small>
+              {% for error in form.attachment.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="alert alert-info py-2 px-3 small mb-4" role="note">
+              <strong>Privacy Guarantee:</strong> Your details and documents are stored securely and seen only by the platform admin.
+            </div>
+
+            <div class="text-center">
+              {{ form.submit(class="btn btn-warning btn-lg px-5 font-weight-bold text-dark shadow-sm") }}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

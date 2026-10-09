@@ -1,0 +1,7 @@
+Group: {{ group_name }}
+From: {{ sender_name }} <{{ sender_email }}>
+Subject: {{ subject or '(none)' }}
+
+{{ message }}
+
+Open the inbox: {{ inbox_url }}

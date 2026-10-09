@@ -56,13 +56,13 @@
         </li>
         <!-- Messages inbox wired in P4 -->
         <li class="nav-item">
-          <a class="nav-link text-muted" href="#">
+          <a class="nav-link {% if request.endpoint == 'admin.messages' %}active{% endif %}" href="{{ url_for('admin.messages') }}">
             Messages
           </a>
         </li>
         <!-- Project Requests inbox wired in P4 -->
         <li class="nav-item">
-          <a class="nav-link text-muted" href="#">
+          <a class="nav-link {% if request.endpoint == 'admin.project_requests' %}active{% endif %}" href="{{ url_for('admin.project_requests') }}">
             Project Requests
           </a>
         </li>
