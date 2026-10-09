@@ -1,0 +1,132 @@
+{% extends "admin/admin_base.html" %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('admin.groups') }}">Groups</a></li>
+  <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm p-4 p-md-5">
+        <form method="POST" enctype="multipart/form-data" novalidate>
+          {{ form.hidden_tag() }}
+
+          <div class="form-group mb-3">
+            <label for="name" class="font-weight-bold">Group Name <span class="text-danger">*</span></label>
+            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), id="name", placeholder="e.g. Acme Devs") }}
+            {% for error in form.name.errors %}
+              <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group mb-3">
+            <label for="tagline" class="font-weight-bold">Tagline</label>
+            {{ form.tagline(class="form-control" + (" is-invalid" if form.tagline.errors else ""), id="tagline", placeholder="A short one-line pitch...") }}
+            {% for error in form.tagline.errors %}
+              <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group mb-3">
+            <label for="description" class="font-weight-bold">Description</label>
+            {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), id="description", rows=4, placeholder="Detailed background about the collective...") }}
+            {% for error in form.description.errors %}
+              <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 form-group mb-3">
+              <label for="founded_year" class="font-weight-bold">Founded Year</label>
+              {{ form.founded_year(class="form-control" + (" is-invalid" if form.founded_year.errors else ""), id="founded_year", placeholder="e.g. 2022") }}
+              {% for error in form.founded_year.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-6 form-group mb-3">
+              <label for="location" class="font-weight-bold">Location</label>
+              {{ form.location(class="form-control" + (" is-invalid" if form.location.errors else ""), id="location", placeholder="e.g. San Francisco, CA") }}
+              {% for error in form.location.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="form-group mb-3">
+            <label for="tech_tags" class="font-weight-bold">Tech Stack Tags</label>
+            {{ form.tech_tags(class="form-control" + (" is-invalid" if form.tech_tags.errors else ""), id="tech_tags", placeholder="python, flask, docker, aws") }}
+            <small class="form-text text-muted">Comma-separated tags (up to 20 tags, each max 30 characters).</small>
+            {% for error in form.tech_tags.errors %}
+              <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="row">
+            <div class="col-md-4 form-group mb-3">
+              <label for="github_url" class="font-weight-bold">GitHub URL</label>
+              {{ form.github_url(class="form-control" + (" is-invalid" if form.github_url.errors else ""), id="github_url", placeholder="https://github.com/...") }}
+              {% for error in form.github_url.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-4 form-group mb-3">
+              <label for="website_url" class="font-weight-bold">Website URL</label>
+              {{ form.website_url(class="form-control" + (" is-invalid" if form.website_url.errors else ""), id="website_url", placeholder="https://...") }}
+              {% for error in form.website_url.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-4 form-group mb-3">
+              <label for="linkedin_url" class="font-weight-bold">LinkedIn URL</label>
+              {{ form.linkedin_url(class="form-control" + (" is-invalid" if form.linkedin_url.errors else ""), id="linkedin_url", placeholder="https://linkedin.com/...") }}
+              {% for error in form.linkedin_url.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 form-group mb-3">
+              <label for="logo" class="font-weight-bold">Logo Image</label>
+              {% if group is defined and group.logo %}
+                <div class="mb-2">
+                  <img src="{{ url_for('static', filename=group.logo) }}" alt="{{ group.name }} logo thumbnail" class="img-thumbnail" style="height: 60px;">
+                </div>
+              {% endif %}
+              {{ form.logo(class="form-control-file", id="logo") }}
+            </div>
+            <div class="col-md-6 form-group mb-3">
+              <label for="cover_image" class="font-weight-bold">Cover Banner Image</label>
+              {% if group is defined and group.cover_image %}
+                <div class="mb-2">
+                  <img src="{{ url_for('static', filename=group.cover_image) }}" alt="{{ group.name }} cover banner thumbnail" class="img-thumbnail" style="height: 60px;">
+                </div>
+              {% endif %}
+              {{ form.cover_image(class="form-control-file", id="cover_image") }}
+            </div>
+          </div>
+
+          <div class="form-check mb-4">
+            {{ form.featured(class="form-check-input", id="featured") }}
+            <label class="form-check-label font-weight-bold" for="featured">
+              Feature this group on the homepage
+            </label>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+            <a href="{{ url_for('admin.groups') }}" class="btn btn-outline-secondary">
+              Cancel
+            </a>
+            {{ form.submit(class="btn btn-warning font-weight-bold px-4") }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

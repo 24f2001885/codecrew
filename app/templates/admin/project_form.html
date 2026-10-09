@@ -1,0 +1,119 @@
+{% extends "admin/admin_base.html" %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('admin.groups') }}">Groups</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('admin.group_projects', id=group.id) }}">{{ group.name }} Projects</a></li>
+  <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm p-4 p-md-5">
+        <form method="POST" enctype="multipart/form-data" novalidate>
+          {{ form.hidden_tag() }}
+
+          <div class="form-group mb-3">
+            <label for="title" class="font-weight-bold">Project Title <span class="text-danger">*</span></label>
+            {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), id="title", placeholder="e.g. CloudPulse Telemetry") }}
+            {% for error in form.title.errors %}
+              <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group mb-3">
+            <label for="summary" class="font-weight-bold">Short Summary</label>
+            {{ form.summary(class="form-control" + (" is-invalid" if form.summary.errors else ""), id="summary", placeholder="Brief pitch line...") }}
+            {% for error in form.summary.errors %}
+              <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group mb-3">
+            <label for="description" class="font-weight-bold">Full Description</label>
+            {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), id="description", rows=4, placeholder="Detailed architectural description...") }}
+            {% for error in form.description.errors %}
+              <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 form-group mb-3">
+              <label for="status" class="font-weight-bold">Status <span class="text-danger">*</span></label>
+              {{ form.status(class="form-control" + (" is-invalid" if form.status.errors else ""), id="status") }}
+              {% for error in form.status.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-6 form-group mb-3">
+              <label for="tech_tags" class="font-weight-bold">Tech Stack</label>
+              {{ form.tech_tags(class="form-control" + (" is-invalid" if form.tech_tags.errors else ""), id="tech_tags", placeholder="react, python, docker") }}
+              {% for error in form.tech_tags.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 form-group mb-3">
+              <label for="github_url" class="font-weight-bold">GitHub Repository</label>
+              {{ form.github_url(class="form-control" + (" is-invalid" if form.github_url.errors else ""), id="github_url", placeholder="https://github.com/...") }}
+              {% for error in form.github_url.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-6 form-group mb-3">
+              <label for="live_url" class="font-weight-bold">Live Demo URL</label>
+              {{ form.live_url(class="form-control" + (" is-invalid" if form.live_url.errors else ""), id="live_url", placeholder="https://...") }}
+              {% for error in form.live_url.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="form-check mb-4">
+            {{ form.featured(class="form-check-input", id="featured") }}
+            <label class="form-check-label font-weight-bold" for="featured">
+              Feature this project in the group showcase
+            </label>
+          </div>
+
+          <div class="border-top pt-3 mb-4">
+            <h5 class="h6 font-weight-bold mb-3">Project Screenshots & Alt Descriptions</h5>
+            {% if project is defined and project.screenshot %}
+              <div class="mb-3">
+                <img src="{{ url_for('static', filename=project.screenshot) }}" alt="{{ project.title }} screenshot thumbnail" class="img-thumbnail" style="max-height: 80px;">
+              </div>
+            {% endif %}
+
+            <div class="form-group mb-2">
+              <label for="gallery_files" class="font-weight-bold small">Upload Screenshot</label>
+              {{ form.gallery_files(class="form-control-file", id="gallery_files") }}
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="gallery_alts" class="font-weight-bold small">Accessible Description (Alt text) <span class="text-danger">*</span></label>
+              {{ form.gallery_alts(class="form-control" + (" is-invalid" if form.gallery_alts.errors else ""), id="gallery_alts", rows=2, placeholder="Describe the screenshot clearly for screen readers...") }}
+              <small class="form-text text-muted">Mandatory: Provide one description line per uploaded image.</small>
+              {% for error in form.gallery_alts.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+            <a href="{{ url_for('admin.group_projects', id=group.id) }}" class="btn btn-outline-secondary">
+              Cancel
+            </a>
+            {{ form.submit(class="btn btn-warning font-weight-bold px-4") }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
