@@ -13,9 +13,28 @@
 
 <section class="ftco-section py-5" style="background-color: #0b1120;">
   <div class="container">
-    <!-- P5 fills this placeholder with live search & tag filtering -->
-    <div id="directory-filter" data-endpoint="" class="d-none"></div>
+    {# Live filter bar #}
+    <div id="directory-filter" data-endpoint="{{ url_for('api.groups') }}" data-kind="groups" class="mb-4">
+      <div class="row">
+        <div class="col-md-8 mb-3 mb-md-0">
+          <input type="text" id="filter-q" class="form-control bg-dark text-white border-secondary" placeholder="Search groups by name or tagline..." aria-label="Search groups" value="{{ q or '' }}">
+        </div>
+        <div class="col-md-4">
+          <input type="text" id="filter-tag" class="form-control bg-dark text-white border-secondary" placeholder="Filter by tech tag (e.g. React)..." aria-label="Filter by tag" value="{{ tag or '' }}">
+        </div>
+      </div>
+    </div>
 
+    {# Aria-live status line #}
+    <div id="directory-status" class="text-muted small mb-4" aria-live="polite">
+      {% if total_count > 0 %}
+        {{ total_count }} group{{ 's' if total_count != 1 else '' }}
+      {% else %}
+        No groups match your search.
+      {% endif %}
+    </div>
+
+    {# Results container #}
     <div class="row" id="directory-results">
       {% if pagination.items %}
         {% for group in pagination.items %}
@@ -23,18 +42,18 @@
         {% endfor %}
       {% else %}
         <div class="col-12 text-center py-5">
-          <p class="h4 text-muted font-weight-normal">No groups match yet.</p>
+          <p class="h4 text-muted font-weight-normal">No groups match your search.</p>
         </div>
       {% endif %}
     </div>
 
-    <!-- Pagination -->
-    {% if pagination.pages > 1 %}
-      <nav aria-label="Pagination" class="mt-5">
+    {# Pagination #}
+    <nav id="directory-pagination" aria-label="Pagination" class="mt-5">
+      {% if pagination.pages > 1 %}
         <ul class="pagination justify-content-center">
           {% if pagination.has_prev %}
             <li class="page-item">
-              <a class="page-link bg-dark text-warning border-secondary" href="{{ url_for('public.groups', page=pagination.prev_num) }}" aria-label="Previous">
+              <a class="page-link bg-dark text-warning border-secondary" href="{{ url_for('public.groups', page=pagination.prev_num, q=q, tag=tag) }}" aria-label="Previous">
                 &laquo; Prev
               </a>
             </li>
@@ -52,7 +71,7 @@
                 </li>
               {% else %}
                 <li class="page-item">
-                  <a class="page-link bg-dark text-light border-secondary" href="{{ url_for('public.groups', page=p) }}">{{ p }}</a>
+                  <a class="page-link bg-dark text-light border-secondary" href="{{ url_for('public.groups', page=p, q=q, tag=tag) }}">{{ p }}</a>
                 </li>
               {% endif %}
             {% else %}
@@ -62,7 +81,7 @@
 
           {% if pagination.has_next %}
             <li class="page-item">
-              <a class="page-link bg-dark text-warning border-secondary" href="{{ url_for('public.groups', page=pagination.next_num) }}" aria-label="Next">
+              <a class="page-link bg-dark text-warning border-secondary" href="{{ url_for('public.groups', page=pagination.next_num, q=q, tag=tag) }}" aria-label="Next">
                 Next &raquo;
               </a>
             </li>
@@ -72,8 +91,8 @@
             </li>
           {% endif %}
         </ul>
-      </nav>
-    {% endif %}
+      {% endif %}
+    </nav>
   </div>
 </section>
 {% endblock %}

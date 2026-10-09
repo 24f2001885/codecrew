@@ -1,0 +1,4 @@
+{% from "partials/_macros.html" import group_card %}
+{% for group in groups %}
+  {{ group_card(group) }}
+{% endfor %}

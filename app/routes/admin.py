@@ -7,9 +7,11 @@ from app.models.member import Member
 from app.models.project import Project
 from app.models.contact_message import ContactMessage
 from app.models.project_request import ProjectRequest
+from app.models.blog_post import BlogPost
 from app.forms.group_forms import GroupForm
 from app.forms.member_forms import MemberForm
 from app.forms.project_forms import ProjectForm
+from app.forms.blog_forms import BlogPostForm
 from app.security.decorators import super_admin_required, apply_guard_to_blueprint
 from app.services.slugs import unique_slug
 from app.services.uploads import save_upload, delete_upload, replace_upload, UploadError
@@ -28,6 +30,8 @@ def dashboard():
     project_count = Project.query.count()
     unread_messages_count = ContactMessage.query.filter_by(is_read=False).count()
     new_requests_count = ProjectRequest.query.filter_by(status="new").count()
+    draft_posts_count = BlogPost.query.filter(BlogPost.published_at.is_(None)).count()
+    published_posts_count = BlogPost.query.filter(BlogPost.published_at.is_not(None)).count()
     return render_template(
         "admin/dashboard.html",
         group_count=group_count,
@@ -35,6 +39,8 @@ def dashboard():
         project_count=project_count,
         unread_messages_count=unread_messages_count,
         new_requests_count=new_requests_count,
+        draft_posts_count=draft_posts_count,
+        published_posts_count=published_posts_count,
     )
 
 
@@ -557,3 +563,126 @@ def project_request_attachment(id):
     ext = os.path.splitext(req_item.attachment_path)[1]
     download_name = f"request_{req_item.id}{ext}"
     return send_private("requests", req_item.attachment_path, download_name=download_name)
+
+
+# -----------------------------------------------------------------------------
+# Blog CRUD
+# -----------------------------------------------------------------------------
+@admin_bp.route("/blog", endpoint="blog")
+def blog():
+    page = request.args.get("page", 1, type=int)
+    group_id = request.args.get("group_id")
+
+    query = BlogPost.query
+    if group_id:
+        query = query.filter_by(group_id=group_id)
+    query = query.order_by(BlogPost.created_at.desc())
+
+    pagination = query.paginate(page=page, per_page=15, error_out=False)
+    groups = Group.query.order_by(Group.name.asc()).all()
+
+    return render_template(
+        "admin/blog_list.html",
+        pagination=pagination,
+        groups=groups,
+        selected_group_id=group_id,
+    )
+
+
+@admin_bp.route("/blog/new", methods=["GET", "POST"], endpoint="blog_new")
+def blog_new():
+    form = BlogPostForm()
+    groups = Group.query.order_by(Group.name.asc()).all()
+    form.group_id.choices = [(g.id, g.name) for g in groups]
+
+    if form.validate_on_submit():
+        group = db.session.get(Group, form.group_id.data)
+        if not group:
+            flash("Selected group not found.", "danger")
+            return render_template("admin/blog_form.html", form=form, post=None)
+
+        slug = unique_slug(BlogPost, form.title.data, scope={"group_id": form.group_id.data})
+        cover_image_path = None
+        if form.cover_image.data:
+            try:
+                cover_image_path = save_upload(form.cover_image.data, subfolder="covers")
+            except UploadError as e:
+                flash(f"Cover image error: {e}", "danger")
+                return render_template("admin/blog_form.html", form=form, post=None)
+
+        tags = form.parse_tags()
+        published_at = datetime.utcnow() if form.published.data else None
+
+        post = BlogPost(
+            group_id=form.group_id.data,
+            title=form.title.data.strip(),
+            slug=slug,
+            content=form.content.data,
+            cover_image_path=cover_image_path,
+            tags=tags,
+            published_at=published_at,
+        )
+        db.session.add(post)
+        db.session.commit()
+        flash(f"Blog post '{post.title}' created successfully.", "success")
+        return redirect(url_for("admin.blog"))
+
+    return render_template("admin/blog_form.html", form=form, post=None)
+
+
+@admin_bp.route("/blog/<id>/edit", methods=["GET", "POST"], endpoint="blog_edit")
+def blog_edit(id):
+    post = db.session.get(BlogPost, id) or abort(404)
+    form = BlogPostForm(obj=post)
+    groups = Group.query.order_by(Group.name.asc()).all()
+    form.group_id.choices = [(g.id, g.name) for g in groups]
+
+    if request.method == "GET":
+        form.group_id.data = post.group_id
+        form.tags.data = ", ".join(post.tags or [])
+        form.published.data = post.published_at is not None
+
+    if form.validate_on_submit():
+        if form.title.data.strip() != post.title or form.group_id.data != post.group_id:
+            post.slug = unique_slug(BlogPost, form.title.data, scope={"group_id": form.group_id.data}, exclude_id=post.id)
+
+        post.title = form.title.data.strip()
+        post.group_id = form.group_id.data
+        post.content = form.content.data
+        post.tags = form.parse_tags()
+
+        if form.cover_image.data:
+            try:
+                post.cover_image_path = replace_upload(form.cover_image.data, old_path=post.cover_image_path, subfolder="covers")
+            except UploadError as e:
+                flash(f"Cover image error: {e}", "danger")
+                return render_template("admin/blog_form.html", form=form, post=post)
+
+        if form.published.data:
+            if not post.published_at:
+                post.published_at = datetime.utcnow()
+        else:
+            post.published_at = None
+
+        db.session.commit()
+        flash(f"Blog post '{post.title}' updated successfully.", "success")
+        return redirect(url_for("admin.blog"))
+
+    return render_template("admin/blog_form.html", form=form, post=post)
+
+
+@admin_bp.route("/blog/<id>/delete", methods=["POST"], endpoint="blog_delete")
+def blog_delete(id):
+    post = db.session.get(BlogPost, id) or abort(404)
+    title = post.title
+    try:
+        if post.cover_image_path:
+            delete_upload(post.cover_image_path)
+        db.session.delete(post)
+        db.session.commit()
+        flash(f"Blog post '{title}' deleted.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to delete blog post: {e}", "danger")
+
+    return redirect(url_for("admin.blog"))

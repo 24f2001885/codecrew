@@ -1,0 +1,4 @@
+{% from "partials/_macros.html" import member_card %}
+{% for member in members %}
+  {{ member_card(member) }}
+{% endfor %}
