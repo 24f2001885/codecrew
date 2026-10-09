@@ -48,9 +48,8 @@
             Projects
           </a>
         </li>
-        <!-- Blog CRUD wired in P5 -->
         <li class="nav-item">
-          <a class="nav-link text-muted" href="#">
+          <a class="nav-link {% if 'blog' in request.endpoint %}active{% endif %}" href="{{ url_for('admin.blog') }}">
             Blog
           </a>
         </li>

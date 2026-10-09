@@ -84,7 +84,7 @@
       });
     }
 
-    // 8. Magnific Popup
+    // 8. Magnific Popup for static project links
     if ($.fn.magnificPopup) {
       $(".js-project-popup").magnificPopup({
         type: "inline",
@@ -93,9 +93,41 @@
       });
     }
 
-    // 9. Smooth Scrolling for in-page anchors
-    $('a[href^="#"]').on("click", function (e) {
-      var target = $(this.getAttribute("href"));
+    // 9. Delegated handler for member popups (supports dynamically injected cards)
+    $(document).on("click", ".js-member-popup", function (e) {
+      e.preventDefault();
+      var target = $(this).attr("href") || $(this).data("mfp-src");
+      if (target && $(target).length && $.fn.magnificPopup) {
+        $.magnificPopup.open({
+          items: {
+            src: target,
+            type: "inline"
+          },
+          mainClass: "mfp-fade"
+        });
+      }
+    });
+
+    // 10. Delegated handler for blog popups
+    $(document).on("click", ".js-blog-popup", function (e) {
+      e.preventDefault();
+      var target = $(this).attr("href") || $(this).data("mfp-src");
+      if (target && $(target).length && $.fn.magnificPopup) {
+        $.magnificPopup.open({
+          items: {
+            src: target,
+            type: "inline"
+          },
+          mainClass: "mfp-fade"
+        });
+      }
+    });
+
+    // 11. Smooth Scrolling for in-page anchors
+    $('a[href^="#"]:not(.js-member-popup):not(.js-project-popup):not(.js-blog-popup)').on("click", function (e) {
+      var href = $(this).attr("href");
+      if (!href || href === "#") return;
+      var target = $(href);
       if (target.length) {
         e.preventDefault();
         var navHeight = $("#ftco-navbar").outerHeight() || 70;
@@ -106,8 +138,14 @@
     });
   });
 
-  // Expose effect re-initializer for dynamically injected DOM (used in P5)
+  // Expose effect re-initializer for dynamically injected DOM (guarded against double execution)
   window.initPublicEffects = function (rootEl) {
+    var $root = rootEl ? $(rootEl) : $(document);
+    if ($root.data("effects-initialized")) {
+      return;
+    }
+    $root.data("effects-initialized", true);
+
     if (typeof AOS !== "undefined") {
       AOS.refresh();
     }

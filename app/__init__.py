@@ -51,13 +51,17 @@ def create_app(config_name=None):
     # P4 blueprints (lead-capture):
     from app.routes.contact import contact_bp
     from app.routes.requests import requests_bp
-    # Remaining blueprints to add: api_bp (P5), join_bp/coder_bp (P7, P8)
+    # P5 blueprint:
+    from app.routes.api import api_bp
+    # Remaining blueprints to add: join_bp, coder_auth_bp, coder_bp (P7, P8)
 
     flask_app.register_blueprint(public_bp)
     flask_app.register_blueprint(auth_bp)
     flask_app.register_blueprint(admin_bp)
     flask_app.register_blueprint(contact_bp)
     flask_app.register_blueprint(requests_bp)
+    limiter.limit("120 per minute")(api_bp)
+    flask_app.register_blueprint(api_bp)
 
     # Ensure models are loaded for SQLAlchemy & Flask-Migrate
     with flask_app.app_context():
