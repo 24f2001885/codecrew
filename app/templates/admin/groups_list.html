@@ -1,0 +1,120 @@
+{% extends "admin/admin_base.html" %}
+
+{% block page_title %}Groups{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Groups</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  {% if pick %}
+    <div class="alert alert-info border-0 shadow-sm mb-4">
+      <i class="mr-2">&bull;</i> Choose a group to manage its <strong>{{ pick }}</strong>.
+    </div>
+  {% endif %}
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="h4 font-weight-bold mb-0">Student Collectives</h2>
+      <p class="text-muted small mb-0">Total: {{ pagination.total }} groups registered</p>
+    </div>
+    <a href="{{ url_for('admin.group_create') }}" class="btn btn-warning font-weight-bold">
+      + New Group
+    </a>
+  </div>
+
+  <div class="card border-0 shadow-sm overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="thead-light">
+          <tr>
+            <th style="width: 60px;">Logo</th>
+            <th>Name</th>
+            <th>Slug</th>
+            <th>Status</th>
+            <th>Members</th>
+            <th>Projects</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if pagination.items %}
+            {% for group in pagination.items %}
+              <tr>
+                <td>
+                  {% if group.logo %}
+                    <img src="{{ url_for('static', filename=group.logo) }}" alt="{{ group.name }} logo" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">
+                  {% else %}
+                    <div class="rounded bg-secondary text-warning d-flex align-items-center justify-content-center font-weight-bold" style="width: 40px; height: 40px;">
+                      {{ group.name[:2]|upper }}
+                    </div>
+                  {% endif %}
+                </td>
+                <td class="font-weight-bold">
+                  <a href="{{ url_for('public.group_detail', slug=group.slug) }}" target="_blank" class="text-dark text-decoration-none">
+                    {{ group.name }} &nearr;
+                  </a>
+                </td>
+                <td><code class="text-muted">{{ group.slug }}</code></td>
+                <td>
+                  {% if group.featured %}
+                    <span class="badge badge-warning text-dark font-weight-bold">Featured</span>
+                  {% else %}
+                    <span class="badge badge-light text-muted">Standard</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{{ url_for('admin.group_members', id=group.id) }}" class="badge badge-info p-2 font-weight-bold">
+                    {{ group.members.count() }} Members
+                  </a>
+                </td>
+                <td>
+                  <a href="{{ url_for('admin.group_projects', id=group.id) }}" class="badge badge-secondary p-2 font-weight-bold">
+                    {{ group.projects.count() }} Projects
+                  </a>
+                </td>
+                <td class="text-right">
+                  <a href="{{ url_for('admin.group_edit', id=group.id) }}" class="btn btn-sm btn-outline-secondary mr-1">
+                    Edit
+                  </a>
+                  <button type="button" class="btn btn-sm btn-outline-danger"
+                          data-confirm-title="Delete Group"
+                          data-confirm-body="Are you sure you want to delete '{{ group.name }}'? All its members and projects will also be deleted."
+                          data-confirm-action="{{ url_for('admin.group_delete', id=group.id) }}"
+                          aria-label="Delete {{ group.name }}">
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7" class="text-center py-5 text-muted">
+                No groups yet. Click "+ New Group" to register the first team.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if pagination.pages > 1 %}
+    <nav aria-label="Groups Table Pagination" class="mt-4">
+      <ul class="pagination justify-content-center">
+        {% for p in pagination.iter_pages() %}
+          {% if p %}
+            <li class="page-item {% if p == pagination.page %}active{% endif %}">
+              <a class="page-link" href="{{ url_for('admin.groups', page=p, pick=pick) }}">{{ p }}</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </nav>
+  {% endif %}
+</div>
+{% endblock %}

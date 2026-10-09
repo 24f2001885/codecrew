@@ -1,0 +1,135 @@
+{% extends "admin/admin_base.html" %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('admin.groups') }}">Groups</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('admin.group_members', id=group.id) }}">{{ group.name }} Members</a></li>
+  <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm p-4 p-md-5">
+        <form method="POST" enctype="multipart/form-data" novalidate>
+          {{ form.hidden_tag() }}
+
+          <div class="form-group mb-3">
+            <label for="name" class="font-weight-bold">Member Name <span class="text-danger">*</span></label>
+            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), id="name", placeholder="e.g. Alex Vance") }}
+            {% for error in form.name.errors %}
+              <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group mb-3">
+            <label for="role" class="font-weight-bold">Role / Title</label>
+            {{ form.role(class="form-control" + (" is-invalid" if form.role.errors else ""), id="role", placeholder="e.g. Lead Architect, Frontend Dev") }}
+            {% for error in form.role.errors %}
+              <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group mb-3">
+            <label for="bio" class="font-weight-bold">Bio</label>
+            {{ form.bio(class="form-control" + (" is-invalid" if form.bio.errors else ""), id="bio", rows=3, placeholder="Short bio describing expertise and background...") }}
+            {% for error in form.bio.errors %}
+              <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group mb-3">
+            <label for="skill_tags" class="font-weight-bold">Skills (comma separated)</label>
+            {{ form.skill_tags(class="form-control" + (" is-invalid" if form.skill_tags.errors else ""), id="skill_tags", placeholder="python, docker, react, kubernetes") }}
+            <small class="form-text text-muted">Up to 20 tags, each max 30 characters.</small>
+            {% for error in form.skill_tags.errors %}
+              <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="row">
+            <div class="col-md-4 form-group mb-3">
+              <label for="github_url" class="font-weight-bold">GitHub Profile</label>
+              {{ form.github_url(class="form-control" + (" is-invalid" if form.github_url.errors else ""), id="github_url", placeholder="https://github.com/...") }}
+              {% for error in form.github_url.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-4 form-group mb-3">
+              <label for="linkedin_url" class="font-weight-bold">LinkedIn Profile</label>
+              {{ form.linkedin_url(class="form-control" + (" is-invalid" if form.linkedin_url.errors else ""), id="linkedin_url", placeholder="https://linkedin.com/...") }}
+              {% for error in form.linkedin_url.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-4 form-group mb-3">
+              <label for="twitter_url" class="font-weight-bold">Twitter / X Profile</label>
+              {{ form.twitter_url(class="form-control" + (" is-invalid" if form.twitter_url.errors else ""), id="twitter_url", placeholder="https://twitter.com/...") }}
+              {% for error in form.twitter_url.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="form-group mb-3">
+            <label for="display_order" class="font-weight-bold">Display Order</label>
+            {{ form.display_order(class="form-control col-md-3" + (" is-invalid" if form.display_order.errors else ""), id="display_order") }}
+            <small class="form-text text-muted">Ascending integer order (0, 1, 2...).</small>
+            {% for error in form.display_order.errors %}
+              <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group mb-3">
+            <label for="photo" class="font-weight-bold">Profile Photo</label>
+            {% if member is defined and member.photo %}
+              <div class="mb-2 d-flex align-items-center">
+                <img src="{{ url_for('static', filename=member.photo) }}" alt="{{ member.name }}" class="img-thumbnail rounded-circle mr-3" style="width: 50px; height: 50px; object-fit: cover;">
+                <div class="form-check">
+                  {{ form.remove_photo(class="form-check-input", id="remove_photo") }}
+                  <label class="form-check-label text-danger small font-weight-bold" for="remove_photo">
+                    Remove current photo
+                  </label>
+                </div>
+              </div>
+            {% endif %}
+            {{ form.photo(class="form-control-file", id="photo") }}
+          </div>
+
+          <div class="form-group mb-4">
+            <label for="resume_pdf" class="font-weight-bold">Resume / CV (PDF)</label>
+            {% if member is defined and member.resume_pdf %}
+              <div class="mb-2 d-flex align-items-center">
+                <a href="{{ url_for('static', filename=member.resume_pdf) }}" target="_blank" class="badge badge-success px-3 py-2 mr-3">
+                  View Current Resume &nearr;
+                </a>
+                <div class="form-check">
+                  {{ form.remove_resume(class="form-check-input", id="remove_resume") }}
+                  <label class="form-check-label text-danger small font-weight-bold" for="remove_resume">
+                    Remove current resume
+                  </label>
+                </div>
+              </div>
+            {% endif %}
+            {{ form.resume_pdf(class="form-control-file", id="resume_pdf", accept=".pdf") }}
+            <small class="form-text text-muted">PDF only, up to 5 MB.</small>
+            {% for error in form.resume_pdf.errors %}
+              <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+            <a href="{{ url_for('admin.group_members', id=group.id) }}" class="btn btn-outline-secondary">
+              Cancel
+            </a>
+            {{ form.submit(class="btn btn-warning font-weight-bold px-4") }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
