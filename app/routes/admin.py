@@ -1,15 +1,19 @@
+import os
 from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from app.extensions import db
 from app.models.group import Group
 from app.models.member import Member
 from app.models.project import Project
+from app.models.contact_message import ContactMessage
+from app.models.project_request import ProjectRequest
 from app.forms.group_forms import GroupForm
 from app.forms.member_forms import MemberForm
 from app.forms.project_forms import ProjectForm
 from app.security.decorators import super_admin_required, apply_guard_to_blueprint
 from app.services.slugs import unique_slug
 from app.services.uploads import save_upload, delete_upload, replace_upload, UploadError
+from app.services.private_files import send_private, delete_private
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -22,11 +26,15 @@ def dashboard():
     group_count = Group.query.count()
     member_count = Member.query.count()
     project_count = Project.query.count()
+    unread_messages_count = ContactMessage.query.filter_by(is_read=False).count()
+    new_requests_count = ProjectRequest.query.filter_by(status="new").count()
     return render_template(
         "admin/dashboard.html",
         group_count=group_count,
         member_count=member_count,
         project_count=project_count,
+        unread_messages_count=unread_messages_count,
+        new_requests_count=new_requests_count,
     )
 
 
@@ -402,3 +410,150 @@ def project_delete(id, project_id):
         flash(f"Failed to delete project: {e}", "danger")
 
     return redirect(url_for("admin.group_projects", id=group.id))
+
+
+# -----------------------------------------------------------------------------
+# Messages Inbox (Contact Inquiries)
+# -----------------------------------------------------------------------------
+@admin_bp.route("/messages", endpoint="messages")
+def messages():
+    page = request.args.get("page", 1, type=int)
+    unread_only = request.args.get("unread") == "1"
+
+    query = ContactMessage.query
+    if unread_only:
+        query = query.filter_by(is_read=False)
+    query = query.order_by(ContactMessage.created_at.desc())
+
+    pagination = query.paginate(page=page, per_page=20, error_out=False)
+    unread_count = ContactMessage.query.filter_by(is_read=False).count()
+    total_count = ContactMessage.query.count()
+    return render_template(
+        "admin/messages.html",
+        pagination=pagination,
+        unread_only=unread_only,
+        unread_count=unread_count,
+        total_count=total_count,
+    )
+
+
+@admin_bp.route("/messages/<id>/read", methods=["POST"])
+def message_toggle_read(id):
+    msg = db.session.get(ContactMessage, id) or abort(404)
+    msg.is_read = not msg.is_read
+    db.session.commit()
+    status_label = "read" if msg.is_read else "unread"
+    flash(f"Message marked as {status_label}.", "success")
+    return redirect(url_for("admin.messages"))
+
+
+@admin_bp.route("/messages/<id>/delete", methods=["POST"])
+def message_delete(id):
+    msg = db.session.get(ContactMessage, id) or abort(404)
+    sender = msg.name
+    db.session.delete(msg)
+    db.session.commit()
+    flash(f"Message from '{sender}' deleted.", "success")
+    return redirect(url_for("admin.messages"))
+
+
+# -----------------------------------------------------------------------------
+# Project Requests Inbox
+# -----------------------------------------------------------------------------
+VALID_REQUEST_STATUSES = ["new", "in_review", "contacted", "closed"]
+
+
+@admin_bp.route("/project-requests", endpoint="project_requests")
+def project_requests():
+    page = request.args.get("page", 1, type=int)
+    status_filter = request.args.get("status")
+
+    query = ProjectRequest.query
+    if status_filter in VALID_REQUEST_STATUSES:
+        query = query.filter_by(status=status_filter)
+    query = query.order_by(ProjectRequest.created_at.desc())
+
+    pagination = query.paginate(page=page, per_page=20, error_out=False)
+    groups = Group.query.order_by(Group.name.asc()).all()
+
+    counts = {
+        "all": ProjectRequest.query.count(),
+        "new": ProjectRequest.query.filter_by(status="new").count(),
+        "in_review": ProjectRequest.query.filter_by(status="in_review").count(),
+        "contacted": ProjectRequest.query.filter_by(status="contacted").count(),
+        "closed": ProjectRequest.query.filter_by(status="closed").count(),
+    }
+
+    return render_template(
+        "admin/project_requests.html",
+        pagination=pagination,
+        status_filter=status_filter,
+        groups=groups,
+        counts=counts,
+    )
+
+
+@admin_bp.route("/project-requests/<id>/status", methods=["POST"])
+def project_request_status(id):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    new_status = request.form.get("status", "").strip().lower()
+
+    if new_status not in VALID_REQUEST_STATUSES:
+        flash(f"Invalid status '{new_status}'. Allowed: {', '.join(VALID_REQUEST_STATUSES)}", "danger")
+        return redirect(url_for("admin.project_requests"))
+
+    req_item.status = new_status
+    db.session.commit()
+    flash(f"Status for request from '{req_item.name}' updated to '{new_status}'.", "success")
+    return redirect(url_for("admin.project_requests"))
+
+
+@admin_bp.route("/project-requests/<id>/assign", methods=["POST"])
+def project_request_assign(id):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    assigned_group_id = request.form.get("assigned_group_id", "").strip()
+
+    if not assigned_group_id:
+        req_item.assigned_group_id = None
+        db.session.commit()
+        flash(f"Unassigned group from request '{req_item.name}'.", "success")
+        return redirect(url_for("admin.project_requests"))
+
+    group = db.session.get(Group, assigned_group_id)
+    if not group:
+        flash("Group not found.", "danger")
+        return redirect(url_for("admin.project_requests"))
+
+    req_item.assigned_group_id = group.id
+    db.session.commit()
+    flash(f"Assigned request from '{req_item.name}' to group '{group.name}'.", "success")
+    return redirect(url_for("admin.project_requests"))
+
+
+@admin_bp.route("/project-requests/<id>/delete", methods=["POST"])
+def project_request_delete(id):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    name = req_item.name
+    try:
+        if req_item.attachment_path:
+            delete_private("requests", req_item.attachment_path)
+
+        db.session.delete(req_item)
+        db.session.commit()
+        flash(f"Project request from '{name}' deleted.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to delete request: {e}", "danger")
+
+    return redirect(url_for("admin.project_requests"))
+
+
+@admin_bp.route("/project-requests/<id>/attachment")
+def project_request_attachment(id):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    if not req_item.attachment_path:
+        abort(404)
+
+    ext = os.path.splitext(req_item.attachment_path)[1]
+    download_name = f"request_{req_item.id}{ext}"
+    return send_private("requests", req_item.attachment_path, download_name=download_name)

@@ -1,0 +1,177 @@
+{% extends "admin/admin_base.html" %}
+
+{% block page_title %}Project Requests{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Project Requests</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Status Filter Navigation -->
+  <ul class="nav nav-pills mb-3" id="statusFilterNav" role="tablist">
+    <li class="nav-item mr-2">
+      <a class="nav-link {% if not status_filter %}active bg-warning text-dark font-weight-bold{% else %}text-muted{% endif %}" href="{{ url_for('admin.project_requests') }}">
+        All <span class="badge badge-secondary ml-1">{{ counts.all }}</span>
+      </a>
+    </li>
+    <li class="nav-item mr-2">
+      <a class="nav-link {% if status_filter == 'new' %}active bg-primary text-white font-weight-bold{% else %}text-muted{% endif %}" href="{{ url_for('admin.project_requests', status='new') }}">
+        New <span class="badge badge-primary ml-1">{{ counts.new }}</span>
+      </a>
+    </li>
+    <li class="nav-item mr-2">
+      <a class="nav-link {% if status_filter == 'in_review' %}active bg-warning text-dark font-weight-bold{% else %}text-muted{% endif %}" href="{{ url_for('admin.project_requests', status='in_review') }}">
+        In Review <span class="badge badge-warning ml-1">{{ counts.in_review }}</span>
+      </a>
+    </li>
+    <li class="nav-item mr-2">
+      <a class="nav-link {% if status_filter == 'contacted' %}active bg-success text-white font-weight-bold{% else %}text-muted{% endif %}" href="{{ url_for('admin.project_requests', status='contacted') }}">
+        Contacted <span class="badge badge-success ml-1">{{ counts.contacted }}</span>
+      </a>
+    </li>
+    <li class="nav-item mr-2">
+      <a class="nav-link {% if status_filter == 'closed' %}active bg-secondary text-white font-weight-bold{% else %}text-muted{% endif %}" href="{{ url_for('admin.project_requests', status='closed') }}">
+        Closed <span class="badge badge-secondary ml-1">{{ counts.closed }}</span>
+      </a>
+    </li>
+  </ul>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="thead-dark small text-uppercase">
+          <tr>
+            <th>Requester</th>
+            <th>Type</th>
+            <th>Budget / Timeline</th>
+            <th>Status</th>
+            <th>Assigned Group</th>
+            <th>Attachment</th>
+            <th>Date</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if pagination.items %}
+            {% for req in pagination.items %}
+              <tr>
+                <td>
+                  <div class="font-weight-bold">{{ req.name }}</div>
+                  <small class="text-muted"><a href="mailto:{{ req.email }}">{{ req.email }}</a></small>
+                  {% if req.company %}
+                    <div class="small text-secondary">{{ req.company }}</div>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge badge-info px-2 py-1">{{ req.project_type|replace('_', ' ')|capitalize }}</span>
+                </td>
+                <td class="small">
+                  <div>Budget: {{ req.budget_range or 'N/A' }}</div>
+                  <div>Timeline: {{ req.timeline or 'N/A' }}</div>
+                </td>
+                <td>
+                  <!-- Status Pill & Inline Change Form -->
+                  <form action="{{ url_for('admin.project_request_status', id=req.id) }}" method="POST" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <select name="status" class="form-control form-control-sm font-weight-bold d-inline-block w-auto" onchange="this.form.submit()">
+                      <option value="new" {% if req.status == 'new' %}selected{% endif %}>New</option>
+                      <option value="in_review" {% if req.status == 'in_review' %}selected{% endif %}>In Review</option>
+                      <option value="contacted" {% if req.status == 'contacted' %}selected{% endif %}>Contacted</option>
+                      <option value="closed" {% if req.status == 'closed' %}selected{% endif %}>Closed</option>
+                    </select>
+                  </form>
+                </td>
+                <td>
+                  <!-- Group Assignment Form -->
+                  <form action="{{ url_for('admin.project_request_assign', id=req.id) }}" method="POST" class="form-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <select name="assigned_group_id" class="form-control form-control-sm mr-1" style="max-width: 140px;">
+                      <option value="">(Unassigned)</option>
+                      {% for g in groups %}
+                        <option value="{{ g.id }}" {% if req.assigned_group_id == g.id %}selected{% endif %}>{{ g.name }}</option>
+                      {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="Save group assignment">Save</button>
+                  </form>
+                </td>
+                <td>
+                  {% if req.attachment_path %}
+                    <a href="{{ url_for('admin.project_request_attachment', id=req.id) }}" class="btn btn-sm btn-outline-primary" title="Download private brief">
+                      <span aria-hidden="true">&#128206;</span> Brief
+                    </a>
+                  {% else %}
+                    <span class="text-muted small">None</span>
+                  {% endif %}
+                </td>
+                <td class="small text-muted text-nowrap">
+                  {{ req.created_at.strftime('%b %d, %Y') }}
+                </td>
+                <td class="text-right text-nowrap">
+                  <!-- Button to toggle details collapse -->
+                  <button type="button" class="btn btn-sm btn-outline-info mr-1" data-toggle="collapse" data-target="#desc-{{ req.id }}" aria-expanded="false" aria-controls="desc-{{ req.id }}">
+                    Details
+                  </button>
+
+                  <!-- Delete button with confirm modal -->
+                  <button type="button" class="btn btn-sm btn-outline-danger"
+                          data-confirm-title="Delete Project Request"
+                          data-confirm-body="Are you sure you want to delete the project request from '{{ req.name }}'?"
+                          data-confirm-action="{{ url_for('admin.project_request_delete', id=req.id) }}"
+                          aria-label="Delete request from {{ req.name }}">
+                    Delete
+                  </button>
+                </td>
+              </tr>
+              <!-- Expandable Details Row -->
+              <tr class="collapse" id="desc-{{ req.id }}">
+                <td colspan="8" class="bg-light p-3 border-top-0">
+                  <div class="card p-3 border-0 bg-white shadow-sm">
+                    <h6 class="font-weight-bold text-dark mb-2">Project Brief & Description:</h6>
+                    <p class="text-secondary mb-0" style="white-space: pre-line;">{{ req.description }}</p>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="8" class="text-center py-5 text-muted">
+                No project requests yet.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if pagination.pages > 1 %}
+      <div class="card-footer bg-white border-0 py-3">
+        <nav aria-label="Project Requests pagination">
+          <ul class="pagination justify-content-center mb-0">
+            {% if pagination.has_prev %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.project_requests', page=pagination.prev_num, status=status_filter) }}">Previous</a>
+              </li>
+            {% endif %}
+            {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+              {% if p %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                  <a class="page-link" href="{{ url_for('admin.project_requests', page=p, status=status_filter) }}">{{ p }}</a>
+                </li>
+              {% else %}
+                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+              {% endif %}
+            {% endfor %}
+            {% if pagination.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.project_requests', page=pagination.next_num, status=status_filter) }}">Next</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

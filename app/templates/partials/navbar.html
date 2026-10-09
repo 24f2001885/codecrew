@@ -17,9 +17,8 @@
         <li class="nav-item">
           <a href="#" class="nav-link">Our Members</a>
         </li>
-        <!-- P4 wires Request a Project to /request-project -->
-        <li class="nav-item cta mr-md-2">
-          <a href="#" class="nav-link"><span>Request a Project</span></a>
+        <li class="nav-item cta mr-md-2 {% if request.endpoint == 'requests.request_project' %}active{% endif %}">
+          <a href="{{ url_for('requests.request_project') }}" class="nav-link"><span>Request a Project</span></a>
         </li>
       </ul>
     </div>

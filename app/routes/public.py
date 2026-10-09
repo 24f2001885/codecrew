@@ -51,6 +51,9 @@ def groups():
     return render_template("public/groups_directory.html", pagination=pagination)
 
 
+from app.forms.contact_forms import ContactForm
+
+
 @public_bp.route("/group/<slug>")
 def group_detail(slug):
     group = Group.query.filter_by(slug=slug).first_or_404()
@@ -68,10 +71,12 @@ def group_detail(slug):
         "total_projects": len(projects),
     }
 
+    form = ContactForm()
     return render_template(
         "public/group_detail.html",
         group=group,
         members=members,
         projects=projects,
         stats=stats,
+        form=form,
     )

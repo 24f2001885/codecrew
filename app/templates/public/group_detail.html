@@ -183,32 +183,63 @@
           <h3 class="font-weight-bold mb-2">Connect with {{ group.name }}</h3>
           <p class="text-muted mb-4">Have an inquiry or collaboration proposal? Send a message directly to the team.</p>
 
-          <!-- P4 wires this form to /group/<slug>/contact -->
-          <form action="" method="POST">
+          <form action="{{ url_for('contact.contact', slug=group.slug) }}" method="POST" novalidate>
+            {% if form is defined and form.hidden_tag %}
+              {{ form.hidden_tag() }}
+            {% endif %}
+
             <!-- Honeypot anti-spam field (hidden from view) -->
-            <div style="display: none;">
+            <div style="display: none !important;" aria-hidden="true">
               <label for="website">Website</label>
-              <input type="text" name="website" id="website" autocomplete="off">
+              <input type="text" name="website" id="website" tabindex="-1" autocomplete="off">
             </div>
 
             <div class="form-group mb-3">
-              <label for="contact_name" class="font-weight-bold small">Your Name</label>
-              <input type="text" id="contact_name" name="name" class="form-control" placeholder="Jane Doe" required>
+              <label for="contact_name" class="font-weight-bold small">Your Name <span class="text-danger">*</span></label>
+              {% if form is defined and form.name %}
+                {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), id="contact_name", placeholder="Jane Doe") }}
+                {% for error in form.name.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              {% else %}
+                <input type="text" id="contact_name" name="name" class="form-control" placeholder="Jane Doe" required>
+              {% endif %}
             </div>
 
             <div class="form-group mb-3">
-              <label for="contact_email" class="font-weight-bold small">Email Address</label>
-              <input type="email" id="contact_email" name="email" class="form-control" placeholder="jane@example.com" required>
+              <label for="contact_email" class="font-weight-bold small">Email Address <span class="text-danger">*</span></label>
+              {% if form is defined and form.email %}
+                {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), id="contact_email", placeholder="jane@example.com") }}
+                {% for error in form.email.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              {% else %}
+                <input type="email" id="contact_email" name="email" class="form-control" placeholder="jane@example.com" required>
+              {% endif %}
             </div>
 
             <div class="form-group mb-3">
               <label for="contact_subject" class="font-weight-bold small">Subject</label>
-              <input type="text" id="contact_subject" name="subject" class="form-control" placeholder="Project Inquiry" required>
+              {% if form is defined and form.subject %}
+                {{ form.subject(class="form-control" + (" is-invalid" if form.subject.errors else ""), id="contact_subject", placeholder="Project Inquiry") }}
+                {% for error in form.subject.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              {% else %}
+                <input type="text" id="contact_subject" name="subject" class="form-control" placeholder="Project Inquiry">
+              {% endif %}
             </div>
 
             <div class="form-group mb-4">
-              <label for="contact_message" class="font-weight-bold small">Message</label>
-              <textarea id="contact_message" name="message" class="form-control" rows="4" placeholder="Briefly describe your request..." required></textarea>
+              <label for="contact_message" class="font-weight-bold small">Message <span class="text-danger">*</span></label>
+              {% if form is defined and form.message %}
+                {{ form.message(class="form-control" + (" is-invalid" if form.message.errors else ""), id="contact_message", rows=4, placeholder="Briefly describe your request...") }}
+                {% for error in form.message.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              {% else %}
+                <textarea id="contact_message" name="message" class="form-control" rows="4" placeholder="Briefly describe your request..." required></textarea>
+              {% endif %}
             </div>
 
             <button type="submit" class="btn btn-warning btn-block font-weight-bold py-2">
