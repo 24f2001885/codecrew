@@ -1,0 +1,126 @@
+{% extends "admin/admin_base.html" %}
+
+{% block page_title %}Messages{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Messages</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="btn-group" role="group" aria-label="Message filters">
+      <a href="{{ url_for('admin.messages') }}" class="btn btn-sm {% if not unread_only %}btn-warning font-weight-bold{% else %}btn-outline-secondary{% endif %}">
+        All Messages ({{ total_count }})
+      </a>
+      <a href="{{ url_for('admin.messages', unread=1) }}" class="btn btn-sm {% if unread_only %}btn-warning font-weight-bold{% else %}btn-outline-secondary{% endif %}">
+        Unread Only {% if unread_count %}<span class="badge badge-danger ml-1">{{ unread_count }}</span>{% endif %}
+      </a>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="thead-dark small text-uppercase">
+          <tr>
+            <th style="width: 30px;">Status</th>
+            <th>Group</th>
+            <th>Sender</th>
+            <th>Subject</th>
+            <th>Message Preview</th>
+            <th>Date</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if pagination.items %}
+            {% for msg in pagination.items %}
+              <tr class="{% if not msg.is_read %}table-active font-weight-bold{% endif %}">
+                <td class="text-center">
+                  {% if not msg.is_read %}
+                    <span class="badge badge-pill badge-danger" title="Unread message" aria-hidden="true">&bull;</span>
+                    <span class="sr-only">Unread</span>
+                  {% else %}
+                    <span class="text-muted" title="Read message" aria-hidden="true">&#10003;</span>
+                    <span class="sr-only">Read</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge badge-secondary px-2 py-1">{{ msg.group.name if msg.group else 'Unknown Group' }}</span>
+                </td>
+                <td>
+                  <div>{{ msg.name }}</div>
+                  <small class="text-muted"><a href="mailto:{{ msg.email }}">{{ msg.email }}</a></small>
+                </td>
+                <td>{{ msg.subject or '(no subject)' }}</td>
+                <td>
+                  <span class="text-truncate d-inline-block" style="max-width: 250px;">
+                    {{ msg.message }}
+                  </span>
+                </td>
+                <td class="small text-muted text-nowrap">
+                  {{ msg.created_at.strftime('%b %d, %Y %H:%M') }}
+                </td>
+                <td class="text-right text-nowrap">
+                  <!-- Toggle Read POST form -->
+                  <form action="{{ url_for('admin.message_toggle_read', id=msg.id) }}" method="POST" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="Mark as {{ 'unread' if msg.is_read else 'read' }}">
+                      {{ 'Mark Unread' if msg.is_read else 'Mark Read' }}
+                    </button>
+                  </form>
+
+                  <!-- Delete via confirm modal -->
+                  <button type="button" class="btn btn-sm btn-outline-danger"
+                          data-confirm-title="Delete Message"
+                          data-confirm-body="Are you sure you want to delete message from '{{ msg.name }}'?"
+                          data-confirm-action="{{ url_for('admin.message_delete', id=msg.id) }}"
+                          aria-label="Delete message from {{ msg.name }}">
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7" class="text-center py-5 text-muted">
+                No messages yet.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if pagination.pages > 1 %}
+      <div class="card-footer bg-white border-0 py-3">
+        <nav aria-label="Messages pagination">
+          <ul class="pagination justify-content-center mb-0">
+            {% if pagination.has_prev %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.messages', page=pagination.prev_num, unread=1 if unread_only else None) }}">Previous</a>
+              </li>
+            {% endif %}
+            {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+              {% if p %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                  <a class="page-link" href="{{ url_for('admin.messages', page=p, unread=1 if unread_only else None) }}">{{ p }}</a>
+                </li>
+              {% else %}
+                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+              {% endif %}
+            {% endfor %}
+            {% if pagination.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.messages', page=pagination.next_num, unread=1 if unread_only else None) }}">Next</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
