@@ -1,0 +1,138 @@
+:root {
+  --primary-color: #f1b24b;
+  --primary-hover: #d99933;
+  --bg-dark: #0b1120;
+  --bg-surface: #1e293b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --font-family-base: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  font-family: var(--font-family-base);
+  background-color: #f8fafc;
+  color: #334155;
+  margin: 0;
+  padding: 0;
+}
+
+/* Loader Styles */
+#ftco-loader {
+  position: fixed;
+  width: 96px;
+  height: 96px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border-radius: 50%;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#ftco-loader.fullscreen {
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  transform: none;
+  background-color: rgba(11, 17, 32, 0.85);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+#ftco-loader.show {
+  visibility: visible;
+  opacity: 1;
+}
+
+#ftco-loader:not(.show) {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.circular {
+  animation: rotate 2s linear infinite;
+  height: 48px;
+  transform-origin: center center;
+  width: 48px;
+}
+
+.path {
+  stroke-dasharray: 1, 200;
+  stroke-dashoffset: 0;
+  animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
+  stroke-linecap: round;
+}
+
+@keyframes rotate {
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes dash {
+  0% { stroke-dasharray: 1, 200; stroke-dashoffset: 0; }
+  50% { stroke-dasharray: 89, 200; stroke-dashoffset: -35px; }
+  100% { stroke-dasharray: 89, 200; stroke-dashoffset: -124px; }
+}
+
+/* Navbar */
+.ftco_navbar {
+  background: #0b1120 !important;
+  padding: 1rem 0;
+}
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.5rem;
+  letter-spacing: 0.5px;
+}
+.navbar-brand span {
+  color: var(--primary-color);
+}
+.nav-link {
+  font-weight: 500;
+}
+
+/* Hero Section */
+.hero-wrap {
+  position: relative;
+  background-size: cover;
+  background-position: center center;
+  display: flex;
+  align-items: center;
+}
+
+/* Primary Button Styling */
+.btn-warning {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #0b1120 !important;
+}
+.btn-warning:hover {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+/* Footer */
+.ftco-footer {
+  background: #070b14;
+  color: var(--text-muted);
+  padding: 4rem 0 2rem;
+}
+.ftco-footer h2 {
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.ftco-footer a {
+  color: var(--text-muted);
+}
+.ftco-footer a:hover {
+  color: var(--primary-color);
+  text-decoration: none;
+}

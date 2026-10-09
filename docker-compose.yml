@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    command: flask --app wsgi:app run --host=0.0.0.0 --port=5000 --debug
+    volumes:
+      - .:/code
+      # Private upload volume: confidential request attachments and applicant resumes.
+      # This folder must never be served as static files.
+      - private_uploads:/code/instance/private_uploads
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      - FLASK_ENV=development
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: codecrews
+      POSTGRES_PASSWORD: codecrews
+      POSTGRES_DB: codecrews
+    volumes:
+      - codecrews_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  codecrews_pgdata:
+  private_uploads:

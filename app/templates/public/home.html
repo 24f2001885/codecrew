@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}CodeCrews — Multi-Tenant Developer Agency{% endblock %}
+
+{% block content %}
+<section class="hero-wrap js-fullheight" style="background-image: linear-gradient(rgba(10, 15, 29, 0.85), rgba(10, 15, 29, 0.95)); min-height: 85vh;" data-section="home">
+  <div class="overlay"></div>
+  <div class="container">
+    <div class="row no-gutters slider-text js-fullheight align-items-center justify-content-end" style="min-height: 85vh;">
+      <div class="col-md-11 text-center ftco-animate">
+        <h1 class="mb-4 text-white font-weight-bold" style="font-size: 3.5rem;">
+          Empowering Next-Gen <span style="color: #f1b24b;">Developer Crews</span>
+        </h1>
+        <p class="mb-5 text-light" style="font-size: 1.25rem; max-width: 800px; margin: 0 auto;">
+          Discover top student engineering talent, browse verified portfolio projects, and connect directly with high-caliber teams built for modern software delivery.
+        </p>
+        <p>
+          <a href="/groups" class="btn btn-warning px-4 py-3 mr-md-2 font-weight-bold text-dark">Explore Groups</a>
+          <a href="/request-project" class="btn btn-outline-light px-4 py-3 font-weight-bold">Request a Project</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ftco-section bg-light py-5">
+  <div class="container">
+    <div class="row justify-content-center mb-5 pb-2">
+      <div class="col-md-8 text-center heading-section ftco-animate">
+        <h2 class="mb-3 font-weight-bold">Why Collaborate With CodeCrews?</h2>
+        <p class="text-muted">Built for engineering excellence, structured teamwork, and transparent project delivery.</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4 text-center p-4">
+        <div class="services-1">
+          <div class="desc">
+            <h3 class="mb-3 font-weight-bold">Autonomous Groups</h3>
+            <p class="text-muted">Specialized teams with dedicated stacks in web, cloud, AI, and systems engineering.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 text-center p-4">
+        <div class="services-1">
+          <div class="desc">
+            <h3 class="mb-3 font-weight-bold">Verified Resumes & Code</h3>
+            <p class="text-muted">Every member profile features direct GitHub links, tech tags, and verified resumes.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 text-center p-4">
+        <div class="services-1">
+          <div class="desc">
+            <h3 class="mb-3 font-weight-bold">Direct Client Engagement</h3>
+            <p class="text-muted">Submit your custom project brief directly through our structured client intake portal.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

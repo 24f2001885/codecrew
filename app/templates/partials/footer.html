@@ -1,0 +1,38 @@
+<footer class="ftco-footer ftco-section">
+  <div class="container">
+    <div class="row mb-5">
+      <div class="col-md">
+        <div class="ftco-footer-widget mb-4">
+          <h2 class="ftco-heading-2">Code<span>Crews</span></h2>
+          <p>The premier multi-tenant developer agency showcasing high-performing student engineering teams, collaborative projects, and world-class craft.</p>
+        </div>
+      </div>
+      <div class="col-md">
+        <div class="ftco-footer-widget mb-4 ml-md-4">
+          <h2 class="ftco-heading-2">Quick Links</h2>
+          <ul class="list-unstyled">
+            <li><a href="{{ url_for('public.index') }}">Home</a></li>
+            <li><a href="/groups">Browse Groups</a></li>
+            <li><a href="/members">Meet Members</a></li>
+            <li><a href="/request-project">Request a Project</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-md">
+        <div class="ftco-footer-widget mb-4">
+          <h2 class="ftco-heading-2">Administration</h2>
+          <ul class="list-unstyled">
+            <li><a href="{{ url_for('auth.login') }}">Admin Login</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 text-center">
+        <p class="copyright">
+          Copyright &copy; {{ now.year if now else '2026' }} CodeCrews. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>

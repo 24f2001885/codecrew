@@ -1,0 +1,16 @@
+version: "3.9"
+
+# docker-compose -f docker-compose.test.yml run --rm web pytest
+services:
+  web:
+    build: .
+    command: pytest
+    volumes:
+      - .:/code
+    environment:
+      - FLASK_ENV=testing
+      - DATABASE_URL=sqlite:///test.db
+      - MAIL_SUPPRESS_SEND=True
+      - SECRET_KEY=test-secret-key-12345
+      - WTF_CSRF_SECRET_KEY=test-csrf-secret-key
+      - SESSION_COOKIE_SECURE=False
