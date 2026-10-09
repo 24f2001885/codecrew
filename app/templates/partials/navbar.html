@@ -7,10 +7,20 @@
 
     <div class="collapse navbar-collapse" id="ftco-nav">
       <ul class="navbar-nav ml-auto">
-        <li class="nav-item active"><a href="{{ url_for('public.index') }}" class="nav-link">Home</a></li>
-        <li class="nav-item"><a href="/groups" class="nav-link">Groups</a></li>
-        <li class="nav-item"><a href="/members" class="nav-link">Our Members</a></li>
-        <li class="nav-item cta mr-md-2"><a href="/request-project" class="nav-link"><span>Request a Project</span></a></li>
+        <li class="nav-item {% if request.endpoint == 'public.index' %}active{% endif %}">
+          <a href="{{ url_for('public.index') }}" class="nav-link">Home</a>
+        </li>
+        <li class="nav-item {% if request.endpoint == 'public.groups' %}active{% endif %}">
+          <a href="{{ url_for('public.groups') }}" class="nav-link">Groups</a>
+        </li>
+        <!-- P5 wires Our Members to /members -->
+        <li class="nav-item">
+          <a href="#" class="nav-link">Our Members</a>
+        </li>
+        <!-- P4 wires Request a Project to /request-project -->
+        <li class="nav-item cta mr-md-2">
+          <a href="#" class="nav-link"><span>Request a Project</span></a>
+        </li>
       </ul>
     </div>
   </div>

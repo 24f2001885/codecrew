@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import group_card %}
+
+{% block title %}Groups Directory — CodeCrews{% endblock %}
+
+{% block content %}
+<section class="hero-wrap hero-wrap-2" style="background: #0b1120; padding: 70px 0 40px;">
+  <div class="container text-center">
+    <h1 class="text-white font-weight-bold mb-2">Groups</h1>
+    <p class="text-muted mb-0">Browse through innovative student engineering teams across technologies and domains.</p>
+  </div>
+</section>
+
+<section class="ftco-section py-5" style="background-color: #0b1120;">
+  <div class="container">
+    <!-- P5 fills this placeholder with live search & tag filtering -->
+    <div id="directory-filter" data-endpoint="" class="d-none"></div>
+
+    <div class="row" id="directory-results">
+      {% if pagination.items %}
+        {% for group in pagination.items %}
+          {{ group_card(group) }}
+        {% endfor %}
+      {% else %}
+        <div class="col-12 text-center py-5">
+          <p class="h4 text-muted font-weight-normal">No groups match yet.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+      <nav aria-label="Pagination" class="mt-5">
+        <ul class="pagination justify-content-center">
+          {% if pagination.has_prev %}
+            <li class="page-item">
+              <a class="page-link bg-dark text-warning border-secondary" href="{{ url_for('public.groups', page=pagination.prev_num) }}" aria-label="Previous">
+                &laquo; Prev
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link bg-dark text-muted border-secondary">&laquo; Prev</span>
+            </li>
+          {% endif %}
+
+          {% for p in pagination.iter_pages(left_edge=2, left_current=2, right_current=2, right_edge=2) %}
+            {% if p %}
+              {% if p == pagination.page %}
+                <li class="page-item active" aria-current="page">
+                  <span class="page-link bg-warning text-dark border-warning font-weight-bold">{{ p }}</span>
+                </li>
+              {% else %}
+                <li class="page-item">
+                  <a class="page-link bg-dark text-light border-secondary" href="{{ url_for('public.groups', page=p) }}">{{ p }}</a>
+                </li>
+              {% endif %}
+            {% else %}
+              <li class="page-item disabled"><span class="page-link bg-dark text-muted border-secondary">&hellip;</span></li>
+            {% endif %}
+          {% endfor %}
+
+          {% if pagination.has_next %}
+            <li class="page-item">
+              <a class="page-link bg-dark text-warning border-secondary" href="{{ url_for('public.groups', page=pagination.next_num) }}" aria-label="Next">
+                Next &raquo;
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link bg-dark text-muted border-secondary">Next &raquo;</span>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% macro group_card(group) %}
+<div class="col-md-6 col-lg-4 mb-4" data-aos="fade-up">
+  <div class="card h-100 cc-card border-0 shadow-sm overflow-hidden">
+    <div class="card-img-wrapper position-relative" style="height: 180px; background-color: #0b1120;">
+      {% if group.cover_image %}
+        <img src="{{ url_for('static', filename=group.cover_image) }}" class="card-img-top w-100 h-100" style="object-fit: cover;" alt="{{ group.name }} logo">
+      {% else %}
+        <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+          <span class="h4 text-warning mb-0">{{ group.name }}</span>
+        </div>
+      {% endif %}
+      {% if group.featured %}
+        <span class="badge badge-warning cc-badge-featured position-absolute" style="top: 12px; right: 12px; font-size: 0.8rem; font-weight: 600;">Featured</span>
+      {% endif %}
+    </div>
+
+    <div class="card-body d-flex flex-column p-4">
+      <h4 class="card-title h5 font-weight-bold mb-2">
+        <a href="{{ url_for('public.group_detail', slug=group.slug) }}" class="text-white text-decoration-none">
+          {{ group.name }}
+        </a>
+      </h4>
+      <p class="card-text text-muted small flex-grow-1 mb-3">
+        {{ group.tagline or 'Active student engineering team at CodeCrews.' }}
+      </p>
+
+      {% if group.tech_tags %}
+        <div class="tech-tags mb-3">
+          {% for tag in group.tech_tags[:4] %}
+            <span class="badge cc-tag mr-1 mb-1">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="card-meta d-flex justify-content-between pt-3 border-top border-secondary text-muted small">
+        <span><strong class="text-warning">{{ group.members.count() if group.members is defined and group.members.count is defined else 0 }}</strong> Members</span>
+        <span><strong class="text-warning">{{ group.projects.count() if group.projects is defined and group.projects.count is defined else 0 }}</strong> Projects</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+
+{% macro member_card(member) %}
+<div class="col-md-6 col-lg-4 mb-4" data-aos="fade-up">
+  <div class="card h-100 cc-card border-0 shadow-sm p-4 text-center" data-member-id="{{ member.id }}">
+    <div class="member-avatar mb-3 mx-auto" style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; background: #1e293b;">
+      {% if member.photo %}
+        <img src="{{ url_for('static', filename=member.photo) }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ member.name }} photo">
+      {% else %}
+        <div class="d-flex align-items-center justify-content-center h-100 text-warning font-weight-bold h4 mb-0">
+          {{ member.name[:2]|upper }}
+        </div>
+      {% endif %}
+    </div>
+
+    <h5 class="font-weight-bold text-white mb-1">{{ member.name }}</h5>
+    <p class="text-warning small mb-2">{{ member.role or 'Member' }}</p>
+
+    {% if member.group %}
+      <div class="mb-2">
+        <a href="{{ url_for('public.group_detail', slug=member.group.slug) }}" class="badge badge-dark text-muted">
+          {{ member.group.name }}
+        </a>
+      </div>
+    {% endif %}
+
+    <p class="text-muted small flex-grow-1 mb-3">
+      {{ member.bio or 'Software developer crafting robust systems.' }}
+    </p>
+
+    {% if member.skill_tags %}
+      <div class="skill-tags mb-3">
+        {% for skill in member.skill_tags[:4] %}
+          <span class="badge cc-tag mr-1 mb-1">{{ skill }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="member-actions d-flex justify-content-center align-items-center gap-2 mt-auto pt-2">
+      {% if member.github_url %}
+        <a href="{{ member.github_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mx-1 text-light" aria-label="{{ member.name }} GitHub">
+          GH
+        </a>
+      {% endif %}
+      {% if member.linkedin_url %}
+        <a href="{{ member.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mx-1 text-light" aria-label="{{ member.name }} LinkedIn">
+          IN
+        </a>
+      {% endif %}
+      {% if member.resume_pdf %}
+        <a href="{{ url_for('static', filename=member.resume_pdf) }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-warning mx-1 font-weight-bold" aria-label="Download {{ member.name }}'s resume">
+          Resume
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+
+{% macro project_card(project) %}
+<div class="col-md-6 col-lg-4 mb-4" data-aos="fade-up">
+  <div class="card h-100 cc-card border-0 shadow-sm overflow-hidden">
+    <div class="project-img-wrapper position-relative" style="height: 180px; background: #0b1120;">
+      {% if project.screenshot %}
+        <img src="{{ url_for('static', filename=project.screenshot) }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ project.title }} screenshot">
+      {% else %}
+        <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+          <span class="font-weight-bold text-warning">{{ project.title }}</span>
+        </div>
+      {% endif %}
+      <span class="badge cc-badge-status badge-success position-absolute" style="top: 10px; right: 10px;">Completed</span>
+    </div>
+
+    <div class="card-body d-flex flex-column p-4">
+      <h5 class="font-weight-bold text-white mb-2">
+        <a href="#project-modal-{{ project.id }}" class="js-project-popup text-white text-decoration-none">
+          {{ project.title }}
+        </a>
+      </h5>
+      <p class="text-muted small flex-grow-1 mb-3">
+        {{ project.summary or project.description[:120] if project.description else 'Featured collaborative project.' }}
+      </p>
+
+      {% if project.tech_tags %}
+        <div class="tech-tags mb-3">
+          {% for tag in project.tech_tags[:4] %}
+            <span class="badge cc-tag mr-1 mb-1">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="project-links mt-auto pt-2 d-flex justify-content-between">
+        {% if project.demo_url %}
+          <a href="{{ project.demo_url }}" target="_blank" rel="noopener noreferrer" class="text-warning small font-weight-bold">Live Demo &rarr;</a>
+        {% endif %}
+        {% if project.github_url %}
+          <a href="{{ project.github_url }}" target="_blank" rel="noopener noreferrer" class="text-muted small">Source Code</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}

@@ -1,19 +1,26 @@
 :root {
-  --primary-color: #f1b24b;
-  --primary-hover: #d99933;
-  --bg-dark: #0b1120;
-  --bg-surface: #1e293b;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --font-family-base: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --cc-color-primary: #f1b24b;
+  --cc-color-primary-hover: #d99933;
+  --cc-color-secondary: #3b82f6;
+  --cc-color-bg-dark: #0b1120;
+  --cc-color-bg-surface: #1e293b;
+  --cc-color-text-light: #f8fafc;
+  --cc-color-text-muted: #94a3b8;
+  --cc-color-text-on-light: #212529;
+  --cc-font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 body {
-  font-family: var(--font-family-base);
-  background-color: #f8fafc;
-  color: #334155;
+  font-family: var(--cc-font-family);
+  background-color: var(--cc-color-bg-dark);
+  color: var(--cc-color-text-muted);
   margin: 0;
   padding: 0;
+}
+
+a:focus, button:focus {
+  outline: 2px solid var(--cc-color-secondary) !important;
+  outline-offset: 2px;
 }
 
 /* Loader Styles */
@@ -92,36 +99,75 @@ body {
   letter-spacing: 0.5px;
 }
 .navbar-brand span {
-  color: var(--primary-color);
+  color: var(--cc-color-primary);
 }
 .nav-link {
   font-weight: 500;
 }
+.nav-item.active .nav-link {
+  color: var(--cc-color-primary) !important;
+}
 
-/* Hero Section */
-.hero-wrap {
-  position: relative;
-  background-size: cover;
-  background-position: center center;
-  display: flex;
-  align-items: center;
+/* Cards & Hover Effects */
+.cc-card {
+  background-color: var(--cc-color-bg-surface) !important;
+  border-radius: 8px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.cc-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Tags and Badges */
+.cc-tag {
+  background-color: transparent !important;
+  border: 1px solid var(--cc-color-primary) !important;
+  color: var(--cc-color-primary) !important;
+  font-weight: 500;
+  padding: 0.35rem 0.6rem;
+  border-radius: 4px;
+}
+
+.cc-badge-featured {
+  background-color: var(--cc-color-primary) !important;
+  color: #0b1120 !important;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.cc-badge-status {
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+.cc-stat {
+  font-size: 2.75rem;
+  font-weight: 700;
+  color: var(--cc-color-primary);
+}
+
+/* Progress Bars for Tech Stack */
+.progress {
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 /* Primary Button Styling */
 .btn-warning {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
+  background-color: var(--cc-color-primary) !important;
+  border-color: var(--cc-color-primary) !important;
   color: #0b1120 !important;
 }
 .btn-warning:hover {
-  background-color: var(--primary-hover);
-  border-color: var(--primary-hover);
+  background-color: var(--cc-color-primary-hover) !important;
+  border-color: var(--cc-color-primary-hover) !important;
 }
 
 /* Footer */
 .ftco-footer {
   background: #070b14;
-  color: var(--text-muted);
+  color: var(--cc-color-text-muted);
   padding: 4rem 0 2rem;
 }
 .ftco-footer h2 {
@@ -130,9 +176,15 @@ body {
   font-weight: 600;
 }
 .ftco-footer a {
-  color: var(--text-muted);
+  color: var(--cc-color-text-muted);
 }
 .ftco-footer a:hover {
-  color: var(--primary-color);
+  color: var(--cc-color-primary);
   text-decoration: none;
+}
+
+@media (max-width: 767.98px) {
+  .cc-card {
+    margin-bottom: 1.5rem;
+  }
 }

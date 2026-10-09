@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import member_card, project_card %}
+
+{% block title %}{{ group.name }} — CodeCrews{% endblock %}
+
+{% block content %}
+<!-- Group Hero Section -->
+<section class="hero-wrap hero-wrap-2 js-fullheight" data-stellar-background-ratio="0.5" style="background: #0b1120; min-height: 60vh;">
+  <div class="overlay" style="position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(11, 17, 32, 0.85);"></div>
+  <div class="container position-relative" style="z-index: 2; padding-top: 80px; padding-bottom: 40px;">
+    <div class="row align-items-center">
+      <div class="col-md-8" data-aos="fade-up">
+        {% if group.featured %}
+          <span class="badge badge-warning mb-2 font-weight-bold">Featured Collective</span>
+        {% endif %}
+        <h1 class="display-4 text-white font-weight-bold mb-2">{{ group.name }}</h1>
+        <p class="lead text-light mb-4">{{ group.tagline or 'Student Engineering Squad' }}</p>
+
+        <!-- In-page Navigation Anchors -->
+        <div class="group-nav-pills d-flex flex-wrap gap-2 pt-2">
+          <a href="#about" class="btn btn-sm btn-outline-warning mr-2 mb-2">About</a>
+          <a href="#team" class="btn btn-sm btn-outline-warning mr-2 mb-2">Team</a>
+          <a href="#tech-stack" class="btn btn-sm btn-outline-warning mr-2 mb-2">Tech Stack</a>
+          <a href="#projects" class="btn btn-sm btn-outline-warning mr-2 mb-2">Projects</a>
+          <a href="#contact" class="btn btn-sm btn-warning font-weight-bold mb-2">Contact</a>
+        </div>
+      </div>
+      <div class="col-md-4 text-center d-none d-md-block" data-aos="fade-left">
+        {% if group.logo %}
+          <img src="{{ url_for('static', filename=group.logo) }}" alt="{{ group.name }} logo" class="img-fluid rounded-circle shadow-lg" style="max-height: 180px; width: 180px; object-fit: cover; border: 3px solid #f1b24b;">
+        {% else %}
+          <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-dark text-warning h1 mb-0 shadow-lg" style="width: 180px; height: 180px; border: 3px solid #f1b24b;">
+            {{ group.name[:2]|upper }}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stat Strip (4 Counters) -->
+<section class="ftco-section bg-dark py-4 border-top border-bottom border-secondary">
+  <div class="container">
+    <div class="row">
+      <div class="col-6 col-md-3 text-center mb-3 mb-md-0">
+        <h3 class="font-weight-bold text-warning mb-0 number" data-number="{{ stats.completed_projects }}">{{ stats.completed_projects }}</h3>
+        <span class="text-muted small text-uppercase font-weight-bold">Projects Completed</span>
+      </div>
+      <div class="col-6 col-md-3 text-center mb-3 mb-md-0">
+        <h3 class="font-weight-bold text-warning mb-0 number" data-number="{{ stats.members }}">{{ stats.members }}</h3>
+        <span class="text-muted small text-uppercase font-weight-bold">Members</span>
+      </div>
+      <div class="col-6 col-md-3 text-center">
+        <h3 class="font-weight-bold text-warning mb-0 number" data-number="{{ stats.years_active }}">{{ stats.years_active }}</h3>
+        <span class="text-muted small text-uppercase font-weight-bold">Years Active</span>
+      </div>
+      <div class="col-6 col-md-3 text-center">
+        <h3 class="font-weight-bold text-warning mb-0 number" data-number="{{ stats.total_projects }}">{{ stats.total_projects }}</h3>
+        <span class="text-muted small text-uppercase font-weight-bold">Total Projects</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- About Section -->
+<section class="ftco-section py-5" id="about" style="background-color: #0b1120;">
+  <div class="container">
+    <div class="row justify-content-center mb-4">
+      <div class="col-md-10" data-aos="fade-up">
+        <h2 class="text-white font-weight-bold mb-3 border-left pl-3" style="border-left: 4px solid #f1b24b !important;">
+          About {{ group.name }}
+        </h2>
+        <div class="text-light lead" style="white-space: pre-line; font-size: 1.1rem; line-height: 1.8;">
+          {{ group.description or 'No description provided yet.' }}
+        </div>
+        <div class="mt-4 pt-3 border-top border-secondary text-muted">
+          <span>Founded: <strong class="text-light">{{ group.founded_year or 'N/A' }}</strong></span>
+          <span class="mx-3">&bull;</span>
+          <span>Status: <strong class="text-warning">Active Squad</strong></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Team Section -->
+<section class="ftco-section py-5" id="team" style="background-color: #111827;">
+  <div class="container">
+    <div class="row mb-4">
+      <div class="col-12" data-aos="fade-up">
+        <h2 class="text-white font-weight-bold mb-1 border-left pl-3" style="border-left: 4px solid #f1b24b !important;">
+          Our Team
+        </h2>
+        <p class="text-muted mb-0">Engineers, architects, and designers contributing to this collective.</p>
+      </div>
+    </div>
+
+    <div class="row">
+      {% if members %}
+        {% for member in members %}
+          {{ member_card(member) }}
+        {% endfor %}
+      {% else %}
+        <div class="col-12 text-center py-5">
+          <p class="h5 text-muted font-weight-normal">No members yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- Tech Stack Section -->
+<section class="ftco-section py-5" id="tech-stack" style="background-color: #0b1120;">
+  <div class="container">
+    <div class="row mb-4">
+      <div class="col-12" data-aos="fade-up">
+        <h2 class="text-white font-weight-bold mb-1 border-left pl-3" style="border-left: 4px solid #f1b24b !important;">
+          Tech Stack
+        </h2>
+        <p class="text-muted mb-0">Core languages, frameworks, and deployment environments utilized by this crew.</p>
+      </div>
+    </div>
+
+    <div class="row">
+      {% if group.tech_tags %}
+        {% for tag in group.tech_tags %}
+          <!-- Width derived from tag position: 95%, 85%, 75% etc -->
+          {% set proficiency = 95 - (loop.index0 * 5) %}
+          <div class="col-md-6 mb-4" data-aos="fade-up">
+            <div class="d-flex justify-content-between mb-1">
+              <span class="text-light font-weight-bold text-uppercase">{{ tag }}</span>
+              <span class="text-warning small font-weight-bold">{{ proficiency }}%</span>
+            </div>
+            <div class="progress" style="height: 8px; background-color: #1e293b;">
+              <div class="progress-bar bg-warning" role="progressbar" style="width: {{ proficiency }}%;" aria-valuenow="{{ proficiency }}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="col-12 text-center py-4">
+          <p class="text-muted">No tech tags configured.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- Projects Section -->
+<section class="ftco-section py-5" id="projects" style="background-color: #111827;">
+  <div class="container">
+    <div class="row mb-4">
+      <div class="col-12" data-aos="fade-up">
+        <h2 class="text-white font-weight-bold mb-1 border-left pl-3" style="border-left: 4px solid #f1b24b !important;">
+          Projects Showcase
+        </h2>
+        <p class="text-muted mb-0">Production deployments, prototypes, and open source releases.</p>
+      </div>
+    </div>
+
+    <div class="row">
+      {% if projects %}
+        {% for project in projects %}
+          {{ project_card(project) }}
+        {% endfor %}
+      {% else %}
+        <div class="col-12 text-center py-5">
+          <p class="h5 text-muted font-weight-normal">No projects yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- Blog Section Placeholder (Filled in P5) -->
+<section id="blog" class="d-none"></section>
+
+<!-- Contact Form Section -->
+<section class="ftco-section py-5" id="contact" style="background-color: #0b1120;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8" data-aos="fade-up">
+        <div class="card bg-white text-dark shadow-lg border-0 p-4 p-md-5">
+          <h3 class="font-weight-bold mb-2">Connect with {{ group.name }}</h3>
+          <p class="text-muted mb-4">Have an inquiry or collaboration proposal? Send a message directly to the team.</p>
+
+          <!-- P4 wires this form to /group/<slug>/contact -->
+          <form action="" method="POST">
+            <!-- Honeypot anti-spam field (hidden from view) -->
+            <div style="display: none;">
+              <label for="website">Website</label>
+              <input type="text" name="website" id="website" autocomplete="off">
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="contact_name" class="font-weight-bold small">Your Name</label>
+              <input type="text" id="contact_name" name="name" class="form-control" placeholder="Jane Doe" required>
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="contact_email" class="font-weight-bold small">Email Address</label>
+              <input type="email" id="contact_email" name="email" class="form-control" placeholder="jane@example.com" required>
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="contact_subject" class="font-weight-bold small">Subject</label>
+              <input type="text" id="contact_subject" name="subject" class="form-control" placeholder="Project Inquiry" required>
+            </div>
+
+            <div class="form-group mb-4">
+              <label for="contact_message" class="font-weight-bold small">Message</label>
+              <textarea id="contact_message" name="message" class="form-control" rows="4" placeholder="Briefly describe your request..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-warning btn-block font-weight-bold py-2">
+              Send Message
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
