@@ -51,11 +51,8 @@ def index():
         .all()
     )
 
-    stats = {
-        "groups": Group.query.count(),
-        "members": Member.query.count(),
-        "projects": Project.query.count(),
-    }
+    from app.services.site_context import platform_stats
+    stats = platform_stats()
 
     return render_template(
         "public/home.html",
@@ -63,6 +60,7 @@ def index():
         teaser_groups=teaser_groups,
         stats=stats,
     )
+
 
 
 @public_bp.route("/groups")

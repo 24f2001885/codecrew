@@ -65,9 +65,8 @@
             Project Requests
           </a>
         </li>
-        <!-- Settings wired in P6 -->
         <li class="nav-item">
-          <a class="nav-link text-muted" href="#">
+          <a class="nav-link {% if request.endpoint == 'admin.settings' %}active{% endif %}" href="{{ url_for('admin.settings') }}">
             Settings
           </a>
         </li>

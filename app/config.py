@@ -30,7 +30,9 @@ class BaseConfig:
     # Session & Security
     SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "False").lower() in ("true", "1", "yes")
     SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
     REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SAMESITE = "Lax"
     CODER_SESSION_HOURS = int(os.environ.get("CODER_SESSION_HOURS", 8))
     PERMANENT_SESSION_LIFETIME = timedelta(hours=int(os.environ.get("CODER_SESSION_HOURS", 8)))
 
