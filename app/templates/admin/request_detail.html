@@ -1,0 +1,205 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Request #{{ req_item.id[:8] }} — CodeCrews Admin{% endblock %}
+{% block page_title %}Project Request Detail{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('admin.project_requests') }}">Project Requests</a></li>
+  <li class="breadcrumb-item active" aria-current="page">#{{ req_item.id[:8] }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <!-- Left column: Request Details & Notes -->
+  <div class="col-lg-7">
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 font-weight-bold">Client Information</h5>
+        <span class="badge badge-primary px-2 py-1">{{ req_item.status|replace('_', ' ')|title }}</span>
+      </div>
+      <div class="card-body">
+        <div class="row mb-3">
+          <div class="col-sm-4 text-muted font-weight-bold">Name:</div>
+          <div class="col-sm-8">{{ req_item.name }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 text-muted font-weight-bold">Email:</div>
+          <div class="col-sm-8"><a href="mailto:{{ req_item.email }}">{{ req_item.email }}</a></div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 text-muted font-weight-bold">Company:</div>
+          <div class="col-sm-8">{{ req_item.company or '—' }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 text-muted font-weight-bold">Project Type:</div>
+          <div class="col-sm-8"><span class="badge badge-light border">{{ req_item.project_type|replace('_', ' ')|title }}</span></div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 text-muted font-weight-bold">Budget:</div>
+          <div class="col-sm-8">{{ req_item.budget_range or '—' }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 text-muted font-weight-bold">Timeline:</div>
+          <div class="col-sm-8">{{ req_item.timeline or '—' }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 text-muted font-weight-bold">Submitted:</div>
+          <div class="col-sm-8">{{ req_item.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</div>
+        </div>
+        {% if req_item.attachment_path %}
+          <div class="row mb-3">
+            <div class="col-sm-4 text-muted font-weight-bold">Attachment:</div>
+            <div class="col-sm-8">
+              <a href="{{ url_for('admin.project_request_attachment', id=req_item.id) }}" class="btn btn-sm btn-outline-primary">
+                Download Attachment
+              </a>
+            </div>
+          </div>
+        {% endif %}
+
+        <hr>
+        <h6 class="font-weight-bold mb-2">Description / Brief:</h6>
+        <div class="p-3 bg-light rounded" style="white-space: pre-wrap;">{{ req_item.description }}</div>
+      </div>
+    </div>
+
+    <!-- Internal Notes -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white">
+        <h5 class="mb-0 font-weight-bold">Internal Super-Admin Notes</h5>
+        <small class="text-muted">Confidential: NEVER shown or serialized to coders, regardless of grant scope.</small>
+      </div>
+      <div class="card-body">
+        <form action="{{ url_for('admin.project_request_notes', id=req_item.id) }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="form-group">
+            <textarea name="internal_notes" rows="4" class="form-control" placeholder="Add confidential notes on client status, feasibility, pricing...">{{ req_item.internal_notes or '' }}</textarea>
+          </div>
+          <button type="submit" class="btn btn-outline-dark btn-sm">Save Internal Notes</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Domain Tags -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white">
+        <h5 class="mb-0 font-weight-bold">Domain Tags</h5>
+        <small class="text-muted">Used for applicant alert matching and skill categorization.</small>
+      </div>
+      <div class="card-body">
+        <form action="{{ url_for('admin.project_request_domain_tags', id=req_item.id) }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="form-group">
+            <input type="text" name="domain_tags" class="form-control" value="{{ (req_item.domain_tags or [])|join(', ') }}" placeholder="e.g. react, python, fintech, ecommerce">
+            <small class="form-text text-muted">Comma-separated list of tech or domain tags.</small>
+          </div>
+          <button type="submit" class="btn btn-outline-dark btn-sm">Update Tags</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right column: Access Control & Grants -->
+  <div class="col-lg-5">
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white">
+        <h5 class="mb-0 font-weight-bold">Grant Coder Access</h5>
+        <small class="text-muted">Authorize a verified coder to see this request opportunity.</small>
+      </div>
+      <div class="card-body">
+        {% if active_coders %}
+          <form action="{{ url_for('admin.project_request_grant', id=req_item.id) }}" method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group mb-3">
+              {{ form.coder_id.label(class="form-label font-weight-bold small") }}
+              {{ form.coder_id(class="form-control form-control-sm") }}
+            </div>
+
+            <div class="form-group mb-3">
+              {{ form.scope.label(class="form-label font-weight-bold small") }}
+              {{ form.scope(class="form-control form-control-sm") }}
+              <small class="form-text text-muted">
+                <strong>Brief Only</strong> conceals client identity/email/company.
+                <strong>Brief & Contact</strong> permits direct client contact.
+              </small>
+            </div>
+
+            <div class="form-group mb-3">
+              {{ form.expires_at.label(class="form-label font-weight-bold small") }}
+              {{ form.expires_at(class="form-control form-control-sm", placeholder="YYYY-MM-DD HH:MM") }}
+              <small class="form-text text-muted">Leave empty for no expiry.</small>
+            </div>
+
+            <button type="submit" class="btn btn-warning btn-block font-weight-bold btn-sm">
+              Authorize Coder
+            </button>
+          </form>
+        {% else %}
+          <div class="alert alert-info small mb-0">
+            No active coders available. <a href="{{ url_for('admin.coder_new') }}">Invite a coder</a> first.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Active & Revoked Grants Table -->
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white">
+        <h5 class="mb-0 font-weight-bold">Access Grants ({{ grants|length }})</h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+          {% for grant in grants %}
+            <div class="list-group-item p-3">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <strong>{{ grant.coder.username if grant.coder else 'Unknown Coder' }}</strong>
+                  <br>
+                  <small class="text-muted">{{ grant.coder.email if grant.coder else '' }}</small>
+                </div>
+                <div>
+                  {% if grant.revoked_at %}
+                    <span class="badge badge-danger">Revoked</span>
+                  {% elif grant.expires_at and grant.expires_at <= now %}
+                    <span class="badge badge-secondary">Expired</span>
+                  {% else %}
+                    <span class="badge badge-success">Active</span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="small mb-2">
+                <span class="badge {% if grant.scope == 'brief_and_contact' %}badge-warning{% else %}badge-info{% endif %}">
+                  {{ 'Brief & Contact' if grant.scope == 'brief_and_contact' else 'Brief Only' }}
+                </span>
+                <span class="text-muted ml-2">Granted: {{ grant.granted_at.strftime('%Y-%m-%d') if grant.granted_at else '' }}</span>
+                {% if grant.expires_at %}
+                  <span class="text-muted ml-2">Expires: {{ grant.expires_at.strftime('%Y-%m-%d') }}</span>
+                {% endif %}
+              </div>
+
+              {% if not grant.revoked_at %}
+                <form action="{{ url_for('admin.project_request_revoke_grant', id=req_item.id, grant_id=grant.id) }}" method="POST" class="mt-2"
+                      onsubmit="return confirm('Revoke access for this coder?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2">
+                    Revoke Grant
+                  </button>
+                </form>
+              {% else %}
+                <small class="text-muted font-italic">Revoked at: {{ grant.revoked_at.strftime('%Y-%m-%d %H:%M') }}</small>
+              {% endif %}
+            </div>
+          {% else %}
+            <div class="p-3 text-center text-muted small">
+              No coders have been granted access to this request yet.
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

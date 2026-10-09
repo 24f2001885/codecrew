@@ -1,0 +1,11 @@
+Hello {{ coder.username }},
+
+You have been invited to join CodeCrews as a Coder representing {{ coder.member.group.name if coder.member and coder.member.group else 'your collective' }}.
+
+To activate your account and choose your password, please visit the following link:
+{{ invite_url }}
+
+This invitation link is valid for 72 hours.
+
+Best regards,
+The CodeCrews Team

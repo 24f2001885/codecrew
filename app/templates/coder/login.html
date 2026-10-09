@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Coder Login — CodeCrews</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  <style>
+    body { background-color: #f4f6f9; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .login-card { max-width: 420px; width: 100%; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="login-card card shadow-sm border-0 p-4">
+    <div class="text-center mb-4">
+      <h2 class="h4 font-weight-bold text-dark">Code<span class="text-primary">Crews</span></h2>
+      <p class="text-muted small">Coder Portal Login</p>
+    </div>
+
+    {% include "partials/flash_messages.html" %}
+
+    <form method="POST">
+      {{ form.hidden_tag() }}
+
+      <div class="form-group mb-3">
+        {{ form.username.label(class="form-label font-weight-bold small") }}
+        {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""), placeholder="Username or Email") }}
+        {% for error in form.username.errors %}
+          <div class="invalid-feedback">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="form-group mb-4">
+        <div class="d-flex justify-content-between">
+          {{ form.password.label(class="form-label font-weight-bold small") }}
+          <a href="{{ url_for('coder_auth.forgot_password') }}" class="small text-muted">Forgot password?</a>
+        </div>
+        {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="Enter your password") }}
+        {% for error in form.password.errors %}
+          <div class="invalid-feedback">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block font-weight-bold mb-3">
+        Sign In to Portal
+      </button>
+
+      <div class="text-center">
+        <a href="{{ url_for('public.index') }}" class="small text-muted">&larr; Back to CodeCrews</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

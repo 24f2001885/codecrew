@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from app.extensions import db
+from flask_login import current_user
 from app.models.group import Group
 from app.models.member import Member
 from app.models.project import Project
@@ -9,15 +10,22 @@ from app.models.contact_message import ContactMessage
 from app.models.project_request import ProjectRequest
 from app.models.blog_post import BlogPost
 from app.models.site_settings import SiteSettings
+from app.models.coder_user import CoderUser
+from app.models.request_access_grant import RequestAccessGrant
+from app.models.audit_log import AuditLog
 from app.forms.group_forms import GroupForm
 from app.forms.member_forms import MemberForm
 from app.forms.project_forms import ProjectForm
 from app.forms.blog_forms import BlogPostForm
 from app.forms.settings_forms import SettingsForm
+from app.forms.coder_forms import CoderAdminForm, CoderEditForm, GrantAccessForm
 from app.security.decorators import super_admin_required, apply_guard_to_blueprint
 from app.services.slugs import unique_slug
 from app.services.uploads import save_upload, delete_upload, replace_upload, UploadError
 from app.services.private_files import send_private, delete_private
+from app.services.tokens import make_token
+from app.services.mailer import send_coder_invite, send_opportunity_assigned
+from app.services.audit import record_audit
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -34,6 +42,8 @@ def dashboard():
     new_requests_count = ProjectRequest.query.filter_by(status="new").count()
     draft_posts_count = BlogPost.query.filter(BlogPost.published_at.is_(None)).count()
     published_posts_count = BlogPost.query.filter(BlogPost.published_at.is_not(None)).count()
+    active_coders_count = CoderUser.query.filter_by(status="active").count()
+    open_grants_count = RequestAccessGrant.query.filter(RequestAccessGrant.revoked_at.is_(None)).count()
     return render_template(
         "admin/dashboard.html",
         group_count=group_count,
@@ -43,7 +53,10 @@ def dashboard():
         new_requests_count=new_requests_count,
         draft_posts_count=draft_posts_count,
         published_posts_count=published_posts_count,
+        active_coders_count=active_coders_count,
+        open_grants_count=open_grants_count,
     )
+
 
 
 # -----------------------------------------------------------------------------
@@ -790,4 +803,350 @@ def settings():
         return redirect(url_for("admin.settings"))
 
     return render_template("admin/settings.html", form=form, settings=settings_obj)
+
+
+# -----------------------------------------------------------------------------
+# Coder Management (P7)
+# -----------------------------------------------------------------------------
+@admin_bp.route("/coders", endpoint="coders")
+def coders():
+    page = request.args.get("page", 1, type=int)
+    status_filter = request.args.get("status")
+
+    query = CoderUser.query
+    if status_filter in ["invited", "active", "revoked"]:
+        query = query.filter_by(status=status_filter)
+    query = query.order_by(CoderUser.created_at.desc())
+
+    pagination = query.paginate(page=page, per_page=20, error_out=False)
+    counts = {
+        "all": CoderUser.query.count(),
+        "invited": CoderUser.query.filter_by(status="invited").count(),
+        "active": CoderUser.query.filter_by(status="active").count(),
+        "revoked": CoderUser.query.filter_by(status="revoked").count(),
+    }
+
+    return render_template(
+        "admin/coders_list.html",
+        pagination=pagination,
+        status_filter=status_filter,
+        counts=counts,
+    )
+
+
+@admin_bp.route("/coders/new", methods=["GET", "POST"], endpoint="coder_new")
+def coder_new():
+    form = CoderAdminForm()
+    members = Member.query.order_by(Member.name.asc()).all()
+    # Populate member choices with members who do NOT yet have a coder account
+    existing_coder_member_ids = {c.member_id for c in CoderUser.query.all()}
+    eligible_members = [m for m in members if m.id not in existing_coder_member_ids]
+    form.member_id.choices = [(m.id, f"{m.name} ({m.group.name if m.group else 'No Group'})") for m in eligible_members]
+
+    if form.validate_on_submit():
+        member_id = form.member_id.data
+        username = form.username.data.strip()
+        email = form.email.data.strip().lower()
+
+        # Validations
+        if CoderUser.query.filter_by(member_id=member_id).first():
+            flash("That member already has a coder account.", "danger")
+            return render_template("admin/coder_form.html", form=form, coder=None)
+
+        if CoderUser.query.filter_by(username=username).first():
+            flash(f"Username '{username}' is already taken.", "danger")
+            return render_template("admin/coder_form.html", form=form, coder=None)
+
+        if CoderUser.query.filter_by(email=email).first():
+            flash(f"Email '{email}' is already in use.", "danger")
+            return render_template("admin/coder_form.html", form=form, coder=None)
+
+        coder = CoderUser(
+            member_id=member_id,
+            username=username,
+            email=email,
+            status="invited",
+            created_by_admin_id=current_user.id,
+            invite_sent_at=datetime.utcnow(),
+        )
+        db.session.add(coder)
+        db.session.flush()
+
+        token = make_token("coder_invite", {"id": coder.id})
+        send_coder_invite(coder, token)
+
+        record_audit("admin", current_user.id, "coder.created", "coder_user", str(coder.id), {
+            "username": coder.username,
+            "email": coder.email,
+            "member_id": str(member_id),
+        })
+
+        db.session.commit()
+        flash(f"Invitation sent to {coder.email}.", "success")
+        return redirect(url_for("admin.coders"))
+
+    return render_template("admin/coder_form.html", form=form, coder=None)
+
+
+@admin_bp.route("/coders/<id>/edit", methods=["GET", "POST"], endpoint="coder_edit")
+def coder_edit(id):
+    coder = db.session.get(CoderUser, id) or abort(404)
+    form = CoderEditForm(obj=coder)
+
+    if form.validate_on_submit():
+        new_username = form.username.data.strip()
+        new_email = form.email.data.strip().lower()
+
+        existing_user = CoderUser.query.filter(CoderUser.username == new_username, CoderUser.id != coder.id).first()
+        if existing_user:
+            flash(f"Username '{new_username}' is already taken.", "danger")
+            return render_template("admin/coder_form.html", form=form, coder=coder)
+
+        existing_email = CoderUser.query.filter(CoderUser.email == new_email, CoderUser.id != coder.id).first()
+        if existing_email:
+            flash(f"Email '{new_email}' is already in use.", "danger")
+            return render_template("admin/coder_form.html", form=form, coder=coder)
+
+        email_changed = coder.email != new_email
+        coder.username = new_username
+        coder.email = new_email
+
+        if email_changed and coder.status == "invited":
+            token = make_token("coder_invite", {"id": coder.id})
+            send_coder_invite(coder, token)
+            coder.invite_sent_at = datetime.utcnow()
+            flash(f"Updated and re-sent invite to {coder.email}.", "info")
+
+        record_audit("admin", current_user.id, "coder.updated", "coder_user", str(coder.id), {
+            "username": coder.username,
+            "email": coder.email,
+        })
+        db.session.commit()
+        flash("Coder account updated.", "success")
+        return redirect(url_for("admin.coders"))
+
+    return render_template("admin/coder_form.html", form=form, coder=coder)
+
+
+@admin_bp.route("/coders/<id>/revoke", methods=["POST"], endpoint="coder_revoke")
+def coder_revoke(id):
+    coder = db.session.get(CoderUser, id) or abort(404)
+    reason = request.form.get("revoke_reason", "").strip() or None
+
+    coder.status = "revoked"
+    coder.revoked_at = datetime.utcnow()
+    coder.revoked_by_admin_id = current_user.id
+    coder.revoke_reason = reason
+
+    # Revoke all open grants
+    open_grants = RequestAccessGrant.query.filter_by(coder_id=coder.id).filter(RequestAccessGrant.revoked_at.is_(None)).all()
+    for grant in open_grants:
+        grant.revoked_at = datetime.utcnow()
+        grant.revoked_by_admin_id = current_user.id
+        grant.revoke_reason = f"Coder revoked: {reason}" if reason else "Coder account revoked"
+        record_audit("admin", current_user.id, "grant.revoked", "request_access_grant", str(grant.id), {
+            "reason": grant.revoke_reason,
+            "project_request_id": str(grant.project_request_id),
+        })
+
+    record_audit("admin", current_user.id, "coder.revoked", "coder_user", str(coder.id), {
+        "reason": reason,
+        "revoked_grants_count": len(open_grants),
+    })
+
+    db.session.commit()
+    flash(f"Coder '{coder.username}' has been revoked and all active grants have been closed.", "warning")
+    return redirect(url_for("admin.coders"))
+
+
+@admin_bp.route("/coders/<id>/reinstate", methods=["POST"], endpoint="coder_reinstate")
+def coder_reinstate(id):
+    coder = db.session.get(CoderUser, id) or abort(404)
+
+    # If they previously had a password set, restore to active; otherwise invited
+    coder.status = "active" if coder.password_hash else "invited"
+    coder.revoked_at = None
+    coder.revoked_by_admin_id = None
+    coder.revoke_reason = None
+
+    record_audit("admin", current_user.id, "coder.reinstated", "coder_user", str(coder.id), {
+        "restored_status": coder.status,
+    })
+
+    db.session.commit()
+    flash(f"Coder '{coder.username}' has been reinstated (status: {coder.status}). Note: previous grants remain revoked.", "success")
+    return redirect(url_for("admin.coders"))
+
+
+@admin_bp.route("/coders/<id>/resend-invite", methods=["POST"], endpoint="coder_resend_invite")
+def coder_resend_invite(id):
+    coder = db.session.get(CoderUser, id) or abort(404)
+    if coder.status == "revoked":
+        flash("Cannot send invite to a revoked coder.", "danger")
+        return redirect(url_for("admin.coders"))
+
+    token = make_token("coder_invite", {"id": coder.id})
+    send_coder_invite(coder, token)
+    coder.invite_sent_at = datetime.utcnow()
+
+    record_audit("admin", current_user.id, "coder.invite_resent", "coder_user", str(coder.id), {
+        "email": coder.email,
+    })
+
+    db.session.commit()
+    flash(f"A new invitation has been sent to {coder.email}.", "success")
+    return redirect(url_for("admin.coders"))
+
+
+# -----------------------------------------------------------------------------
+# Project Request Detail, Notes, Domain Tags & Grants (P7)
+# -----------------------------------------------------------------------------
+@admin_bp.route("/project-requests/<id>", endpoint="project_request_detail")
+def project_request_detail(id):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    grants = RequestAccessGrant.query.filter_by(project_request_id=req_item.id).order_by(RequestAccessGrant.granted_at.desc()).all()
+    active_coders = CoderUser.query.filter_by(status="active").order_by(CoderUser.username.asc()).all()
+
+    form = GrantAccessForm()
+    form.coder_id.choices = [(c.id, f"{c.username} ({c.email})") for c in active_coders]
+
+    return render_template(
+        "admin/request_detail.html",
+        req_item=req_item,
+        grants=grants,
+        form=form,
+        active_coders=active_coders,
+    )
+
+
+@admin_bp.route("/project-requests/<id>/notes", methods=["POST"], endpoint="project_request_notes")
+def project_request_notes(id):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    notes = request.form.get("internal_notes", "").strip() or None
+
+    req_item.internal_notes = notes
+    record_audit("admin", current_user.id, "request.notes_updated", "project_request", str(req_item.id))
+    db.session.commit()
+    flash("Internal notes updated.", "success")
+    return redirect(url_for("admin.project_request_detail", id=id))
+
+
+@admin_bp.route("/project-requests/<id>/domain-tags", methods=["POST"], endpoint="project_request_domain_tags")
+def project_request_domain_tags(id):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    raw_tags = request.form.get("domain_tags", "")
+    try:
+        from app.forms import parse_tag_string
+        tags = parse_tag_string(raw_tags)
+    except Exception as e:
+        flash(f"Invalid domain tags: {e}", "danger")
+        return redirect(url_for("admin.project_request_detail", id=id))
+
+    req_item.domain_tags = tags
+    record_audit("admin", current_user.id, "request.tags_updated", "project_request", str(req_item.id), {"tags": tags})
+    db.session.commit()
+    flash("Domain tags updated.", "success")
+    return redirect(url_for("admin.project_request_detail", id=id))
+
+
+@admin_bp.route("/project-requests/<id>/grants", methods=["POST"], endpoint="project_request_grant")
+def project_request_grant(id):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    active_coders = CoderUser.query.filter_by(status="active").order_by(CoderUser.username.asc()).all()
+
+    form = GrantAccessForm()
+    form.coder_id.choices = [(c.id, f"{c.username} ({c.email})") for c in active_coders]
+
+    if form.validate_on_submit():
+        coder_id = form.coder_id.data
+        coder = db.session.get(CoderUser, coder_id)
+        if not coder or coder.status != "active":
+            flash("Selected coder is not active.", "danger")
+            return redirect(url_for("admin.project_request_detail", id=id))
+
+        # Check for active grant
+        existing = RequestAccessGrant.query.filter_by(project_request_id=req_item.id, coder_id=coder.id).filter(RequestAccessGrant.revoked_at.is_(None)).first()
+        if existing and existing.is_active:
+            flash(f"Coder '{coder.username}' already has an active grant for this request.", "warning")
+            return redirect(url_for("admin.project_request_detail", id=id))
+
+        grant = RequestAccessGrant(
+            project_request_id=req_item.id,
+            coder_id=coder.id,
+            scope=form.scope.data,
+            expires_at=form.expires_at.data,
+            granted_by_admin_id=current_user.id,
+        )
+        db.session.add(grant)
+        db.session.flush()
+
+        send_opportunity_assigned(coder, grant)
+        record_audit("admin", current_user.id, "grant.created", "request_access_grant", str(grant.id), {
+            "coder_id": str(coder.id),
+            "project_request_id": str(req_item.id),
+            "scope": grant.scope,
+            "expires_at": grant.expires_at.isoformat() if grant.expires_at else None,
+        })
+        db.session.commit()
+        flash(f"Granted access to {coder.username}.", "success")
+        return redirect(url_for("admin.project_request_detail", id=id))
+
+    for field, errors in form.errors.items():
+        for err in errors:
+            flash(f"{field}: {err}", "danger")
+    return redirect(url_for("admin.project_request_detail", id=id))
+
+
+@admin_bp.route("/project-requests/<id>/grants/<grant_id>/revoke", methods=["POST"], endpoint="project_request_revoke_grant")
+def project_request_revoke_grant(id, grant_id):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    grant = db.session.get(RequestAccessGrant, grant_id) or abort(404)
+    if grant.project_request_id != req_item.id:
+        abort(404)
+
+    reason = request.form.get("revoke_reason", "").strip() or None
+    grant.revoked_at = datetime.utcnow()
+    grant.revoked_by_admin_id = current_user.id
+    grant.revoke_reason = reason
+
+    record_audit("admin", current_user.id, "grant.revoked", "request_access_grant", str(grant.id), {
+        "reason": reason,
+        "coder_id": str(grant.coder_id),
+        "project_request_id": str(req_item.id),
+    })
+    db.session.commit()
+    flash("Grant revoked.", "warning")
+    return redirect(url_for("admin.project_request_detail", id=id))
+
+
+# -----------------------------------------------------------------------------
+# Audit Log (P7 - Read-only)
+# -----------------------------------------------------------------------------
+@admin_bp.route("/audit-log", endpoint="audit_log")
+def audit_log():
+    page = request.args.get("page", 1, type=int)
+    action_filter = request.args.get("action", "").strip() or None
+    actor_type_filter = request.args.get("actor_type", "").strip() or None
+
+    query = AuditLog.query
+    if action_filter:
+        query = query.filter_by(action=action_filter)
+    if actor_type_filter:
+        query = query.filter_by(actor_type=actor_type_filter)
+    query = query.order_by(AuditLog.created_at.desc())
+
+    pagination = query.paginate(page=page, per_page=25, error_out=False)
+
+    # Distinct actions and actor types for filters
+    actions = [r[0] for r in db.session.query(AuditLog.action).distinct().order_by(AuditLog.action).all()]
+    actor_types = [r[0] for r in db.session.query(AuditLog.actor_type).distinct().order_by(AuditLog.actor_type).all()]
+
+    return render_template(
+        "admin/audit_log.html",
+        pagination=pagination,
+        action_filter=action_filter,
+        actor_type_filter=actor_type_filter,
+        actions=actions,
+        actor_types=actor_types,
+    )
 

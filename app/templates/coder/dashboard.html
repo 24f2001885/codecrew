@@ -1,0 +1,89 @@
+{% extends "coder/coder_base.html" %}
+
+{% block title %}Dashboard — Coder Portal{% endblock %}
+{% block page_title %}Welcome, {{ coder.username }}!{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+  <div class="col-md-4 mb-3">
+    <div class="card shadow-sm border-0 border-left border-primary" style="border-left-width: 4px !important;">
+      <div class="card-body">
+        <div class="text-muted small text-uppercase font-weight-bold">Assigned Group</div>
+        <div class="h4 font-weight-bold mb-1 text-dark">{{ group.name if group else 'None' }}</div>
+        <div class="small text-muted">{{ group.location if group and group.location else 'Remote Crew' }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4 mb-3">
+    <div class="card shadow-sm border-0 border-left border-success" style="border-left-width: 4px !important;">
+      <div class="card-body">
+        <div class="text-muted small text-uppercase font-weight-bold">Group Projects</div>
+        <div class="h4 font-weight-bold mb-1 text-dark">{{ project_count }}</div>
+        <a href="{{ url_for('coder.projects') }}" class="small text-success font-weight-bold">View & manage &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4 mb-3">
+    <div class="card shadow-sm border-0 border-left border-warning" style="border-left-width: 4px !important;">
+      <div class="card-body">
+        <div class="text-muted small text-uppercase font-weight-bold">Client Opportunities</div>
+        <div class="h4 font-weight-bold mb-1 text-dark">{{ active_grants_count }}</div>
+        <a href="{{ url_for('coder.opportunities') }}" class="small text-warning font-weight-bold">View assigned requests &rarr;</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white">
+        <h5 class="mb-0 font-weight-bold">Quick Actions</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-flex flex-wrap gap-2">
+          <a href="{{ url_for('coder.project_new') }}" class="btn btn-outline-primary mr-2 mb-2">
+            + Add New Group Project
+          </a>
+          <a href="{{ url_for('coder.opportunities') }}" class="btn btn-outline-warning mr-2 mb-2 text-dark font-weight-bold">
+            Review Assigned Opportunities
+          </a>
+          <a href="{{ url_for('coder.profile') }}" class="btn btn-outline-secondary mb-2">
+            Update My Profile & Skills
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white">
+        <h5 class="mb-0 font-weight-bold">My Crew Profile</h5>
+      </div>
+      <div class="card-body">
+        {% if member %}
+          <div class="font-weight-bold">{{ member.name }}</div>
+          <div class="text-muted small mb-2">{{ member.role or 'Software Engineer' }}</div>
+          {% if member.skill_tags %}
+            <div class="mb-3">
+              {% for tag in member.skill_tags %}
+                <span class="badge badge-light border">{{ tag }}</span>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <a href="{{ url_for('coder.profile') }}" class="btn btn-sm btn-outline-primary btn-block">
+            Edit Profile
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

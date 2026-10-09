@@ -111,3 +111,49 @@ def send_project_request_notification(project_request):
         inbox_url=inbox_url,
     )
     return _send(subject, body, [recipient])
+
+
+def send_coder_invite(coder, token):
+    """
+    Sends invite email with set-password link to a newly created coder.
+    """
+    try:
+        invite_url = url_for("coder_auth.accept_invite", token=token, _external=True)
+    except Exception:
+        invite_url = f"/coder/accept-invite/{token}"
+
+    subject = "Welcome to CodeCrews — Set Up Your Coder Account"
+    body = render_template("emails/coder_invite.txt", coder=coder, invite_url=invite_url)
+    return _send(subject, body, [coder.email])
+
+
+def send_coder_password_reset(coder, token):
+    """
+    Sends password reset instructions to a coder.
+    """
+    try:
+        reset_url = url_for("coder_auth.reset_password", token=token, _external=True)
+    except Exception:
+        reset_url = f"/coder/reset-password/{token}"
+
+    max_age_min = current_app.config.get("RESET_TOKEN_MAX_AGE", 3600) // 60
+    subject = "CodeCrews Coder Password Reset"
+    body = render_template("emails/password_reset_coder.txt", coder=coder, reset_url=reset_url, max_age_minutes=max_age_min)
+    return _send(subject, body, [coder.email])
+
+
+def send_opportunity_assigned(coder, grant):
+    """
+    Notifies coder that a project request has been granted to them.
+    Never includes confidential requester details in the email.
+    """
+    try:
+        opp_url = url_for("coder.opportunity_detail", request_id=grant.request_id, _external=True)
+    except Exception:
+        opp_url = f"/coder/opportunities/{grant.request_id}"
+
+    scope_label = "Brief Only" if grant.scope == "brief_only" else "Brief & Contact Details"
+    subject = "New Project Opportunity Assigned — CodeCrews"
+    body = render_template("emails/opportunity_assigned.txt", coder=coder, scope=scope_label, opportunity_url=opp_url)
+    return _send(subject, body, [coder.email])
+

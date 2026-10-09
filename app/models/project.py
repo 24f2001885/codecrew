@@ -20,7 +20,11 @@ class Project(db.Model):
     live_url = db.Column(db.String(255), nullable=True)
     github_url = db.Column(db.String(255), nullable=True)
     featured = db.Column(db.Boolean, default=False, nullable=False)
+    created_by_coder_id = db.Column(db.String(36), db.ForeignKey("coder_users.id", ondelete="SET NULL"), nullable=True)
+    last_edited_by_coder_id = db.Column(db.String(36), db.ForeignKey("coder_users.id", ondelete="SET NULL"), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
 
     __table_args__ = (
         db.UniqueConstraint("group_id", "slug", name="uq_project_group_slug"),
