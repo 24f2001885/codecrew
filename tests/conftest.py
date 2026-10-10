@@ -41,3 +41,44 @@ def logged_in_client(app, admin_user):
     )
     assert resp.status_code == 302
     return c
+
+
+@pytest.fixture
+def coder_user(app, admin_user):
+    with app.app_context():
+        from app.models.group import Group
+        from app.models.member import Member
+        from app.models.coder_user import CoderUser
+
+        group = Group(name="Alpha Crew", slug="alpha-crew")
+        db.session.add(group)
+        db.session.flush()
+
+        member = Member(name="Coder Dev", group_id=group.id, role="Fullstack Dev")
+        db.session.add(member)
+        db.session.flush()
+
+        coder = CoderUser(
+            member_id=member.id,
+            username="coderdev",
+            email="coder@example.com",
+            status="active",
+            created_by_admin_id=admin_user.id,
+        )
+        coder.set_password("CoderPass1234!")
+        db.session.add(coder)
+        db.session.commit()
+        db.session.refresh(coder)
+        return coder
+
+
+@pytest.fixture
+def logged_in_coder_client(app, coder_user):
+    c = app.test_client()
+    resp = c.post(
+        "/coder/login",
+        data={"username": "coderdev", "password": "CoderPass1234!"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+    return c

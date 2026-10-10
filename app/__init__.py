@@ -134,7 +134,9 @@ def create_app(config_name=None):
     from app.routes.requests import requests_bp
     # P5 blueprint:
     from app.routes.api import api_bp
-    # Remaining blueprints to add: join_bp, coder_auth_bp, coder_bp (P7, P8)
+    # P7 blueprints:
+    from app.routes.coder_auth import coder_auth_bp
+    from app.routes.coder import coder_bp
 
     flask_app.register_blueprint(public_bp)
     flask_app.register_blueprint(auth_bp)
@@ -143,6 +145,8 @@ def create_app(config_name=None):
     flask_app.register_blueprint(requests_bp)
     limiter.limit("120 per minute")(api_bp)
     flask_app.register_blueprint(api_bp)
+    flask_app.register_blueprint(coder_auth_bp)
+    flask_app.register_blueprint(coder_bp)
 
     # Ensure models are loaded for SQLAlchemy & Flask-Migrate
     with flask_app.app_context():

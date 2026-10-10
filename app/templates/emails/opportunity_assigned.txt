@@ -1,0 +1,10 @@
+Hello {{ coder.username }},
+
+A new project opportunity has been assigned to you on CodeCrews!
+
+Scope: {{ scope }}
+View the details in your Coder Portal:
+{{ opportunity_url }}
+
+Best regards,
+The CodeCrews Team

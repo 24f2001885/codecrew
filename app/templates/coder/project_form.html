@@ -1,0 +1,135 @@
+{% extends "coder/coder_base.html" %}
+
+{% block title %}{{ title }} — Coder Portal{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{{ url_for('coder.dashboard') }}">Coder Portal</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('coder.projects') }}">Projects</a></li>
+  <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-9">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4">
+        <form method="POST" enctype="multipart/form-data">
+          {{ form.hidden_tag() }}
+
+          <div class="form-group mb-3">
+            {{ form.title.label(class="form-label font-weight-bold") }}
+            {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+            {% for error in form.title.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group mb-3">
+            {{ form.summary.label(class="form-label font-weight-bold") }}
+            {{ form.summary(class="form-control" + (" is-invalid" if form.summary.errors else ""), rows=2) }}
+            {% for error in form.summary.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+            <small class="form-text text-muted">Short tagline or summary (max 300 characters).</small>
+          </div>
+
+          <div class="form-group mb-3">
+            {{ form.description.label(class="form-label font-weight-bold") }}
+            {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=5) }}
+            {% for error in form.description.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group mb-3">
+            {{ form.tech_tags.label(class="form-label font-weight-bold") }}
+            {{ form.tech_tags(class="form-control" + (" is-invalid" if form.tech_tags.errors else "")) }}
+            {% for error in form.tech_tags.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+            <small class="form-text text-muted">Comma-separated tech tags.</small>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-4">
+              {{ form.demo_url.label(class="form-label font-weight-bold small") }}
+              {{ form.demo_url(class="form-control" + (" is-invalid" if form.demo_url.errors else "")) }}
+              {% for error in form.demo_url.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-4">
+              {{ form.live_url.label(class="form-label font-weight-bold small") }}
+              {{ form.live_url(class="form-control" + (" is-invalid" if form.live_url.errors else "")) }}
+              {% for error in form.live_url.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-4">
+              {{ form.github_url.label(class="form-label font-weight-bold small") }}
+              {{ form.github_url(class="form-control" + (" is-invalid" if form.github_url.errors else "")) }}
+              {% for error in form.github_url.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="form-group mb-4">
+            {{ form.screenshot.label(class="form-label font-weight-bold") }}
+            {{ form.screenshot(class="form-control-file") }}
+            {% if project and project.screenshot %}
+              <div class="mt-2">
+                <img src="{{ url_for('static', filename='uploads/' + project.screenshot) }}" alt="Current Screenshot" style="height: 100px; border-radius: 4px;">
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="card bg-light border-0 p-3 mb-4">
+            <h6 class="font-weight-bold mb-2">Gallery Screenshots (with Mandatory Accessibility Descriptions)</h6>
+            <div class="form-group mb-3">
+              {{ form.gallery_images.label(class="form-label font-weight-bold small") }}
+              {{ form.gallery_images(class="form-control-file", multiple=True) }}
+            </div>
+            <div class="form-group mb-0">
+              {{ form.gallery_alts.label(class="form-label font-weight-bold small") }}
+              {{ form.gallery_alts(class="form-control" + (" is-invalid" if form.gallery_alts.errors else ""), rows=3, placeholder="Description for Image 1\nDescription for Image 2") }}
+              {% for error in form.gallery_alts.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+              <small class="form-text text-muted">Provide one concise alt description per uploaded image line-by-line.</small>
+            </div>
+
+            {% if project and project.gallery_images %}
+              <div class="mt-3">
+                <h6 class="font-weight-bold small mb-2">Current Gallery Images:</h6>
+                <div class="row">
+                  {% for item in project.gallery_images %}
+                    <div class="col-md-3 mb-2">
+                      <div class="border rounded p-2 bg-white">
+                        <img src="{{ url_for('static', filename='uploads/' + item.path) }}" alt="{{ item.alt }}" class="img-fluid rounded mb-1" style="height: 60px; object-fit: cover;">
+                        <small class="d-block text-truncate text-muted">{{ item.alt }}</small>
+                        <div class="form-check mt-1">
+                          <input class="form-check-input" type="checkbox" name="remove_gallery_images" value="{{ item.path }}" id="del_{{ loop.index }}">
+                          <label class="form-check-label small text-danger" for="del_{{ loop.index }}">Remove</label>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('coder.projects') }}" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary font-weight-bold px-4">
+              Save Project
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

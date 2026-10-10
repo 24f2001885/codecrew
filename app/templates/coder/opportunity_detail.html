@@ -1,0 +1,99 @@
+{% extends "coder/coder_base.html" %}
+
+{% block title %}Opportunity #{{ opportunity.id[:8] }} — Coder Portal{% endblock %}
+{% block page_title %}Opportunity Details{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{{ url_for('coder.dashboard') }}">Coder Portal</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('coder.opportunities') }}">Opportunities</a></li>
+  <li class="breadcrumb-item active" aria-current="page">#{{ opportunity.id[:8] }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 font-weight-bold">Project Opportunity</h5>
+        <span class="badge {% if opportunity.scope == 'brief_and_contact' %}badge-warning text-dark{% else %}badge-info{% endif %} px-2 py-1">
+          {{ 'Scope: Brief & Contact' if opportunity.scope == 'brief_and_contact' else 'Scope: Brief Only' }}
+        </span>
+      </div>
+
+      <div class="card-body">
+        {% if opportunity.scope == 'brief_and_contact' and opportunity.name %}
+          <div class="card bg-light border-0 p-3 mb-4">
+            <h6 class="font-weight-bold mb-2 text-dark">Client Contact Information</h6>
+            <div class="row small">
+              <div class="col-sm-4 text-muted">Client Name:</div>
+              <div class="col-sm-8 font-weight-bold">{{ opportunity.name }}</div>
+              <div class="col-sm-4 text-muted">Email:</div>
+              <div class="col-sm-8"><a href="mailto:{{ opportunity.email }}">{{ opportunity.email }}</a></div>
+              {% if opportunity.company %}
+                <div class="col-sm-4 text-muted">Company:</div>
+                <div class="col-sm-8">{{ opportunity.company }}</div>
+              {% endif %}
+            </div>
+          </div>
+        {% else %}
+          <div class="alert alert-secondary small mb-4">
+            <strong>Brief Only Mode:</strong> Client contact details (name, email, company) are protected and confidential. If the project progresses, the super-admin may expand your grant scope to include contact info.
+          </div>
+        {% endif %}
+
+        <div class="row mb-3">
+          <div class="col-sm-4 text-muted font-weight-bold">Project Type:</div>
+          <div class="col-sm-8"><span class="badge badge-light border">{{ opportunity.project_type|replace('_', ' ')|title }}</span></div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-sm-4 text-muted font-weight-bold">Budget Range:</div>
+          <div class="col-sm-8">{{ opportunity.budget_range or 'Not specified' }}</div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-sm-4 text-muted font-weight-bold">Target Timeline:</div>
+          <div class="col-sm-8">{{ opportunity.timeline or 'Not specified' }}</div>
+        </div>
+
+        {% if opportunity.domain_tags %}
+          <div class="row mb-3">
+            <div class="col-sm-4 text-muted font-weight-bold">Domain / Tech Tags:</div>
+            <div class="col-sm-8">
+              {% for tag in opportunity.domain_tags %}
+                <span class="badge badge-light border mr-1">{{ tag }}</span>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        {% if opportunity.has_attachment %}
+          <div class="row mb-3">
+            <div class="col-sm-4 text-muted font-weight-bold">Project Attachment:</div>
+            <div class="col-sm-8">
+              <a href="{{ url_for('coder.opportunity_attachment', request_id=opportunity.id) }}" class="btn btn-sm btn-outline-primary">
+                Download Client Attachment
+              </a>
+            </div>
+          </div>
+        {% endif %}
+
+        <hr>
+
+        <h6 class="font-weight-bold mb-2">Project Brief:</h6>
+        <div class="p-3 bg-light rounded" style="white-space: pre-wrap; font-family: inherit;">{{ opportunity.description }}</div>
+      </div>
+
+      <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+        <a href="{{ url_for('coder.opportunities') }}" class="btn btn-outline-secondary btn-sm">
+          &larr; Back to Opportunities
+        </a>
+        <small class="text-muted">
+          Grant active since {{ opportunity.grant_created_at.strftime('%Y-%m-%d') if opportunity.grant_created_at else '' }}
+          {% if opportunity.grant_expires_at %} &middot; Expires {{ opportunity.grant_expires_at.strftime('%Y-%m-%d') }}{% endif %}
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

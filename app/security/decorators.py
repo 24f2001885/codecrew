@@ -20,6 +20,11 @@ def _check_coder():
             return redirect(url_for("auth.login", next=request.path))
     if getattr(current_user, "role", None) != "coder":
         abort(403)
+    if getattr(current_user, "status", None) != "active":
+        try:
+            return redirect(url_for("coder_auth.login", next=request.path))
+        except BuildError:
+            return redirect(url_for("auth.login", next=request.path))
     return None
 
 

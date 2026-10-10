@@ -109,9 +109,12 @@
                   {{ req.created_at.strftime('%b %d, %Y') }}
                 </td>
                 <td class="text-right text-nowrap">
+                  <a href="{{ url_for('admin.project_request_detail', id=req.id) }}" class="btn btn-sm btn-outline-primary mr-1" title="View details and manage coder access">
+                    Manage
+                  </a>
                   <!-- Button to toggle details collapse -->
                   <button type="button" class="btn btn-sm btn-outline-info mr-1" data-toggle="collapse" data-target="#desc-{{ req.id }}" aria-expanded="false" aria-controls="desc-{{ req.id }}">
-                    Details
+                    Quick View
                   </button>
 
                   <!-- Delete button with confirm modal -->

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Accept Invitation — CodeCrews Coder Portal</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  <style>
+    body { background-color: #f4f6f9; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .invite-card { max-width: 440px; width: 100%; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="invite-card card shadow-sm border-0 p-4">
+    <div class="text-center mb-4">
+      <h2 class="h4 font-weight-bold text-dark">Code<span class="text-primary">Crews</span></h2>
+      <p class="text-muted small">Activate Your Coder Account</p>
+    </div>
+
+    {% include "partials/flash_messages.html" %}
+
+    <div class="alert alert-light border small mb-4">
+      Welcome, <strong>{{ coder.username }}</strong>! Create a secure password (minimum 10 characters) to activate your account.
+    </div>
+
+    <form method="POST">
+      {{ form.hidden_tag() }}
+
+      <div class="form-group mb-3">
+        {{ form.password.label(class="form-label font-weight-bold small") }}
+        {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="Minimum 10 characters") }}
+        {% for error in form.password.errors %}
+          <div class="invalid-feedback">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="form-group mb-4">
+        {{ form.confirm_password.label(class="form-label font-weight-bold small") }}
+        {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else ""), placeholder="Repeat your password") }}
+        {% for error in form.confirm_password.errors %}
+          <div class="invalid-feedback">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block font-weight-bold mb-3">
+        Set Password & Activate
+      </button>
+
+      <div class="text-center">
+        <a href="{{ url_for('coder_auth.login') }}" class="small text-muted">Already activated? Log in</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

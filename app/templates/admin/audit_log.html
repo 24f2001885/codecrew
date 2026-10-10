@@ -1,0 +1,133 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Audit Log — CodeCrews Admin{% endblock %}
+{% block page_title %}Audit Log{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Audit Log</li>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-body p-3">
+    <form method="GET" action="{{ url_for('admin.audit_log') }}" class="form-inline">
+      <div class="form-group mr-3 mb-2">
+        <label for="actor_type" class="mr-2 font-weight-bold small">Actor Type:</label>
+        <select name="actor_type" id="actor_type" class="form-control form-control-sm">
+          <option value="">All Actors</option>
+          {% for at in actor_types %}
+            <option value="{{ at }}" {% if actor_type_filter == at %}selected{% endif %}>{{ at|capitalize }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group mr-3 mb-2">
+        <label for="action" class="mr-2 font-weight-bold small">Action:</label>
+        <select name="action" id="action" class="form-control form-control-sm">
+          <option value="">All Actions</option>
+          {% for act in actions %}
+            <option value="{{ act }}" {% if action_filter == act %}selected{% endif %}>{{ act }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-dark btn-sm mb-2 mr-2">Filter</button>
+      {% if action_filter or actor_type_filter %}
+        <a href="{{ url_for('admin.audit_log') }}" class="btn btn-outline-secondary btn-sm mb-2">Clear Filters</a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="thead-light">
+          <tr>
+            <th>Timestamp (UTC)</th>
+            <th>Actor</th>
+            <th>Action</th>
+            <th>Target</th>
+            <th>Summary / Details</th>
+            <th>IP Address</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in pagination.items %}
+            <tr>
+              <td class="small text-nowrap font-weight-bold">
+                {{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') if log.created_at else '—' }}
+              </td>
+              <td>
+                <span class="badge {% if log.actor_type == 'admin' %}badge-warning text-dark{% elif log.actor_type == 'coder' %}badge-info{% else %}badge-secondary{% endif %}">
+                  {{ log.actor_type }}
+                </span>
+                <br>
+                <small class="text-muted">{{ log.actor_id or 'system' }}</small>
+              </td>
+              <td>
+                <code>{{ log.action }}</code>
+              </td>
+              <td class="small">
+                {% if log.target_type %}
+                  <div><strong>{{ log.target_type }}</strong></div>
+                  <div class="text-muted">{{ log.target_id or '' }}</div>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td class="small">
+                <div>{{ log.summary or '' }}</div>
+                {% if log.details %}
+                  <details class="text-muted mt-1">
+                    <summary class="small">JSON Details</summary>
+                    <pre class="bg-light p-2 rounded mb-0 mt-1 small" style="max-height: 120px; overflow-y: auto;">{{ log.details|tojson(indent=2) }}</pre>
+                  </details>
+                {% endif %}
+              </td>
+              <td class="small text-muted text-nowrap">
+                {{ log.ip_address or '—' }}
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="6" class="text-center py-4 text-muted">
+                No audit log entries found matching criteria.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if pagination and pagination.pages > 1 %}
+    <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+      <small class="text-muted">Page {{ pagination.page }} of {{ pagination.pages }} (Total: {{ pagination.total }})</small>
+      <ul class="pagination pagination-sm mb-0">
+        {% if pagination.has_prev %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('admin.audit_log', page=pagination.prev_num, action=action_filter, actor_type=actor_type_filter) }}">Previous</a>
+          </li>
+        {% endif %}
+        {% for p in pagination.iter_pages() %}
+          {% if p %}
+            <li class="page-item {% if p == pagination.page %}active{% endif %}">
+              <a class="page-link" href="{{ url_for('admin.audit_log', page=p, action=action_filter, actor_type=actor_type_filter) }}">{{ p }}</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+          {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('admin.audit_log', page=pagination.next_num, action=action_filter, actor_type=actor_type_filter) }}">Next</a>
+          </li>
+        {% endif %}
+      </ul>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
