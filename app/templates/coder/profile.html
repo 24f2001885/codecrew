@@ -1,0 +1,99 @@
+{% extends "coder/coder_base.html" %}
+
+{% block title %}My Profile — Coder Portal{% endblock %}
+{% block page_title %}Edit Profile{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{{ url_for('coder.dashboard') }}">Coder Portal</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Profile</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4">
+        <form method="POST" enctype="multipart/form-data">
+          {{ form.hidden_tag() }}
+
+          <div class="form-group mb-3">
+            <label class="form-label font-weight-bold">Member Name</label>
+            <input type="text" class="form-control" value="{{ member.name }}" disabled readonly>
+            <small class="form-text text-muted">Contact admin if your display name needs changing.</small>
+          </div>
+
+          <div class="form-group mb-3">
+            {{ form.role.label(class="form-label font-weight-bold") }}
+            {{ form.role(class="form-control" + (" is-invalid" if form.role.errors else ""), placeholder="e.g. Lead Frontend Architect") }}
+            {% for error in form.role.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group mb-3">
+            {{ form.bio.label(class="form-label font-weight-bold") }}
+            {{ form.bio(class="form-control" + (" is-invalid" if form.bio.errors else ""), rows=4, placeholder="Share your coding experience, specialties...") }}
+            {% for error in form.bio.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group mb-3">
+            {{ form.skill_tags.label(class="form-label font-weight-bold") }}
+            {{ form.skill_tags(class="form-control" + (" is-invalid" if form.skill_tags.errors else ""), placeholder="python, flask, react, postgresql, docker") }}
+            {% for error in form.skill_tags.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+            <small class="form-text text-muted">Comma-separated skill keywords.</small>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-4">
+              {{ form.github_url.label(class="form-label font-weight-bold small") }}
+              {{ form.github_url(class="form-control" + (" is-invalid" if form.github_url.errors else ""), placeholder="https://github.com/...") }}
+              {% for error in form.github_url.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-4">
+              {{ form.linkedin_url.label(class="form-label font-weight-bold small") }}
+              {{ form.linkedin_url(class="form-control" + (" is-invalid" if form.linkedin_url.errors else ""), placeholder="https://linkedin.com/in/...") }}
+              {% for error in form.linkedin_url.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-4">
+              {{ form.twitter_url.label(class="form-label font-weight-bold small") }}
+              {{ form.twitter_url(class="form-control" + (" is-invalid" if form.twitter_url.errors else ""), placeholder="https://twitter.com/...") }}
+              {% for error in form.twitter_url.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-md-6">
+              {{ form.photo.label(class="form-label font-weight-bold small") }}
+              {{ form.photo(class="form-control-file") }}
+              {% if member.photo_path %}
+                <small class="text-success d-block mt-1">Current photo uploaded</small>
+              {% endif %}
+            </div>
+            <div class="col-md-6">
+              {{ form.resume_pdf.label(class="form-label font-weight-bold small") }}
+              {{ form.resume_pdf(class="form-control-file") }}
+              {% if member.resume_pdf %}
+                <small class="text-success d-block mt-1">Current resume uploaded</small>
+              {% endif %}
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary font-weight-bold px-4">
+            Save Profile
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

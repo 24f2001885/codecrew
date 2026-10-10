@@ -1,0 +1,64 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}{% if coder %}Edit Coder — {{ coder.username }}{% else %}Invite Coder{% endif %} — CodeCrews Admin{% endblock %}
+{% block page_title %}{% if coder %}Edit Coder{% else %}Invite New Coder{% endif %}{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('admin.coders') }}">Coders</a></li>
+  <li class="breadcrumb-item active" aria-current="page">{% if coder %}{{ coder.username }}{% else %}New{% endif %}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4">
+        <form method="POST">
+          {{ form.hidden_tag() }}
+
+          {% if not coder %}
+            <div class="form-group mb-3">
+              {{ form.member_id.label(class="form-label font-weight-bold") }}
+              {{ form.member_id(class="form-control" + (" is-invalid" if form.member_id.errors else "")) }}
+              {% for error in form.member_id.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+              <small class="form-text text-muted">Select an existing crew member who does not yet have a login account.</small>
+            </div>
+          {% else %}
+            <div class="form-group mb-3">
+              <label class="form-label font-weight-bold">Linked Member</label>
+              <input type="text" class="form-control" value="{{ coder.member.name }} ({{ coder.member.group.name if coder.member.group else 'No Group' }})" readonly disabled>
+            </div>
+          {% endif %}
+
+          <div class="form-group mb-3">
+            {{ form.username.label(class="form-label font-weight-bold") }}
+            {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "")) }}
+            {% for error in form.username.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group mb-4">
+            {{ form.email.label(class="form-label font-weight-bold") }}
+            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+            {% for error in form.email.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+            <small class="form-text text-muted">{% if not coder %}An activation email with a setup link will be sent to this address.{% else %}If the coder is still pending invite, changing this email will resend the invitation.{% endif %}</small>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('admin.coders') }}" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-warning font-weight-bold">
+              {% if coder %}Save Changes{% else %}Send Invitation{% endif %}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

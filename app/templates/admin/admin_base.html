@@ -61,8 +61,18 @@
         </li>
         <!-- Project Requests inbox wired in P4 -->
         <li class="nav-item">
-          <a class="nav-link {% if request.endpoint == 'admin.project_requests' %}active{% endif %}" href="{{ url_for('admin.project_requests') }}">
+          <a class="nav-link {% if 'project_request' in request.endpoint %}active{% endif %}" href="{{ url_for('admin.project_requests') }}">
             Project Requests
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint in ['admin.coders', 'admin.coder_new', 'admin.coder_edit'] %}active{% endif %}" href="{{ url_for('admin.coders') }}">
+            Coders
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'admin.audit_log' %}active{% endif %}" href="{{ url_for('admin.audit_log') }}">
+            Audit Log
           </a>
         </li>
         <li class="nav-item">

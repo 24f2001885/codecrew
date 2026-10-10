@@ -26,7 +26,7 @@ def load_user(user_id):
     elif prefix == "coder":
         try:
             from app.models.coder_user import CoderUser
-            coder = db.session.get(CoderUser, actual_id)
+            coder = db.session.get(CoderUser, actual_id, populate_existing=True)
             if coder and getattr(coder, "status", None) == "active":
                 return coder
             return None

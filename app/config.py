@@ -61,6 +61,10 @@ class TestingConfig(BaseConfig):
     DEBUG = True
     FLASK_ENV = "testing"
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "sqlite:///:memory:")
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "poolclass": __import__("sqlalchemy.pool", fromlist=["StaticPool"]).StaticPool,
+        "connect_args": {"check_same_thread": False},
+    }
     WTF_CSRF_ENABLED = False
     MAIL_SUPPRESS_SEND = True
     PRIVATE_UPLOAD_FOLDER = os.environ.get("PRIVATE_UPLOAD_FOLDER", "instance/test_private_uploads")
