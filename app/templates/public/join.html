@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Join as a Coder — CodeCrews{% endblock %}
+
+{% block content %}
+<section class="ftco-section bg-dark text-light py-5">
+  <div class="container py-4">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-md-10">
+        <div class="text-center mb-5" data-aos="fade-up">
+          <h1 class="text-white font-weight-bold mb-3">Join as a Coder</h1>
+          <p class="lead text-muted">
+            Want to be considered for upcoming client projects? Tell us your domain and skill set.
+            We will email you when a matching project arrives. <em>This does not create an account.</em>
+          </p>
+        </div>
+
+        <div class="card bg-white text-dark shadow-lg rounded-lg border-0 p-4 p-md-5" data-aos="fade-up">
+          <form method="POST" action="{{ url_for('join.join') }}" enctype="multipart/form-data" novalidate>
+            {{ form.csrf_token }}
+            {{ form.honeypot(style="display:none !important; visibility:hidden !important;", tabindex="-1", autocomplete="off") }}
+
+            {% if form.errors %}
+              <div class="alert alert-danger mb-4" role="alert">
+                <p class="font-weight-bold mb-1">Please correct the following errors:</p>
+                <ul class="mb-0 pl-3">
+                  {% for field, errors in form.errors.items() %}
+                    {% for error in errors %}
+                      <li>{{ form[field].label.text if field in form else field }}: {{ error }}</li>
+                    {% endfor %}
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="name" class="font-weight-bold">Full Name <span class="text-danger">*</span></label>
+                {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), id="name", placeholder="Alex Morgan") }}
+                {% if form.name.errors %}
+                  <div class="invalid-feedback">{{ form.name.errors[0] }}</div>
+                {% endif %}
+              </div>
+              <div class="form-group col-md-6">
+                <label for="email" class="font-weight-bold">Email Address <span class="text-danger">*</span></label>
+                {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), id="email", placeholder="alex@example.com") }}
+                {% if form.email.errors %}
+                  <div class="invalid-feedback">{{ form.email.errors[0] }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="project_types" class="font-weight-bold">Domains of Interest <span class="text-danger">*</span></label>
+              <small class="form-text text-muted mb-2">Select one or more project types you are interested in.</small>
+              <div class="row px-3">
+                {% for val, label in form.project_types.choices %}
+                  <div class="custom-control custom-checkbox col-sm-6 mb-2">
+                    <input type="checkbox" name="project_types" value="{{ val }}" class="custom-control-input" id="pt_{{ val }}"
+                      {% if val in (form.project_types.data or []) %}checked{% endif %}>
+                    <label class="custom-control-label" for="pt_{{ val }}">{{ label }}</label>
+                  </div>
+                {% endfor %}
+              </div>
+              {% if form.project_types.errors %}
+                <small class="text-danger d-block mt-1">{{ form.project_types.errors[0] }}</small>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label for="domain_tags" class="font-weight-bold">Specialized Skills / Domain Tags</label>
+              {{ form.domain_tags(class="form-control" + (" is-invalid" if form.domain_tags.errors else ""), id="domain_tags", placeholder="e.g. react, nodejs, postgresql, fintech, machine learning") }}
+              <small class="form-text text-muted">Comma-separated skills (max 20 tags, up to 30 characters each).</small>
+              {% if form.domain_tags.errors %}
+                <div class="invalid-feedback">{{ form.domain_tags.errors[0] }}</div>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label for="headline" class="font-weight-bold">Professional Headline</label>
+              {{ form.headline(class="form-control" + (" is-invalid" if form.headline.errors else ""), id="headline", placeholder="e.g. Fullstack Engineer specializing in Python & Cloud Architecture") }}
+              {% if form.headline.errors %}
+                <div class="invalid-feedback">{{ form.headline.errors[0] }}</div>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label for="portfolio_url" class="font-weight-bold">Portfolio or GitHub URL</label>
+              {{ form.portfolio_url(class="form-control" + (" is-invalid" if form.portfolio_url.errors else ""), id="portfolio_url", placeholder="https://github.com/yourhandle or https://yourportfolio.dev") }}
+              {% if form.portfolio_url.errors %}
+                <div class="invalid-feedback">{{ form.portfolio_url.errors[0] }}</div>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label for="message" class="font-weight-bold">Brief Intro / Note</label>
+              {{ form.message(class="form-control" + (" is-invalid" if form.message.errors else ""), id="message", rows="3", placeholder="Tell us about your background, typical availability, or technical strengths...") }}
+              {% if form.message.errors %}
+                <div class="invalid-feedback">{{ form.message.errors[0] }}</div>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label for="resume_pdf" class="font-weight-bold">Resume (PDF only, optional, max 5 MB)</label>
+              {{ form.resume_pdf(class="form-control-file" + (" is-invalid" if form.resume_pdf.errors else ""), id="resume_pdf", accept=".pdf") }}
+              <small class="form-text text-muted">Stored securely in private platform storage; never accessible publicly.</small>
+              {% if form.resume_pdf.errors %}
+                <div class="invalid-feedback d-block">{{ form.resume_pdf.errors[0] }}</div>
+              {% endif %}
+            </div>
+
+            <div class="form-group my-4 p-3 bg-light rounded border">
+              <div class="custom-control custom-checkbox">
+                {{ form.alerts_consent(class="custom-control-input" + (" is-invalid" if form.alerts_consent.errors else ""), id="alerts_consent") }}
+                <label class="custom-control-label font-weight-medium" for="alerts_consent">
+                  Email me about projects in my domains; I can unsubscribe at any time. <span class="text-danger">*</span>
+                </label>
+                {% if form.alerts_consent.errors %}
+                  <div class="invalid-feedback d-block">{{ form.alerts_consent.errors[0] }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-warning btn-lg btn-block font-weight-bold text-dark py-3">
+              Submit Application
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

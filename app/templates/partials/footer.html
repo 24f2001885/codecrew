@@ -15,13 +15,15 @@
             <li><a href="/groups">Browse Groups</a></li>
             <li><a href="/members">Meet Members</a></li>
             <li><a href="/request-project">Request a Project</a></li>
+            <li><a href="{{ url_for('join.join') }}">Join as a Coder</a></li>
           </ul>
         </div>
       </div>
       <div class="col-md">
         <div class="ftco-footer-widget mb-4">
-          <h2 class="ftco-heading-2">Administration</h2>
+          <h2 class="ftco-heading-2">Portals</h2>
           <ul class="list-unstyled">
+            <li><a href="{{ url_for('coder_auth.login') }}">Coder Login</a></li>
             <li><a href="{{ url_for('auth.login') }}">Admin Login</a></li>
           </ul>
         </div>

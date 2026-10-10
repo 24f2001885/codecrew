@@ -1,0 +1,9 @@
+Hello,
+
+{{ summary }}
+
+If you are interested in working on this project, please let us know:
+{{ interested_url }}
+
+To stop receiving project alerts in your domains, unsubscribe here:
+{{ unsubscribe_url }}

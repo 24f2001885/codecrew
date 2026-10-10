@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Access Changed — CodeCrews</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    body { background-color: #0f172a; color: #f8fafc; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container text-center py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card p-5 shadow-lg">
+          <div class="display-4 text-warning mb-3"><i class="fas fa-user-lock"></i></div>
+          <h2 class="font-weight-bold mb-3">Access Changed</h2>
+          <p class="text-light mb-4">
+            Your access to this area has been changed by the platform admin. Please contact them if you think this is a mistake.
+          </p>
+          <a href="{{ url_for('public.index') }}" class="btn btn-primary font-weight-bold px-4 py-2">
+            Return to Public Site
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

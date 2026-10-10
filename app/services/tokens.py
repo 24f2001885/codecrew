@@ -4,11 +4,17 @@ from flask import current_app
 
 SALTS = {
     "admin_reset": "admin-reset",
+    "admin-reset": "admin-reset",
     "coder_invite": "coder-invite",
+    "coder-invite": "coder-invite",
     "coder_reset": "coder-reset",
+    "coder-reset": "coder-reset",
     "app_verify": "app-verify",
+    "app-verify": "app-verify",
     "app_unsub": "app-unsub",
+    "app-unsub": "app-unsub",
     "alert_interest": "alert-interest",
+    "alert-interest": "alert-interest",
 }
 
 
@@ -48,14 +54,14 @@ def read_token(purpose, token, max_age=None):
 def max_age_for(purpose):
     """Returns the configured max_age in seconds for a given purpose."""
     config = current_app.config
-    if purpose in ("admin_reset", "coder_reset"):
+    if purpose in ("admin_reset", "admin-reset", "coder_reset", "coder-reset"):
         return config.get("RESET_TOKEN_MAX_AGE", 3600)
-    elif purpose == "coder_invite":
+    elif purpose in ("coder_invite", "coder-invite"):
         return config.get("INVITE_TOKEN_MAX_AGE", 259200)
-    elif purpose == "app_verify":
+    elif purpose in ("app_verify", "app-verify"):
         return config.get("APPLICATION_VERIFY_MAX_AGE", 604800)
-    elif purpose == "alert_interest":
+    elif purpose in ("alert_interest", "alert-interest"):
         return config.get("INTERESTED_TOKEN_MAX_AGE", 2592000)
-    elif purpose == "app_unsub":
+    elif purpose in ("app_unsub", "app-unsub"):
         return None
     return None

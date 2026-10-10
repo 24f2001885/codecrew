@@ -61,6 +61,17 @@ def request_project():
             except Exception as e:
                 logger.warning(f"Mail notification failed for project request {project_req.id}: {e}")
 
+            # Auto domain alert if enabled in site settings
+            try:
+                from app.models.site_settings import SiteSettings
+                from app.services.alerts import send_alert_batch, format_default_summary
+                settings = SiteSettings.get_settings()
+                if getattr(settings, "auto_send_domain_alerts", False):
+                    summary = format_default_summary(project_req)
+                    send_alert_batch(project_req, summary=summary, admin_id=None, is_auto=True)
+            except Exception as e:
+                logger.warning(f"Auto domain alert failed for project request {project_req.id}: {e}")
+
             flash("Thanks — we received your request.", "success")
             return redirect(url_for("requests.request_project"))
 

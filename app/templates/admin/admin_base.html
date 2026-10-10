@@ -71,6 +71,11 @@
           </a>
         </li>
         <li class="nav-item">
+          <a class="nav-link {% if 'coder_application' in request.endpoint %}active{% endif %}" href="{{ url_for('admin.coder_applications') }}">
+            Coder Applications
+          </a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link {% if request.endpoint == 'admin.audit_log' %}active{% endif %}" href="{{ url_for('admin.audit_log') }}">
             Audit Log
           </a>

@@ -9,6 +9,9 @@ from app.models.site_settings import SiteSettings
 from app.models.coder_user import CoderUser
 from app.models.request_access_grant import RequestAccessGrant
 from app.models.audit_log import AuditLog
+from app.models.coder_application import CoderApplication
+from app.models.domain_alert import DomainAlert
+from app.models.domain_alert_delivery import DomainAlertDelivery
 
 __all__ = [
     "AdminUser",
@@ -22,5 +25,8 @@ __all__ = [
     "CoderUser",
     "RequestAccessGrant",
     "AuditLog",
+    "CoderApplication",
+    "DomainAlert",
+    "DomainAlertDelivery",
 ]
 

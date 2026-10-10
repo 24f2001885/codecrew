@@ -1,0 +1,147 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Coder Applications — Admin{% endblock %}
+
+{% block page_title %}Coder Applications{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-body">
+    <!-- Filter Bar -->
+    <form method="GET" action="{{ url_for('admin.coder_applications') }}" class="form-inline mb-4 flex-wrap gap-2">
+      <div class="form-group mr-3 mb-2">
+        <label for="status" class="mr-2 font-weight-bold small text-muted text-uppercase">Status:</label>
+        <select name="status" id="status" class="form-control form-control-sm" onchange="this.form.submit()">
+          <option value="">All Statuses</option>
+          <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+          <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+          <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+          <option value="converted" {% if status_filter == 'converted' %}selected{% endif %}>Converted</option>
+        </select>
+      </div>
+
+      <div class="form-group mr-3 mb-2">
+        <label for="verified" class="mr-2 font-weight-bold small text-muted text-uppercase">Verified:</label>
+        <select name="verified" id="verified" class="form-control form-control-sm" onchange="this.form.submit()">
+          <option value="">All</option>
+          <option value="1" {% if verified_filter == '1' %}selected{% endif %}>Verified Only</option>
+          <option value="0" {% if verified_filter == '0' %}selected{% endif %}>Unverified Only</option>
+        </select>
+      </div>
+
+      {% if status_filter or verified_filter %}
+        <a href="{{ url_for('admin.coder_applications') }}" class="btn btn-sm btn-outline-secondary mb-2">
+          Clear Filters
+        </a>
+      {% endif %}
+    </form>
+
+    <!-- Table of Applications -->
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="thead-light">
+          <tr>
+            <th>Applicant</th>
+            <th>Email</th>
+            <th>Domains of Interest</th>
+            <th>Verified</th>
+            <th>Status</th>
+            <th>Applied Date</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if pagination and pagination.items %}
+            {% for app in pagination.items %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('admin.coder_application_detail', id=app.id) }}" class="font-weight-bold text-dark text-decoration-none">
+                    {{ app.name }}
+                  </a>
+                  {% if app.headline %}
+                    <div class="small text-muted text-truncate" style="max-width: 200px;">{{ app.headline }}</div>
+                  {% endif %}
+                </td>
+                <td>{{ app.email }}</td>
+                <td>
+                  {% for pt in app.project_types %}
+                    <span class="badge badge-light border text-secondary mr-1">{{ pt|replace('_', ' ')|title }}</span>
+                  {% endfor %}
+                  {% if app.domain_tags %}
+                    {% for tag in app.domain_tags[:3] %}
+                      <span class="badge badge-info mr-1">{{ tag }}</span>
+                    {% endfor %}
+                    {% if app.domain_tags|length > 3 %}
+                      <span class="small text-muted">+{{ app.domain_tags|length - 3 }}</span>
+                    {% endif %}
+                  {% endif %}
+                </td>
+                <td>
+                  {% if app.is_verified %}
+                    <span class="badge badge-success"><i class="fas fa-check mr-1"></i>Verified</span>
+                  {% else %}
+                    <span class="badge badge-secondary">Unverified</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if app.status == 'pending' %}
+                    <span class="badge badge-warning">Pending</span>
+                  {% elif app.status == 'approved' %}
+                    <span class="badge badge-success">Approved</span>
+                  {% elif app.status == 'rejected' %}
+                    <span class="badge badge-danger">Rejected</span>
+                  {% elif app.status == 'converted' %}
+                    <span class="badge badge-primary">Converted</span>
+                  {% endif %}
+                </td>
+                <td class="text-muted small">
+                  {{ app.created_at.strftime('%Y-%m-%d %H:%M') if app.created_at else '—' }}
+                </td>
+                <td class="text-right">
+                  <a href="{{ url_for('admin.coder_application_detail', id=app.id) }}" class="btn btn-sm btn-outline-primary" aria-label="Review application for {{ app.name }}">
+                    Review
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7" class="text-center py-5 text-muted">
+                <i class="fas fa-inbox fa-3x mb-3 d-block text-secondary"></i>
+                <p class="h6 mb-0">No coder applications found.</p>
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination and pagination.pages > 1 %}
+      <nav aria-label="Applications navigation" class="mt-4">
+        <ul class="pagination justify-content-center mb-0">
+          {% if pagination.has_prev %}
+            <li class="page-item">
+              <a class="page-link" href="{{ url_for('admin.coder_applications', page=pagination.prev_num, status=status_filter, verified=verified_filter) }}">Previous</a>
+            </li>
+          {% endif %}
+          {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+              <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('admin.coder_applications', page=p, status=status_filter, verified=verified_filter) }}">{{ p }}</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+            {% endif %}
+          {% endfor %}
+          {% if pagination.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="{{ url_for('admin.coder_applications', page=pagination.next_num, status=status_filter, verified=verified_filter) }}">Next</a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
