@@ -192,11 +192,21 @@
             </div>
           </fieldset>
 
-          {# 5. Coder & Alerts Fieldset (Placeholder for P7/P8) #}
-          <!-- Coder & Alerts settings fieldset — reserved for P7 and P8 -->
+          {# 5. Coder & Alerts Fieldset #}
           <fieldset class="mb-4">
-            <legend class="h5 font-weight-bold text-muted mb-2">Coder & Alerts</legend>
-            <p class="text-muted small">Application intake status and domain alert preferences will be configurable here in P7 &amp; P8.</p>
+            <legend class="h5 font-weight-bold text-primary mb-3">Coder Intake &amp; Domain Alerts</legend>
+            <div class="custom-control custom-checkbox mb-3">
+              {{ form.coder_applications_open(class="custom-control-input", id="coder_applications_open") }}
+              <label class="custom-control-label font-weight-bold" for="coder_applications_open">
+                Accept Coder Applications (when disabled, /join displays an applications closed page)
+              </label>
+            </div>
+            <div class="custom-control custom-checkbox mb-3">
+              {{ form.auto_send_domain_alerts(class="custom-control-input", id="auto_send_domain_alerts") }}
+              <label class="custom-control-label font-weight-bold" for="auto_send_domain_alerts">
+                Auto-Send Domain Alerts to Matching Applicants on New Project Requests
+              </label>
+            </div>
           </fieldset>
 
           <div class="d-flex justify-content-end">

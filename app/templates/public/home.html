@@ -60,6 +60,17 @@
   {% endif %}
 </section>
 
+<!-- Coder Pool Notification Banner -->
+<div class="alert alert-info alert-dismissible fade show mb-0 text-center py-3 border-0 rounded-0" role="alert" style="background: #1e293b; color: #f8fafc;">
+  <div class="container d-flex align-items-center justify-content-center flex-wrap">
+    <span class="mr-3 font-weight-medium">Developer? Join our coder pool and hear about projects in your domain.</span>
+    <a href="{{ url_for('join.join') }}" class="btn btn-outline-info btn-sm font-weight-bold my-1">Join as a Coder</a>
+    <button type="button" class="close text-white ml-3" data-dismiss="alert" aria-label="Close" style="position: static; padding: 0.25rem 0.5rem;">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+</div>
+
 <!-- Stats Strip with Waypoints and animateNumber -->
 {% set current_stats = platform_stats() if platform_stats is callable else stats %}
 <section class="ftco-section ftco-counter bg-dark py-5 border-top border-bottom border-secondary" id="section-counter">

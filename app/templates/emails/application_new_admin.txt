@@ -1,0 +1,12 @@
+Hello Administrator,
+
+A new coder application has been submitted and verified on CodeCrews:
+
+Name: {{ application.name }}
+Email: {{ application.email }}
+Headline: {{ application.headline or 'Not provided' }}
+Project Types: {{ application.project_types|join(', ') }}
+Domain Tags: {{ application.domain_tags|join(', ') }}
+
+You can review this application in the admin portal:
+{{ inbox_url }}

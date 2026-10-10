@@ -13,18 +13,23 @@ from app.models.site_settings import SiteSettings
 from app.models.coder_user import CoderUser
 from app.models.request_access_grant import RequestAccessGrant
 from app.models.audit_log import AuditLog
+from app.models.coder_application import CoderApplication
+from app.models.domain_alert import DomainAlert
+from app.models.domain_alert_delivery import DomainAlertDelivery
 from app.forms.group_forms import GroupForm
 from app.forms.member_forms import MemberForm
 from app.forms.project_forms import ProjectForm
 from app.forms.blog_forms import BlogPostForm
 from app.forms.settings_forms import SettingsForm
 from app.forms.coder_forms import CoderAdminForm, CoderEditForm, GrantAccessForm
+from app.forms.join_forms import AdminConvertApplicationForm, AdminAlertNotifyForm
 from app.security.decorators import super_admin_required, apply_guard_to_blueprint
 from app.services.slugs import unique_slug
 from app.services.uploads import save_upload, delete_upload, replace_upload, UploadError
 from app.services.private_files import send_private, delete_private
 from app.services.tokens import make_token
 from app.services.mailer import send_coder_invite, send_opportunity_assigned
+from app.services.alerts import find_matching_applications, format_default_summary, send_alert_batch
 from app.services.audit import record_audit
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -43,6 +48,7 @@ def dashboard():
     draft_posts_count = BlogPost.query.filter(BlogPost.published_at.is_(None)).count()
     published_posts_count = BlogPost.query.filter(BlogPost.published_at.is_not(None)).count()
     active_coders_count = CoderUser.query.filter_by(status="active").count()
+    pending_applications_count = CoderApplication.query.filter_by(status="pending").count()
     open_grants_count = RequestAccessGrant.query.filter(RequestAccessGrant.revoked_at.is_(None)).count()
     return render_template(
         "admin/dashboard.html",
@@ -54,6 +60,7 @@ def dashboard():
         draft_posts_count=draft_posts_count,
         published_posts_count=published_posts_count,
         active_coders_count=active_coders_count,
+        pending_applications_count=pending_applications_count,
         open_grants_count=open_grants_count,
     )
 
@@ -737,6 +744,10 @@ def settings():
         else:
             form.override_stats.data = False
 
+        # Coder applications & alerts
+        form.coder_applications_open.data = getattr(settings_obj, "coder_applications_open", True)
+        form.auto_send_domain_alerts.data = getattr(settings_obj, "auto_send_domain_alerts", False)
+
     if form.validate_on_submit():
         settings_obj.hero_headline = form.hero_headline.data.strip() if form.hero_headline.data else None
         settings_obj.hero_subheadline = form.hero_subheadline.data.strip() if form.hero_subheadline.data else None
@@ -796,6 +807,9 @@ def settings():
             }
         else:
             settings_obj.stats_override = None
+
+        settings_obj.coder_applications_open = bool(form.coder_applications_open.data)
+        settings_obj.auto_send_domain_alerts = bool(form.auto_send_domain_alerts.data)
 
         settings_obj.updated_at = datetime.utcnow()
         db.session.commit()
@@ -1148,5 +1162,214 @@ def audit_log():
         actor_type_filter=actor_type_filter,
         actions=actions,
         actor_types=actor_types,
+    )
+
+
+# -----------------------------------------------------------------------------
+# Coder Applications Management (P8)
+# -----------------------------------------------------------------------------
+@admin_bp.route("/coder-applications", endpoint="coder_applications")
+def coder_applications():
+    page = request.args.get("page", 1, type=int)
+    status_filter = request.args.get("status", "").strip() or None
+    verified_filter = request.args.get("verified", "").strip()
+
+    query = CoderApplication.query
+    if status_filter:
+        query = query.filter_by(status=status_filter)
+    if verified_filter == "1":
+        query = query.filter(CoderApplication.email_verified_at.isnot(None))
+    elif verified_filter == "0":
+        query = query.filter(CoderApplication.email_verified_at.is_(None))
+
+    query = query.order_by(CoderApplication.created_at.desc())
+    pagination = query.paginate(page=page, per_page=15, error_out=False)
+
+    return render_template(
+        "admin/applications_list.html",
+        pagination=pagination,
+        status_filter=status_filter,
+        verified_filter=verified_filter,
+    )
+
+
+@admin_bp.route("/coder-applications/<id>", endpoint="coder_application_detail")
+def coder_application_detail(id):
+    app_record = db.session.get(CoderApplication, id) or abort(404)
+    deliveries = (
+        DomainAlertDelivery.query.filter_by(application_id=app_record.id)
+        .order_by(DomainAlertDelivery.sent_at.desc())
+        .all()
+    )
+
+    convert_form = AdminConvertApplicationForm()
+    groups = Group.query.order_by(Group.name.asc()).all()
+    convert_form.group_id.choices = [(str(g.id), g.name) for g in groups]
+    if request.method == "GET":
+        convert_form.member_name.data = app_record.name
+
+    return render_template(
+        "admin/application_detail.html",
+        application=app_record,
+        deliveries=deliveries,
+        convert_form=convert_form,
+    )
+
+
+@admin_bp.route("/coder-applications/<id>/resume")
+def coder_application_resume(id):
+    app_record = db.session.get(CoderApplication, id) or abort(404)
+    if not app_record.resume_pdf:
+        abort(404)
+    return send_private("applications", app_record.resume_pdf, download_name=f"resume_{app_record.id}.pdf")
+
+
+@admin_bp.route("/coder-applications/<id>/approve", methods=["POST"])
+def coder_application_approve(id):
+    app_record = db.session.get(CoderApplication, id) or abort(404)
+    app_record.status = "approved"
+    record_audit("admin", current_user.id, "application.approved", "coder_application", str(app_record.id))
+    db.session.commit()
+    flash(f"Application for '{app_record.name}' approved.", "success")
+    return redirect(url_for("admin.coder_application_detail", id=id))
+
+
+@admin_bp.route("/coder-applications/<id>/reject", methods=["POST"])
+def coder_application_reject(id):
+    app_record = db.session.get(CoderApplication, id) or abort(404)
+    app_record.status = "rejected"
+    record_audit("admin", current_user.id, "application.rejected", "coder_application", str(app_record.id))
+    db.session.commit()
+    flash(f"Application for '{app_record.name}' rejected.", "warning")
+    return redirect(url_for("admin.coder_application_detail", id=id))
+
+
+@admin_bp.route("/coder-applications/<id>/convert", methods=["POST"])
+def coder_application_convert(id):
+    app_record = db.session.get(CoderApplication, id) or abort(404)
+    form = AdminConvertApplicationForm()
+    groups = Group.query.order_by(Group.name.asc()).all()
+    form.group_id.choices = [(str(g.id), g.name) for g in groups]
+
+    if form.validate_on_submit():
+        group = db.session.get(Group, form.group_id.data)
+        if not group:
+            flash("Selected group not found.", "danger")
+            return redirect(url_for("admin.coder_application_detail", id=id))
+
+        username = form.username.data.strip()
+        existing_coder = CoderUser.query.filter_by(username=username).first()
+        if existing_coder:
+            flash(f"Coder username '{username}' is already in use.", "danger")
+            return redirect(url_for("admin.coder_application_detail", id=id))
+
+        existing_email_coder = CoderUser.query.filter_by(email=app_record.email.lower()).first()
+        if existing_email_coder:
+            flash(f"A coder account already exists for email '{app_record.email}'.", "danger")
+            return redirect(url_for("admin.coder_application_detail", id=id))
+
+        # Create Member in target group
+        member = Member(
+            group_id=group.id,
+            name=form.member_name.data.strip(),
+            role=form.role.data.strip() if form.role.data else None,
+        )
+        db.session.add(member)
+        db.session.flush()
+
+        # Create CoderUser in invited state
+        coder = CoderUser(
+            member_id=member.id,
+            username=username,
+            email=app_record.email.lower(),
+            status="invited",
+            created_by_admin_id=current_user.id,
+            invite_sent_at=datetime.utcnow(),
+        )
+        db.session.add(coder)
+        db.session.flush()
+
+        # Send invite email
+        token = make_token("coder-invite", {"id": coder.id})
+        send_coder_invite(coder, token)
+
+        # Update application status
+        app_record.status = "converted"
+        app_record.converted_coder_id = coder.id
+
+        record_audit(
+            "admin",
+            current_user.id,
+            "application.converted",
+            "coder_application",
+            str(app_record.id),
+            {"coder_id": coder.id, "member_id": member.id, "group_id": group.id},
+        )
+        db.session.commit()
+        flash(f"Converted '{app_record.name}' to member and created coder account.", "success")
+        return redirect(url_for("admin.coders"))
+
+    flash("Please correct errors in the conversion form.", "danger")
+    return redirect(url_for("admin.coder_application_detail", id=id))
+
+
+@admin_bp.route("/coder-applications/<id>/delete", methods=["POST"])
+def coder_application_delete(id):
+    app_record = db.session.get(CoderApplication, id) or abort(404)
+    name = app_record.name
+    if app_record.resume_pdf:
+        delete_private("applications", app_record.resume_pdf)
+
+    db.session.delete(app_record)
+    record_audit("admin", current_user.id, "application.deleted", "coder_application", str(id), {"name": name})
+    db.session.commit()
+    flash(f"Application for '{name}' deleted.", "info")
+    return redirect(url_for("admin.coder_applications"))
+
+
+# -----------------------------------------------------------------------------
+# Domain Alert Notify Routes (P8)
+# -----------------------------------------------------------------------------
+@admin_bp.route("/project-requests/<id>/notify", methods=["GET", "POST"], endpoint="project_request_notify")
+def project_request_notify(id):
+    req_obj = db.session.get(ProjectRequest, id) or abort(404)
+    matches = find_matching_applications(req_obj)
+    form = AdminAlertNotifyForm()
+
+    if request.method == "GET":
+        form.summary.data = format_default_summary(req_obj)
+
+    if form.validate_on_submit():
+        summary = form.summary.data.strip()
+        result = send_alert_batch(req_obj, summary=summary, admin_id=current_user.id, is_auto=False)
+        flash(
+            f"Alerts sent to {result['sent']} applicant(s) ({result['failed']} failed) — {result['remaining']} remaining.",
+            "success" if result["sent"] > 0 else "info",
+        )
+        return redirect(url_for("admin.project_request_notify", id=id))
+
+    # Past alerts and deliveries for this request
+    past_alerts = (
+        DomainAlert.query.filter_by(project_request_id=req_obj.id)
+        .order_by(DomainAlert.created_at.desc())
+        .all()
+    )
+    interested_deliveries = (
+        DomainAlertDelivery.query.join(DomainAlert)
+        .filter(
+            DomainAlert.project_request_id == req_obj.id,
+            DomainAlertDelivery.interested_at.isnot(None),
+        )
+        .order_by(DomainAlertDelivery.interested_at.desc())
+        .all()
+    )
+
+    return render_template(
+        "admin/notify_applicants.html",
+        request_obj=req_obj,
+        matches=matches,
+        form=form,
+        past_alerts=past_alerts,
+        interested_deliveries=interested_deliveries,
     )
 

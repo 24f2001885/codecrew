@@ -88,7 +88,10 @@ def create_app(config_name=None):
             return redirect(referrer)
         return redirect(url_for("public.index"))
 
-    # Themed Error Handlers (P6)
+    @flask_app.errorhandler(403)
+    def forbidden_handler(error):
+        return render_template("errors/403.html"), 403
+
     @flask_app.errorhandler(404)
     def page_not_found(error):
         return render_template("errors/404.html"), 404
@@ -109,6 +112,8 @@ def create_app(config_name=None):
     @flask_app.errorhandler(Exception)
     def handle_unhandled_exception(error):
         if isinstance(error, HTTPException):
+            if error.code == 403:
+                return render_template("errors/403.html"), 403
             if error.code == 404:
                 return render_template("errors/404.html"), 404
             if error.code == 429:
@@ -137,6 +142,8 @@ def create_app(config_name=None):
     # P7 blueprints:
     from app.routes.coder_auth import coder_auth_bp
     from app.routes.coder import coder_bp
+    # P8 blueprint:
+    from app.routes.join import join_bp
 
     flask_app.register_blueprint(public_bp)
     flask_app.register_blueprint(auth_bp)
@@ -147,6 +154,11 @@ def create_app(config_name=None):
     flask_app.register_blueprint(api_bp)
     flask_app.register_blueprint(coder_auth_bp)
     flask_app.register_blueprint(coder_bp)
+    flask_app.register_blueprint(join_bp)
+
+    # Register CLI commands
+    from app.cli import register_cli_commands
+    register_cli_commands(flask_app)
 
     # Ensure models are loaded for SQLAlchemy & Flask-Migrate
     with flask_app.app_context():

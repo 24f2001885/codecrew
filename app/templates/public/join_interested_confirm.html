@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Express Interest — CodeCrews{% endblock %}
+
+{% block content %}
+<section class="ftco-section bg-dark text-light py-5">
+  <div class="container py-5 text-center">
+    <div class="row justify-content-center">
+      <div class="col-lg-6 col-md-8">
+        <div class="card bg-white text-dark shadow-lg rounded-lg border-0 p-5" data-aos="fade-up">
+          <div class="display-3 text-success mb-4"><i class="fas fa-hand-paper"></i></div>
+          <h2 class="font-weight-bold mb-3">Confirm Your Interest</h2>
+          <p class="text-muted mb-4">
+            Click below to let the platform administrator know you would like to be considered for this project opportunity.
+          </p>
+          <form method="POST" action="{{ url_for('join.interested', token=token) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-success btn-lg font-weight-bold px-5 py-3">
+              I'm Interested in This Project
+            </button>
+          </form>
+          <div class="mt-4">
+            <a href="{{ url_for('public.index') }}" class="text-muted small">Cancel and return to home</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
