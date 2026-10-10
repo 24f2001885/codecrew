@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Applications Closed — CodeCrews{% endblock %}
+
+{% block content %}
+<section class="ftco-section bg-dark text-light py-5">
+  <div class="container py-5 text-center">
+    <div class="row justify-content-center">
+      <div class="col-lg-6 col-md-8">
+        <div class="card bg-white text-dark shadow-lg rounded-lg border-0 p-5" data-aos="fade-up">
+          <div class="display-3 text-warning mb-4"><i class="fas fa-lock"></i></div>
+          <h2 class="font-weight-bold mb-3">Applications Closed</h2>
+          <p class="text-muted mb-4">
+            We are not currently accepting new coder applications. Please check back later or explore our public collective groups.
+          </p>
+          <a href="{{ url_for('public.groups') }}" class="btn btn-warning font-weight-bold text-dark px-4 py-2">
+            Browse Groups
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

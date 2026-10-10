@@ -6,14 +6,14 @@ from app.extensions import mail
 logger = logging.getLogger(__name__)
 
 
-def _send(subject, body, recipients):
+def _send(subject, body, recipients, extra_headers=None):
     """
     Private helper: sends an email via Flask-Mail safely.
     Logs errors and returns True/False. Never re-raises exceptions.
     """
     try:
         sender = current_app.config.get("MAIL_DEFAULT_SENDER", "noreply@codecrews.example")
-        msg = Message(subject=subject, sender=sender, recipients=recipients, body=body)
+        msg = Message(subject=subject, sender=sender, recipients=recipients, body=body, extra_headers=extra_headers)
         mail.send(msg)
         logger.info(f"[MAIL SENT] Subject: {subject} to {recipients}")
         return True
@@ -156,4 +156,57 @@ def send_opportunity_assigned(coder, grant):
     subject = "New Project Opportunity Assigned — CodeCrews"
     body = render_template("emails/opportunity_assigned.txt", coder=coder, scope=scope_label, opportunity_url=opp_url)
     return _send(subject, body, [coder.email])
+
+
+def send_application_verify(application, verify_url):
+    """
+    Sends email verification link to applicant.
+    """
+    subject = "Verify Your Email — CodeCrews Coder Pool"
+    max_age_days = current_app.config.get("APPLICATION_VERIFY_MAX_AGE", 604800) // 86400
+    body = render_template(
+        "emails/application_verify.txt",
+        application=application,
+        verify_url=verify_url,
+        max_age_days=max_age_days,
+    )
+    return _send(subject, body, [application.email])
+
+
+def send_application_new_admin(application):
+    """
+    Notifies super-admin when a coder application email has been verified.
+    """
+    recipient = current_app.config.get("ADMIN_NOTIFICATION_EMAIL", "admin@codecrews.example")
+    subject = f"New Verified Coder Application — {application.name}"
+    try:
+        inbox_url = url_for("admin.coder_application_detail", id=application.id, _external=True)
+    except Exception:
+        inbox_url = f"/admin/coder-applications/{application.id}"
+
+    body = render_template(
+        "emails/application_new_admin.txt",
+        application=application,
+        inbox_url=inbox_url,
+    )
+    return _send(subject, body, [recipient])
+
+
+def send_domain_alert(recipient_email, summary, interested_url, unsubscribe_url):
+    """
+    Sends domain alert email with anonymized summary, interested link, and unsubscribe link.
+    Strictly excludes requester identifying information.
+    """
+    subject = "New Project in Your Domain — CodeCrews Alert"
+    body = render_template(
+        "emails/domain_alert.txt",
+        summary=summary,
+        interested_url=interested_url,
+        unsubscribe_url=unsubscribe_url,
+    )
+    extra_headers = {
+        "List-Unsubscribe": f"<{unsubscribe_url}>",
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    }
+    return _send(subject, body, [recipient_email], extra_headers=extra_headers)
 

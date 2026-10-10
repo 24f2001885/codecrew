@@ -16,7 +16,8 @@ class SiteSettings(db.Model):
     seo_default_og_image = db.Column(db.String(255), nullable=True)
     stats_override = db.Column(db.JSON, nullable=True)
 
-    # Note: P7/P8 add coder_applications_open and auto_send_domain_alerts later
+    coder_applications_open = db.Column(db.Boolean, default=True, nullable=False)
+    auto_send_domain_alerts = db.Column(db.Boolean, default=False, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     @classmethod

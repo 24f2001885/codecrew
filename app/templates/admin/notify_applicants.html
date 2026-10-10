@@ -1,0 +1,198 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Notify Applicants — Project Request #{{ request_obj.id[:8] }} — Admin{% endblock %}
+
+{% block page_title %}Notify Matching Applicants{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-8">
+    <!-- Match Preview & Send Card -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <div>
+          <h5 class="mb-0 font-weight-bold text-dark">
+            Matching Applicants for Project #{{ request_obj.id[:8] }}
+          </h5>
+          <small class="text-muted">Type: <strong>{{ request_obj.project_type|replace('_', ' ')|title }}</strong> | Domain Tags: <strong>{{ request_obj.domain_tags|join(', ') if request_obj.domain_tags else 'None' }}</strong></small>
+        </div>
+        <span class="badge badge-primary px-3 py-2 font-weight-bold">
+          {{ matches|length }} Eligible Match{{ 'es' if matches|length != 1 else '' }}
+        </span>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('admin.project_request_notify', id=request_obj.id) }}">
+          {{ form.csrf_token }}
+
+          <div class="alert alert-warning border-0 small mb-4" role="alert">
+            <strong class="d-block mb-1"><i class="fas fa-shield-alt mr-1"></i> Privacy &amp; Anonymity Invariant:</strong>
+            Do <strong>NOT</strong> include client names, client email, company name, specific budget, or private details that could identify the requester.
+            The applicant will receive only this summary with a link to express interest.
+          </div>
+
+          <div class="form-group mb-4">
+            <label for="summary" class="font-weight-bold">
+              Anonymized Project Summary <span class="text-danger">*</span>
+            </label>
+            {{ form.summary(class="form-control" + (" is-invalid" if form.summary.errors else ""), id="summary", rows="4", maxlength="600") }}
+            <div class="d-flex justify-content-between mt-1">
+              <small class="form-text text-muted">{{ form.summary.description }}</small>
+              <small id="charCount" class="text-muted font-weight-bold"></small>
+            </div>
+            {% if form.summary.errors %}
+              <div class="invalid-feedback d-block">{{ form.summary.errors[0] }}</div>
+            {% endif %}
+          </div>
+
+          {% if matches %}
+            <button type="submit" class="btn btn-success btn-lg font-weight-bold px-4">
+              <i class="fas fa-paper-plane mr-2"></i> Send Domain Alert to {{ matches|length }} Match{{ 'es' if matches|length != 1 else '' }}
+            </button>
+          {% else %}
+            <button type="button" class="btn btn-secondary btn-lg" disabled>
+              <i class="fas fa-ban mr-2"></i> No New Matching Applicants
+            </button>
+            <p class="small text-muted mt-2">All eligible matching applicants have already been notified or none match the criteria.</p>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+
+    <!-- Matches Table -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white py-3">
+        <h6 class="mb-0 font-weight-bold text-dark">Eligible Matched Applicants ({{ matches|length }})</h6>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="thead-light">
+              <tr>
+                <th>Applicant</th>
+                <th>Email</th>
+                <th>Domains</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if matches %}
+                {% for app in matches %}
+                  <tr>
+                    <td class="font-weight-bold">{{ app.name }}</td>
+                    <td>{{ app.email }}</td>
+                    <td>
+                      {% for pt in app.project_types %}
+                        <span class="badge badge-light border text-secondary mr-1">{{ pt|replace('_', ' ')|title }}</span>
+                      {% endfor %}
+                      {% for t in app.domain_tags[:2] %}
+                        <span class="badge badge-info mr-1">{{ t }}</span>
+                      {% endfor %}
+                    </td>
+                    <td><span class="badge badge-success">Verified</span></td>
+                    <td>
+                      <a href="{{ url_for('admin.coder_application_detail', id=app.id) }}" class="btn btn-sm btn-outline-secondary" target="_blank">
+                        View
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="5" class="text-center py-4 text-muted small">
+                    No un-notified matching applicants found for this request's tags and type.
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar: Interested Applicants & Past Alerts -->
+  <div class="col-lg-4">
+    <!-- Interested Applicants Card -->
+    <div class="card shadow-sm border-0 mb-4 border-left-success">
+      <div class="card-header bg-white py-3">
+        <h6 class="mb-0 font-weight-bold text-success">
+          <i class="fas fa-hand-paper mr-1"></i> Expressed Interest ({{ interested_deliveries|length }})
+        </h6>
+      </div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% if interested_deliveries %}
+            {% for del in interested_deliveries %}
+              <li class="list-group-flush list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <a href="{{ url_for('admin.coder_application_detail', id=del.application.id) }}" class="font-weight-bold text-dark">
+                    {{ del.application.name }}
+                  </a>
+                  <div class="small text-muted">{{ del.application.email }}</div>
+                  <div class="small text-muted">{{ del.interested_at.strftime('%Y-%m-%d %H:%M') if del.interested_at else '' }}</div>
+                </div>
+                <a href="{{ url_for('admin.coder_application_detail', id=del.application.id) }}" class="btn btn-sm btn-outline-primary">
+                  Review &amp; Convert
+                </a>
+              </li>
+            {% endfor %}
+          {% else %}
+            <li class="list-group-item text-center text-muted small py-4">
+              No applicants have expressed interest in this project yet.
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Alert History Card -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white py-3">
+        <h6 class="mb-0 font-weight-bold text-dark">Sent Alert History</h6>
+      </div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% if past_alerts %}
+            {% for a in past_alerts %}
+              <li class="list-group-item">
+                <div class="d-flex justify-content-between small text-muted mb-1">
+                  <span>{{ a.created_at.strftime('%Y-%m-%d %H:%M') if a.created_at else '' }}</span>
+                  <span class="badge badge-light border">{{ a.recipient_count }} recipients</span>
+                </div>
+                <p class="small text-dark mb-0">{{ a.summary }}</p>
+                {% if a.is_auto %}
+                  <span class="badge badge-secondary mt-1">Auto-triggered</span>
+                {% endif %}
+              </li>
+            {% endfor %}
+          {% else %}
+            <li class="list-group-item text-center text-muted small py-4">
+              No alerts have been sent for this request yet.
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+
+    <a href="{{ url_for('admin.project_request_detail', id=request_obj.id) }}" class="btn btn-light btn-block btn-sm">
+      &larr; Back to Request Detail
+    </a>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var summaryInput = document.getElementById("summary");
+    var counter = document.getElementById("charCount");
+    if (summaryInput && counter) {
+      function update() {
+        var len = summaryInput.value.length;
+        counter.textContent = len + " / 600 characters";
+      }
+      summaryInput.addEventListener("input", update);
+      update();
+    }
+  });
+</script>
+{% endblock %}

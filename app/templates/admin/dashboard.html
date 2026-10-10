@@ -68,6 +68,36 @@
         </div>
       </div>
     </div>
+
+    <div class="col-md-3 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="text-muted text-uppercase font-weight-bold mb-2">Active Coders</h6>
+          <h3 class="font-weight-bold text-success mb-0">{{ active_coders_count|default(0) }}</h3>
+          <a href="{{ url_for('admin.coders') }}" class="small text-primary font-weight-bold">Manage Coders &rarr;</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="text-muted text-uppercase font-weight-bold mb-2">Pending Applications</h6>
+          <h3 class="font-weight-bold text-warning mb-0">{{ pending_applications_count|default(0) }}</h3>
+          <a href="{{ url_for('admin.coder_applications') }}" class="small text-primary font-weight-bold">Review Pool &rarr;</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="text-muted text-uppercase font-weight-bold mb-2">Open Access Grants</h6>
+          <h3 class="font-weight-bold text-info mb-0">{{ open_grants_count|default(0) }}</h3>
+          <a href="{{ url_for('admin.project_requests') }}" class="small text-primary font-weight-bold">View Requests &rarr;</a>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

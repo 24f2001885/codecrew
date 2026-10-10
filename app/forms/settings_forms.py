@@ -37,7 +37,8 @@ class SettingsForm(FlaskForm):
     stats_members = IntegerField("Members Count", validators=[Optional(), NumberRange(min=0, message="Must be non-negative.")])
     stats_projects = IntegerField("Projects Count", validators=[Optional(), NumberRange(min=0, message="Must be non-negative.")])
 
-    # Note: P7 and P8 add coder_applications_open and auto_send_domain_alerts
+    coder_applications_open = BooleanField("Accept Coder Applications", default=True)
+    auto_send_domain_alerts = BooleanField("Auto-Send Domain Alerts on New Requests", default=False)
     submit = SubmitField("Save Settings")
 
     def validate(self, extra_validators=None):

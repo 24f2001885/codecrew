@@ -12,6 +12,7 @@ def test_coder_cannot_access_admin_routes(app, logged_in_coder_client):
         "/admin/messages",
         "/admin/project-requests",
         "/admin/coders",
+        "/admin/coder-applications",
         "/admin/audit-log",
         "/admin/settings",
     ]

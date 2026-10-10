@@ -1,0 +1,10 @@
+Hello {{ application.name }},
+
+Thank you for applying to join the CodeCrews coder pool.
+Please verify your email address to confirm your application by visiting the link below:
+
+{{ verify_url }}
+
+This link is valid for {{ max_age_days }} days. Once verified, you will be considered for matching client projects in your domain.
+
+If you did not submit this application, you can safely ignore this email.
