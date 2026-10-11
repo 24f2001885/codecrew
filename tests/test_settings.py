@@ -139,3 +139,47 @@ def test_seo_defaults_used_when_page_has_none(app, client, logged_in_client):
     assert resp.status_code == 200
     # Groups directory inherits default SEO description
     assert b"Unique Custom Default Description for Testing" in resp.data
+
+
+def test_dynamic_branding_and_sections_render_on_public_pages(app, client, logged_in_client):
+    data = {
+        "site_name": "DevCollective Dynamic",
+        "site_tagline": "The Premier Ecosystem for Top Creators",
+        "footer_copyright": "2026 DevCollective Labs Inc. All rights reserved.",
+        "coder_banner_enabled": "y",
+        "coder_banner_text": "Exclusive Coder Pool registration open now!",
+        "coder_banner_cta": "Apply Today",
+        "spotlight_badge": "Top Creators Spotlight",
+        "spotlight_title": "Curated Engineering Guilds",
+        "spotlight_subtitle": "Discover the most skilled groups building solutions.",
+        "explore_title": "Browse Active Communities",
+        "explore_subtitle": "Find and collaborate with top engineering minds.",
+    }
+    resp = logged_in_client.post("/admin/settings", data=data, follow_redirects=True)
+    assert resp.status_code == 200
+    assert b"Settings saved." in resp.data
+
+    with app.app_context():
+        settings = db.session.get(SiteSettings, 1)
+        assert settings.site_name == "DevCollective Dynamic"
+        assert settings.coder_banner_enabled is True
+        assert settings.coder_banner_text == "Exclusive Coder Pool registration open now!"
+
+        g = Group(name="Featured Guild", slug="featured-guild", featured=True)
+        db.session.add(g)
+        db.session.commit()
+
+    # Verify rendering on Home page, Navbar, and Footer
+    home_resp = client.get("/")
+    assert home_resp.status_code == 200
+    assert b"DevCollective Dynamic" in home_resp.data
+    assert b"The Premier Ecosystem for Top Creators" in home_resp.data
+    assert b"2026 DevCollective Labs Inc. All rights reserved." in home_resp.data
+    assert b"Exclusive Coder Pool registration open now!" in home_resp.data
+    assert b"Apply Today" in home_resp.data
+    assert b"Top Creators Spotlight" in home_resp.data
+    assert b"Curated Engineering Guilds" in home_resp.data
+    assert b"Discover the most skilled groups building solutions." in home_resp.data
+    assert b"Browse Active Communities" in home_resp.data
+    assert b"Find and collaborate with top engineering minds." in home_resp.data
+

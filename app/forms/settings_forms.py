@@ -13,12 +13,29 @@ from wtforms.validators import Optional, Length, URL, NumberRange
 
 
 class SettingsForm(FlaskForm):
+    # General Branding
+    site_name = StringField("Platform / Site Name", validators=[Optional(), Length(max=100)])
+    site_tagline = TextAreaField("Site Tagline / Description", validators=[Optional(), Length(max=255)])
+    footer_copyright = StringField("Footer Copyright Notice", validators=[Optional(), Length(max=150)])
+
     # Hero Section
     hero_headline = StringField("Hero Headline", validators=[Optional(), Length(max=200)])
     hero_subheadline = TextAreaField("Hero Subheadline", validators=[Optional(), Length(max=300)])
     hero_cta_text = StringField("Hero CTA Text", validators=[Optional(), Length(max=80)])
     hero_images = MultipleFileField("Hero Images", validators=[Optional()])
     hero_image_alts = TextAreaField("Hero Image Descriptions (one per line)", validators=[Optional()])
+
+    # Promo / Coder Pool Banner
+    coder_banner_enabled = BooleanField("Display Coder Pool Banner on Homepage", default=True)
+    coder_banner_text = StringField("Coder Pool Banner Text", validators=[Optional(), Length(max=255)])
+    coder_banner_cta = StringField("Coder Pool Button Text", validators=[Optional(), Length(max=60)])
+
+    # Homepage Sections (Spotlight & Explore)
+    spotlight_badge = StringField("Spotlight Section Badge", validators=[Optional(), Length(max=60)])
+    spotlight_title = StringField("Spotlight Section Title", validators=[Optional(), Length(max=120)])
+    spotlight_subtitle = TextAreaField("Spotlight Section Subtitle", validators=[Optional(), Length(max=255)])
+    explore_title = StringField("Explore Section Title", validators=[Optional(), Length(max=120)])
+    explore_subtitle = TextAreaField("Explore Section Subtitle", validators=[Optional(), Length(max=255)])
 
     # Footer & Social Links
     github_url = URLField("GitHub URL", validators=[Optional(), URL(message="Invalid URL format.")])

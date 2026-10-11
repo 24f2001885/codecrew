@@ -17,6 +17,7 @@ class Group(db.Model):
     founded_date = db.Column(db.Date, nullable=True)
     location = db.Column(db.String(120), nullable=True)
     tech_tags = db.Column(db.JSON, default=list, nullable=False)
+    skills_proficiencies = db.Column(db.JSON, default=dict, nullable=False)
     social_links = db.Column(db.JSON, default=dict, nullable=False)
     featured = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
@@ -26,6 +27,17 @@ class Group(db.Model):
     projects = db.relationship("Project", backref="group", cascade="all, delete-orphan", lazy="dynamic")
     blog_posts = db.relationship("BlogPost", backref="group", cascade="all, delete-orphan", lazy="dynamic")
     contact_messages = db.relationship("ContactMessage", backref="group", cascade="all, delete-orphan", lazy="dynamic")
+
+    def get_skills_with_levels(self):
+        """Returns structured skills list [{'name': str, 'level': int}] based on database values."""
+        prof = self.skills_proficiencies or {}
+        skills = []
+        for idx, tag in enumerate(self.tech_tags or []):
+            level = prof.get(tag)
+            if level is None:
+                level = max(50, 95 - (idx * 5))
+            skills.append({"name": tag, "level": int(level)})
+        return skills
 
     @property
     def logo(self):

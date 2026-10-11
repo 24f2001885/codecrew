@@ -85,6 +85,7 @@ def group_create():
             slug = unique_slug(Group, form.name.data)
             logo_path = save_upload(form.logo.data, "logos", "image") if form.logo.data else None
             cover_path = save_upload(form.cover_image.data, "covers", "image") if form.cover_image.data else None
+            tags, levels = form.parse_tags_with_levels()
 
             group = Group(
                 name=form.name.data.strip(),
@@ -92,7 +93,8 @@ def group_create():
                 tagline=form.tagline.data.strip() if form.tagline.data else None,
                 description=form.description.data.strip() if form.description.data else None,
                 founded_year=form.founded_year.data,
-                tech_tags=form.parse_tags(),
+                tech_tags=tags,
+                skills_proficiencies=levels,
                 featured=form.featured.data,
                 logo=logo_path,
                 cover_image=cover_path,
@@ -118,7 +120,13 @@ def group_edit(id):
 
     if request.method == "GET":
         if group.tech_tags:
-            form.tech_tags.data = ", ".join(group.tech_tags)
+            parts = []
+            for t in group.tech_tags:
+                if group.skills_proficiencies and t in group.skills_proficiencies:
+                    parts.append(f"{t}:{group.skills_proficiencies[t]}")
+                else:
+                    parts.append(t)
+            form.tech_tags.data = ", ".join(parts)
 
     if form.validate_on_submit():
         try:
@@ -128,7 +136,9 @@ def group_edit(id):
             group.tagline = form.tagline.data.strip() if form.tagline.data else None
             group.description = form.description.data.strip() if form.description.data else None
             group.founded_year = form.founded_year.data
-            group.tech_tags = form.parse_tags()
+            tags, levels = form.parse_tags_with_levels()
+            group.tech_tags = tags
+            group.skills_proficiencies = levels
             group.featured = form.featured.data
 
             if form.logo.data and hasattr(form.logo.data, "filename") and form.logo.data.filename:
@@ -719,9 +729,23 @@ def settings():
     form = SettingsForm()
 
     if request.method == "GET":
+        form.site_name.data = getattr(settings_obj, "site_name", "CodeCrews")
+        form.site_tagline.data = getattr(settings_obj, "site_tagline", None)
+        form.footer_copyright.data = getattr(settings_obj, "footer_copyright", "CodeCrews. All rights reserved.")
+
         form.hero_headline.data = settings_obj.hero_headline
         form.hero_subheadline.data = settings_obj.hero_subheadline
         form.hero_cta_text.data = settings_obj.hero_cta_text
+
+        form.coder_banner_enabled.data = getattr(settings_obj, "coder_banner_enabled", True)
+        form.coder_banner_text.data = getattr(settings_obj, "coder_banner_text", None)
+        form.coder_banner_cta.data = getattr(settings_obj, "coder_banner_cta", None)
+
+        form.spotlight_badge.data = getattr(settings_obj, "spotlight_badge", "Spotlight")
+        form.spotlight_title.data = getattr(settings_obj, "spotlight_title", "Featured Groups")
+        form.spotlight_subtitle.data = getattr(settings_obj, "spotlight_subtitle", None)
+        form.explore_title.data = getattr(settings_obj, "explore_title", "Explore Groups")
+        form.explore_subtitle.data = getattr(settings_obj, "explore_subtitle", None)
 
         # Social links
         socials = settings_obj.footer_social_links or {}
@@ -749,9 +773,23 @@ def settings():
         form.auto_send_domain_alerts.data = getattr(settings_obj, "auto_send_domain_alerts", False)
 
     if form.validate_on_submit():
+        settings_obj.site_name = form.site_name.data.strip() if form.site_name.data else "CodeCrews"
+        settings_obj.site_tagline = form.site_tagline.data.strip() if form.site_tagline.data else None
+        settings_obj.footer_copyright = form.footer_copyright.data.strip() if form.footer_copyright.data else "CodeCrews. All rights reserved."
+
         settings_obj.hero_headline = form.hero_headline.data.strip() if form.hero_headline.data else None
         settings_obj.hero_subheadline = form.hero_subheadline.data.strip() if form.hero_subheadline.data else None
         settings_obj.hero_cta_text = form.hero_cta_text.data.strip() if form.hero_cta_text.data else None
+
+        settings_obj.coder_banner_enabled = bool(form.coder_banner_enabled.data)
+        settings_obj.coder_banner_text = form.coder_banner_text.data.strip() if form.coder_banner_text.data else None
+        settings_obj.coder_banner_cta = form.coder_banner_cta.data.strip() if form.coder_banner_cta.data else None
+
+        settings_obj.spotlight_badge = form.spotlight_badge.data.strip() if form.spotlight_badge.data else "Spotlight"
+        settings_obj.spotlight_title = form.spotlight_title.data.strip() if form.spotlight_title.data else "Featured Groups"
+        settings_obj.spotlight_subtitle = form.spotlight_subtitle.data.strip() if form.spotlight_subtitle.data else None
+        settings_obj.explore_title = form.explore_title.data.strip() if form.explore_title.data else "Explore Groups"
+        settings_obj.explore_subtitle = form.explore_subtitle.data.strip() if form.explore_subtitle.data else None
 
         # Handle removals
         remove_paths = request.form.getlist("remove_hero_images")

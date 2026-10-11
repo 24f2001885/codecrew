@@ -23,8 +23,8 @@
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body">
           <h6 class="text-muted text-uppercase font-weight-bold mb-2">Student Groups</h6>
-          <h3 class="font-weight-bold text-primary mb-0">Active</h3>
-          <small class="text-muted">CRUD management active in P3</small>
+          <h3 class="font-weight-bold text-primary mb-0">{{ group_count|default(0) }}</h3>
+          <a href="{{ url_for('admin.groups') }}" class="small text-primary font-weight-bold">Manage Groups &rarr;</a>
         </div>
       </div>
     </div>
@@ -33,8 +33,8 @@
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body">
           <h6 class="text-muted text-uppercase font-weight-bold mb-2">Developers</h6>
-          <h3 class="font-weight-bold text-success mb-0">Seeded</h3>
-          <small class="text-muted">Profiles and resumes in P3</small>
+          <h3 class="font-weight-bold text-success mb-0">{{ member_count|default(0) }}</h3>
+          <a href="{{ url_for('admin.groups', pick='members') }}" class="small text-success font-weight-bold">Manage Members &rarr;</a>
         </div>
       </div>
     </div>
@@ -43,8 +43,8 @@
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body">
           <h6 class="text-muted text-uppercase font-weight-bold mb-2">Projects</h6>
-          <h3 class="font-weight-bold text-warning mb-0">Ready</h3>
-          <small class="text-muted">Showcase catalog in P3</small>
+          <h3 class="font-weight-bold text-warning mb-0">{{ project_count|default(0) }}</h3>
+          <a href="{{ url_for('admin.groups', pick='projects') }}" class="small text-warning font-weight-bold">Manage Projects &rarr;</a>
         </div>
       </div>
     </div>
@@ -53,8 +53,8 @@
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body">
           <h6 class="text-muted text-uppercase font-weight-bold mb-2">Inquiries</h6>
-          <h3 class="font-weight-bold text-info mb-0">Inbox</h3>
-          <small class="text-muted">Contact & requests in P4</small>
+          <h3 class="font-weight-bold text-info mb-0">{{ unread_messages_count|default(0) }}</h3>
+          <a href="{{ url_for('admin.messages') }}" class="small text-info font-weight-bold">View Messages &rarr;</a>
         </div>
       </div>
     </div>
