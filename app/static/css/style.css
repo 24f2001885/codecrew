@@ -2,20 +2,38 @@
   --cc-color-primary: #f1b24b;
   --cc-color-primary-hover: #d99933;
   --cc-color-secondary: #3b82f6;
-  --cc-color-bg-dark: #0b1120;
-  --cc-color-bg-surface: #1e293b;
+  --cc-color-accent: #a0f669;
+  --cc-color-cyan: #38bdf8;
+  --cc-color-bg-dark: #080c14;
+  --cc-color-bg-surface: #111827;
+  --cc-glass-bg: rgba(17, 24, 39, 0.72);
+  --cc-glass-bg-hover: rgba(22, 32, 54, 0.85);
+  --cc-glass-border: rgba(255, 255, 255, 0.08);
+  --cc-glass-border-hover: rgba(241, 178, 75, 0.45);
+  --cc-glow-amber: rgba(241, 178, 75, 0.18);
+  --cc-glow-accent: rgba(160, 246, 105, 0.18);
+  --cc-glow-cyan: rgba(56, 189, 248, 0.18);
   --cc-color-text-light: #f8fafc;
   --cc-color-text-muted: #94a3b8;
   --cc-color-text-on-light: #212529;
   --cc-font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --cc-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 body {
   font-family: var(--cc-font-family);
   background-color: var(--cc-color-bg-dark);
+  background-image:
+    radial-gradient(circle at 14% 18%, rgba(241, 178, 75, 0.06) 0%, transparent 45%),
+    radial-gradient(circle at 86% 68%, rgba(56, 189, 248, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 50% 90%, rgba(160, 246, 105, 0.04) 0%, transparent 45%),
+    radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 28px 28px;
+  background-attachment: fixed;
   color: var(--cc-color-text-muted);
   margin: 0;
   padding: 0;
+  min-height: 100vh;
 }
 
 a:focus, button:focus {
@@ -48,7 +66,8 @@ a:focus, button:focus {
   top: 0;
   left: 0;
   transform: none;
-  background-color: rgba(11, 17, 32, 0.85);
+  background-color: rgba(8, 12, 20, 0.88);
+  backdrop-filter: blur(8px);
   border-radius: 0;
   box-shadow: none;
 }
@@ -88,96 +107,323 @@ a:focus, button:focus {
   100% { stroke-dasharray: 89, 200; stroke-dashoffset: -124px; }
 }
 
-/* Navbar */
+/* Navbar with Glass Blur & Scrolled Glow */
 .ftco_navbar {
-  background: #0b1120 !important;
-  padding: 1rem 0;
+  background: rgba(8, 12, 20, 0.82) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.9rem 0;
+  transition: all 0.3s ease;
 }
+
+.ftco_navbar.scrolled {
+  background: rgba(8, 12, 20, 0.94) !important;
+  box-shadow: 0 12px 32px -10px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(241, 178, 75, 0.15);
+  padding: 0.7rem 0;
+}
+
 .navbar-brand {
-  font-weight: 700;
-  font-size: 1.5rem;
-  letter-spacing: 0.5px;
+  font-weight: 800;
+  font-size: 1.55rem;
+  letter-spacing: -0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
+
 .navbar-brand span {
   color: var(--cc-color-primary);
+  text-shadow: 0 0 16px rgba(241, 178, 75, 0.45);
 }
+
 .nav-link {
   font-weight: 500;
+  font-size: 0.95rem;
+  letter-spacing: 0.2px;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+  position: relative;
 }
+
+.nav-link:hover {
+  color: #ffffff !important;
+}
+
 .nav-item.active .nav-link {
   color: var(--cc-color-primary) !important;
+  text-shadow: 0 0 12px rgba(241, 178, 75, 0.4);
 }
 
-/* Cards & Hover Effects */
+/* Cards & Glassmorphism 2.0 */
 .cc-card {
-  background-color: var(--cc-color-bg-surface) !important;
-  border-radius: 8px;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  background: var(--cc-glass-bg) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--cc-glass-border) !important;
+  border-radius: 14px;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s ease, background 0.35s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
 }
+
 .cc-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3) !important;
+  transform: translateY(-6px) scale(1.008);
+  background: var(--cc-glass-bg-hover) !important;
+  border-color: var(--cc-glass-border-hover) !important;
+  box-shadow: 0 20px 40px -15px var(--cc-glow-amber), 0 0 0 1px rgba(241, 178, 75, 0.25) !important;
 }
 
-/* Tags and Badges */
+.cc-card .card-img-wrapper {
+  border-radius: 14px 14px 0 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.cc-card .card-img-wrapper img {
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cc-card:hover .card-img-wrapper img {
+  transform: scale(1.06);
+}
+
+/* Tags and Chips */
 .cc-tag {
-  background-color: transparent !important;
-  border: 1px solid var(--cc-color-primary) !important;
+  background: rgba(241, 178, 75, 0.08) !important;
+  border: 1px solid rgba(241, 178, 75, 0.28) !important;
   color: var(--cc-color-primary) !important;
-  font-weight: 500;
-  padding: 0.35rem 0.6rem;
-  border-radius: 4px;
+  font-family: var(--cc-font-mono);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.3px;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  transition: all 0.25s ease;
+  display: inline-block;
 }
 
+.cc-tag:hover {
+  background: rgba(241, 178, 75, 0.22) !important;
+  border-color: var(--cc-color-primary) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(241, 178, 75, 0.25);
+}
+
+/* Status Badges & Radar Beacons */
 .cc-badge-featured {
-  background-color: var(--cc-color-primary) !important;
-  color: #0b1120 !important;
+  background: linear-gradient(135deg, #f1b24b 0%, #e59d28 100%) !important;
+  color: #080c14 !important;
   font-weight: 700;
-  border-radius: 4px;
+  letter-spacing: 0.4px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(241, 178, 75, 0.4);
 }
 
 .cc-badge-status {
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
 }
 
-.cc-stat {
-  font-size: 2.75rem;
-  font-weight: 700;
+.cc-radar-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(160, 246, 105, 0.1);
+  border: 1px solid rgba(160, 246, 105, 0.35);
+  color: var(--cc-color-accent);
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  box-shadow: 0 0 12px rgba(160, 246, 105, 0.15);
+}
+
+.cc-radar-dot {
+  position: relative;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cc-color-accent);
+  box-shadow: 0 0 6px var(--cc-color-accent);
+}
+
+.cc-radar-dot::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1.5px solid var(--cc-color-accent);
+  animation: ccRadarPing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ccRadarPing {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Hero Section Typography & Badges */
+.cc-gradient-heading {
+  background: linear-gradient(135deg, #ffffff 35%, #f1b24b 95%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+}
+
+.cc-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(241, 178, 75, 0.08);
+  border: 1px solid rgba(241, 178, 75, 0.25);
   color: var(--cc-color-primary);
+  font-family: var(--cc-font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 20px rgba(241, 178, 75, 0.1);
 }
 
-/* Progress Bars for Tech Stack */
+/* Coder Pool Glass Banner */
+.cc-banner-glass {
+  background: rgba(17, 24, 39, 0.85) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.25) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Counter & HUD Stats */
+.cc-stat {
+  font-family: var(--cc-font-mono);
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--cc-color-primary);
+  text-shadow: 0 0 24px rgba(241, 178, 75, 0.35);
+  letter-spacing: -0.03em;
+}
+
+.cc-hud-tile {
+  background: rgba(17, 24, 39, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 1.8rem 1.2rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cc-hud-tile:hover {
+  transform: translateY(-4px);
+  border-color: rgba(241, 178, 75, 0.35);
+  box-shadow: 0 16px 36px -10px var(--cc-glow-amber);
+}
+
+/* Shimmer Progress Bars for Tech Stack */
 .progress {
-  border-radius: 4px;
+  background-color: #111827 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
   overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-/* Primary Button Styling */
-.btn-warning {
-  background-color: var(--cc-color-primary) !important;
-  border-color: var(--cc-color-primary) !important;
-  color: #0b1120 !important;
+.progress-bar.bg-warning {
+  background: linear-gradient(90deg, #f1b24b 0%, #ffd98a 50%, #f1b24b 100%) !important;
+  background-size: 200% 100% !important;
+  animation: ccShimmerSweep 3s infinite linear;
+  box-shadow: 0 0 10px rgba(241, 178, 75, 0.5);
 }
+
+@keyframes ccShimmerSweep {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Button Stylings */
+.btn-warning {
+  background: linear-gradient(135deg, #f1b24b 0%, #e59d28 100%) !important;
+  border-color: transparent !important;
+  color: #080c14 !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(241, 178, 75, 0.35);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
 .btn-warning:hover {
-  background-color: var(--cc-color-primary-hover) !important;
-  border-color: var(--cc-color-primary-hover) !important;
+  background: linear-gradient(135deg, #ffd080 0%, #f1b24b 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(241, 178, 75, 0.5) !important;
+  color: #080c14 !important;
+}
+
+.btn-warning:active {
+  transform: scale(0.98);
+}
+
+.btn-outline-light {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  backdrop-filter: blur(8px);
+  border-radius: 8px !important;
+  color: #ffffff !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.btn-outline-light:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.btn-outline-warning {
+  background: rgba(241, 178, 75, 0.05) !important;
+  border: 1px solid rgba(241, 178, 75, 0.35) !important;
+  color: var(--cc-color-primary) !important;
+  border-radius: 8px !important;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.btn-outline-warning:hover {
+  background: rgba(241, 178, 75, 0.18) !important;
+  border-color: var(--cc-color-primary) !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(241, 178, 75, 0.25);
 }
 
 /* Footer */
 .ftco-footer {
-  background: #070b14;
+  background: #05080f;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   color: var(--cc-color-text-muted);
-  padding: 4rem 0 2rem;
+  padding: 4.5rem 0 2.5rem;
 }
+
 .ftco-footer h2 {
   color: #fff;
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
+
 .ftco-footer a {
   color: var(--cc-color-text-muted);
+  transition: color 0.2s ease;
 }
+
 .ftco-footer a:hover {
   color: var(--cc-color-primary);
   text-decoration: none;
@@ -207,6 +453,7 @@ a:focus, button:focus {
   text-decoration: none;
   transition: top 0.2s ease-in-out;
 }
+
 .skip-link:focus {
   top: 1rem;
   outline: 3px solid #ffffff;
@@ -236,11 +483,11 @@ select:focus-visible {
   outline-offset: 2px;
 }
 
-/* Color contrast note: body text #999 on #000 passes AA; raising dimmer/smaller text to at least #b3b3b3 */
+/* Color contrast enforcement */
 .text-muted,
 .ftco-footer,
 .small {
-  color: #b3b3b3 !important;
+  color: #94a3b8 !important;
 }
 
 /* Prefers-reduced-motion media query */
@@ -257,10 +504,11 @@ select:focus-visible {
   .owl-stage,
   .hero-wrap,
   .ftco-animate,
-  [data-aos] {
+  [data-aos],
+  .progress-bar.bg-warning,
+  .cc-radar-dot::after {
     transition: none !important;
     animation: none !important;
     transform: none !important;
   }
 }
-

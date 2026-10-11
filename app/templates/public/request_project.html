@@ -3,20 +3,23 @@
 {% block title %}Request a Project — CodeCrews{% endblock %}
 
 {% block content %}
-<section class="hero-wrap hero-wrap-2" style="background-color: #0b1120; min-height: 240px; padding: 60px 0 30px;">
-  <div class="container text-center">
-    <h1 class="font-weight-bold text-white mb-3">Tell Us What You Want Built</h1>
-    <p class="lead text-light mx-auto" style="max-width: 650px;">
+<section class="hero-wrap hero-wrap-2 position-relative overflow-hidden" style="background: #080c14; min-height: 240px; padding: 70px 0 40px; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+  <div class="container text-center position-relative" style="z-index: 2;">
+    <div class="cc-hero-badge mb-2">
+      <span class="cc-radar-dot"></span> Custom Engagements
+    </div>
+    <h1 class="font-weight-bold text-white mb-3 cc-gradient-heading display-4">Tell Us What You Want Built</h1>
+    <p class="lead text-light mx-auto" style="max-width: 650px; color: #94a3b8 !important; font-size: 1.15rem;">
       Submit your project idea, brief, or requirements. Your submission is sent directly to the CodeCrews platform administration for review and team matching.
     </p>
   </div>
 </section>
 
-<section class="ftco-section py-5" style="background-color: #0f172a;">
+<section class="ftco-section py-5">
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-lg-8">
-        <div class="card border-0 shadow-lg p-4 p-md-5 rounded" style="background-color: #ffffff; color: #212529;">
+        <div class="card border-0 shadow-lg p-4 p-md-5" style="background-color: #ffffff; color: #212529; border-radius: 16px;">
           <form method="POST" enctype="multipart/form-data" novalidate>
             {{ form.hidden_tag() }}
 
@@ -94,13 +97,13 @@
               {% endfor %}
             </div>
 
-            <div class="alert alert-info py-2 px-3 small mb-4" role="note">
+            <div class="alert alert-info py-2 px-3 small mb-4" role="note" style="border-radius: 8px;">
               <strong>Privacy Guarantee:</strong> Your details and documents are stored securely and seen only by the platform admin.
             </div>
 
-            <div class="text-center">
-              {{ form.submit(class="btn btn-warning btn-lg px-5 font-weight-bold text-dark shadow-sm") }}
-            </div>
+            <button type="submit" class="btn btn-warning btn-block font-weight-bold py-3" style="border-radius: 8px;">
+              Submit Project Request
+            </button>
           </form>
         </div>
       </div>

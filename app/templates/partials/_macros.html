@@ -6,11 +6,13 @@
         <img src="{{ url_for('static', filename=group.cover_image) }}" class="card-img-top w-100 h-100" style="object-fit: cover;" alt="{{ group.name }} logo">
       {% else %}
         <div class="d-flex align-items-center justify-content-center h-100 text-muted">
-          <span class="h4 text-warning mb-0">{{ group.name }}</span>
+          <span class="h4 text-warning mb-0 font-weight-bold">{{ group.name }}</span>
         </div>
       {% endif %}
       {% if group.featured %}
-        <span class="badge badge-warning cc-badge-featured position-absolute" style="top: 12px; right: 12px; font-size: 0.8rem; font-weight: 600;">Featured</span>
+        <span class="badge badge-warning cc-badge-featured position-absolute d-inline-flex align-items-center" style="top: 12px; right: 12px; font-size: 0.8rem; font-weight: 700;">
+          <span class="cc-radar-dot mr-1"></span>Featured
+        </span>
       {% endif %}
     </div>
 
@@ -32,9 +34,9 @@
         </div>
       {% endif %}
 
-      <div class="card-meta d-flex justify-content-between pt-3 border-top border-secondary text-muted small">
-        <span><strong class="text-warning">{{ group.members.count() if group.members is defined and group.members.count is defined else 0 }}</strong> Members</span>
-        <span><strong class="text-warning">{{ group.projects.count() if group.projects is defined and group.projects.count is defined else 0 }}</strong> Projects</span>
+      <div class="card-meta d-flex justify-content-between pt-3 text-muted small" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
+        <span><strong class="text-warning font-mono">{{ group.members.count() if group.members is defined and group.members.count is defined else 0 }}</strong> Members</span>
+        <span><strong class="text-warning font-mono">{{ group.projects.count() if group.projects is defined and group.projects.count is defined else 0 }}</strong> Projects</span>
       </div>
     </div>
   </div>
@@ -45,7 +47,7 @@
 {% macro member_card(member) %}
 <div class="col-md-6 col-lg-4 mb-4" data-aos="fade-up">
   <div class="card h-100 cc-card border-0 shadow-sm p-4 text-center" data-member-id="{{ member.id }}">
-    <div class="member-avatar mb-3 mx-auto" style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; background: #1e293b;">
+    <div class="member-avatar mb-3 mx-auto" style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; background: #1e293b; border: 2px solid rgba(241, 178, 75, 0.35); box-shadow: 0 0 16px rgba(241, 178, 75, 0.15);">
       {% if member.photo %}
         <img src="{{ url_for('static', filename=member.photo) }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ member.name }} photo">
       {% else %}
@@ -60,11 +62,11 @@
         {{ member.name }}
       </a>
     </h5>
-    <p class="text-warning small mb-2">{{ member.role or 'Member' }}</p>
+    <p class="text-warning small mb-2 font-weight-medium">{{ member.role or 'Member' }}</p>
 
     {% if member.group %}
       <div class="mb-2">
-        <a href="{{ url_for('public.group_detail', slug=member.group.slug) }}" class="badge badge-dark text-muted">
+        <a href="{{ url_for('public.group_detail', slug=member.group.slug) }}" class="badge badge-dark text-muted" style="background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 9999px; padding: 0.3rem 0.6rem;">
           {{ member.group.name }}
         </a>
       </div>
@@ -83,21 +85,21 @@
     {% endif %}
 
     <div class="member-actions d-flex justify-content-center align-items-center gap-2 mt-auto pt-2">
-      <a href="#member-popup-{{ member.id }}" class="btn btn-sm btn-outline-info js-member-popup mx-1" aria-label="View {{ member.name }}'s profile">
+      <a href="#member-popup-{{ member.id }}" class="btn btn-sm btn-outline-info js-member-popup mx-1" aria-label="View {{ member.name }}'s profile" style="border-radius: 6px;">
         Profile
       </a>
       {% if member.github_url %}
-        <a href="{{ member.github_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mx-1 text-light" aria-label="{{ member.name }} GitHub">
+        <a href="{{ member.github_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mx-1 text-light" aria-label="{{ member.name }} GitHub" style="border-radius: 6px;">
           GH
         </a>
       {% endif %}
       {% if member.linkedin_url %}
-        <a href="{{ member.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mx-1 text-light" aria-label="{{ member.name }} LinkedIn">
+        <a href="{{ member.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mx-1 text-light" aria-label="{{ member.name }} LinkedIn" style="border-radius: 6px;">
           IN
         </a>
       {% endif %}
       {% if member.resume_pdf %}
-        <a href="{{ url_for('static', filename=member.resume_pdf) }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-warning mx-1 font-weight-bold" aria-label="Download {{ member.name }}'s resume">
+        <a href="{{ url_for('static', filename=member.resume_pdf) }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-warning mx-1 font-weight-bold" aria-label="Download {{ member.name }}'s resume" style="border-radius: 6px;">
           Resume
         </a>
       {% endif %}
@@ -105,9 +107,9 @@
   </div>
 
   {# Inline hidden Magnific Popup content #}
-  <div id="member-popup-{{ member.id }}" class="mfp-hide cc-member-modal bg-dark text-white p-4 mx-auto rounded shadow-lg" style="max-width: 600px; text-align: left;">
+  <div id="member-popup-{{ member.id }}" class="mfp-hide cc-member-modal text-white p-4 mx-auto rounded shadow-lg" style="max-width: 600px; text-align: left; background: rgba(17, 24, 39, 0.96); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px;">
     <div class="d-flex align-items-center mb-4">
-      <div class="mr-3" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; background: #1e293b; flex-shrink: 0;">
+      <div class="mr-3" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; background: #1e293b; border: 2px solid rgba(241, 178, 75, 0.4); flex-shrink: 0;">
         {% if member.photo %}
           <img src="{{ url_for('static', filename=member.photo) }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ member.name }} photo">
         {% else %}
@@ -120,7 +122,7 @@
         <h4 class="font-weight-bold text-white mb-1">{{ member.name }}</h4>
         <p class="text-warning mb-1">{{ member.role or 'Member' }}</p>
         {% if member.group %}
-          <a href="{{ url_for('public.group_detail', slug=member.group.slug) }}" class="badge badge-secondary">
+          <a href="{{ url_for('public.group_detail', slug=member.group.slug) }}" class="badge badge-secondary" style="background: rgba(255, 255, 255, 0.1); border-radius: 9999px;">
             {{ member.group.name }}
           </a>
         {% endif %}
@@ -128,13 +130,13 @@
     </div>
     
     <div class="mb-3">
-      <h6 class="text-muted text-uppercase small font-weight-bold">Bio</h6>
-      <p class="text-light" style="white-space: pre-line;">{{ member.bio or 'Software developer crafting robust systems.' }}</p>
+      <h6 class="text-muted text-uppercase small font-weight-bold" style="letter-spacing: 0.5px;">Bio</h6>
+      <p class="text-light" style="white-space: pre-line; line-height: 1.6;">{{ member.bio or 'Software developer crafting robust systems.' }}</p>
     </div>
 
     {% if member.skill_tags and member.skill_tags|length > 0 %}
       <div class="mb-3">
-        <h6 class="text-muted text-uppercase small font-weight-bold">Skills</h6>
+        <h6 class="text-muted text-uppercase small font-weight-bold" style="letter-spacing: 0.5px;">Skills</h6>
         <div>
           {% for skill in member.skill_tags %}
             <span class="badge cc-tag mr-1 mb-1">{{ skill }}</span>
@@ -159,12 +161,12 @@
     </div>
 
     {% if member.group and member.group.projects %}
-      <div class="mt-4 pt-3 border-top border-secondary">
-        <h6 class="text-muted text-uppercase small font-weight-bold mb-2">Group Projects</h6>
+      <div class="mt-4 pt-3" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
+        <h6 class="text-muted text-uppercase small font-weight-bold mb-2" style="letter-spacing: 0.5px;">Group Projects</h6>
         <ul class="list-unstyled mb-0">
           {% for proj in member.group.projects %}
             <li class="mb-1">
-              <a href="{{ url_for('public.group_detail', slug=member.group.slug) }}#projects" class="text-info">{{ proj.title }}</a>
+              <a href="{{ url_for('public.group_detail', slug=member.group.slug) }}#projects" class="text-info font-weight-medium">{{ proj.title }}</a>
             </li>
           {% endfor %}
         </ul>
@@ -183,10 +185,12 @@
         <img src="{{ url_for('static', filename=project.screenshot) }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ project.title }} screenshot">
       {% else %}
         <div class="d-flex align-items-center justify-content-center h-100 text-muted">
-          <span class="font-weight-bold text-warning">{{ project.title }}</span>
+          <span class="font-weight-bold text-warning h5 mb-0">{{ project.title }}</span>
         </div>
       {% endif %}
-      <span class="badge cc-badge-status badge-success position-absolute" style="top: 10px; right: 10px;">Completed</span>
+      <span class="badge cc-badge-status badge-success position-absolute d-inline-flex align-items-center" style="top: 10px; right: 10px; background: rgba(160, 246, 105, 0.2); color: #a0f669; border: 1px solid rgba(160, 246, 105, 0.4);">
+        <span class="cc-radar-dot mr-1"></span>Completed
+      </span>
     </div>
 
     <div class="card-body d-flex flex-column p-4">
@@ -207,7 +211,7 @@
         </div>
       {% endif %}
 
-      <div class="project-links mt-auto pt-2 d-flex justify-content-between">
+      <div class="project-links mt-auto pt-2 d-flex justify-content-between" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
         {% if project.demo_url %}
           <a href="{{ project.demo_url }}" target="_blank" rel="noopener noreferrer" class="text-warning small font-weight-bold">Live Demo &rarr;</a>
         {% endif %}
