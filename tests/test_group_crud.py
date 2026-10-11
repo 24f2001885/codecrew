@@ -187,3 +187,59 @@ def test_public_site_reads_live_data(logged_in_client, app):
     # Check directory again
     resp2 = logged_in_client.get("/groups")
     assert b"Live Group Renamed" in resp2.data
+
+
+def test_create_and_edit_group_with_skill_proficiencies(logged_in_client, app):
+    # 1. Create a group with tag:percentage format
+    data = {
+        "name": "Fullstack Ninjas",
+        "tagline": "Mastering web technologies",
+        "description": "Elite fullstack engineering guild.",
+        "tech_tags": "Python:95, TypeScript:90, Docker:80",
+    }
+    resp = logged_in_client.post("/admin/groups/new", data=data, follow_redirects=True)
+    assert resp.status_code == 200
+    assert b"created successfully" in resp.data
+
+    with app.app_context():
+        group = Group.query.filter_by(name="Fullstack Ninjas").first()
+        assert group is not None
+        assert group.tech_tags == ["python", "typescript", "docker"]
+        assert group.skills_proficiencies == {"python": 95, "typescript": 90, "docker": 80}
+        gid = group.id
+        slug = group.slug
+
+    # 2. Check public detail page displays exact percentage values and progress bars
+    pub_resp = logged_in_client.get(f"/group/{slug}")
+    assert pub_resp.status_code == 200
+    assert b"95%" in pub_resp.data
+    assert b"90%" in pub_resp.data
+    assert b"80%" in pub_resp.data
+    assert b'style="width: 95%;"' in pub_resp.data
+    assert b'style="width: 90%;"' in pub_resp.data
+    assert b'style="width: 80%;"' in pub_resp.data
+
+    # 3. Check edit form pre-populates with tag:percentage format
+    edit_get = logged_in_client.get(f"/admin/groups/{gid}/edit")
+    assert edit_get.status_code == 200
+    assert b"python:95, typescript:90, docker:80" in edit_get.data
+
+    # 4. Update the skills in edit form
+    update_data = {
+        "name": "Fullstack Ninjas",
+        "tech_tags": "Python:98, Go:88",
+    }
+    edit_post = logged_in_client.post(f"/admin/groups/{gid}/edit", data=update_data, follow_redirects=True)
+    assert edit_post.status_code == 200
+    assert b"updated successfully" in edit_post.data
+
+    with app.app_context():
+        updated_group = db.session.get(Group, gid)
+        assert updated_group.tech_tags == ["python", "go"]
+        assert updated_group.skills_proficiencies == {"python": 98, "go": 88}
+
+    # Verify updated percentages render on public page
+    pub_resp2 = logged_in_client.get(f"/group/{slug}")
+    assert b"98%" in pub_resp2.data
+    assert b"88%" in pub_resp2.data
+

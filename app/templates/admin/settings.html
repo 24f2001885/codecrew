@@ -19,6 +19,61 @@
         <form method="POST" enctype="multipart/form-data" novalidate>
           {{ form.hidden_tag() }}
 
+          {# 0. General Platform Branding #}
+          <fieldset class="mb-5 pb-3 border-bottom">
+            <legend class="h5 font-weight-bold text-primary mb-3">General Platform Branding</legend>
+            <div class="row">
+              <div class="col-md-6 form-group mb-3">
+                <label for="site_name" class="font-weight-bold small">Site / Platform Name</label>
+                {{ form.site_name(class="form-control" + (" is-invalid" if form.site_name.errors else ""), id="site_name", placeholder="e.g. CodeCrews") }}
+                {% for error in form.site_name.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6 form-group mb-3">
+                <label for="footer_copyright" class="font-weight-bold small">Footer Copyright Text</label>
+                {{ form.footer_copyright(class="form-control" + (" is-invalid" if form.footer_copyright.errors else ""), id="footer_copyright", placeholder="e.g. CodeCrews. All rights reserved.") }}
+                {% for error in form.footer_copyright.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="form-group mb-3">
+              <label for="site_tagline" class="font-weight-bold small">Platform Description / Footer Tagline</label>
+              {{ form.site_tagline(class="form-control" + (" is-invalid" if form.site_tagline.errors else ""), id="site_tagline", rows="2", placeholder="e.g. The premier multi-tenant developer agency showcasing high-performing student engineering teams...") }}
+              {% for error in form.site_tagline.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </fieldset>
+
+          {# 0.1 Promo Banner #}
+          <fieldset class="mb-5 pb-3 border-bottom">
+            <legend class="h5 font-weight-bold text-primary mb-3">Coder Pool Notification Banner</legend>
+            <div class="custom-control custom-checkbox mb-3">
+              {{ form.coder_banner_enabled(class="custom-control-input", id="coder_banner_enabled") }}
+              <label class="custom-control-label font-weight-bold" for="coder_banner_enabled">
+                Display Coder Pool Banner on Homepage
+              </label>
+            </div>
+            <div class="row">
+              <div class="col-md-8 form-group mb-3">
+                <label for="coder_banner_text" class="font-weight-bold small">Banner Message</label>
+                {{ form.coder_banner_text(class="form-control" + (" is-invalid" if form.coder_banner_text.errors else ""), id="coder_banner_text", placeholder="e.g. Developer? Join our coder pool and hear about projects in your domain.") }}
+                {% for error in form.coder_banner_text.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-4 form-group mb-3">
+                <label for="coder_banner_cta" class="font-weight-bold small">Banner Button Label</label>
+                {{ form.coder_banner_cta(class="form-control" + (" is-invalid" if form.coder_banner_cta.errors else ""), id="coder_banner_cta", placeholder="e.g. Join as a Coder") }}
+                {% for error in form.coder_banner_cta.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+          </fieldset>
+
           {# 1. Hero Fieldset #}
           <fieldset class="mb-5 pb-3 border-bottom">
             <legend class="h5 font-weight-bold text-primary mb-3">Hero Banner</legend>
@@ -84,6 +139,49 @@
                 <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
               {% endfor %}
               <small class="form-text text-muted">Required for accessibility: each newly uploaded image must have a corresponding description line.</small>
+            </div>
+          </fieldset>
+
+          {# 1.1 Homepage Sections (Spotlight & Explore) #}
+          <fieldset class="mb-5 pb-3 border-bottom">
+            <legend class="h5 font-weight-bold text-primary mb-3">Homepage Sections (Spotlight &amp; Explore)</legend>
+            <div class="row">
+              <div class="col-md-4 form-group mb-3">
+                <label for="spotlight_badge" class="font-weight-bold small">Spotlight Badge Text</label>
+                {{ form.spotlight_badge(class="form-control" + (" is-invalid" if form.spotlight_badge.errors else ""), id="spotlight_badge", placeholder="Spotlight") }}
+                {% for error in form.spotlight_badge.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-8 form-group mb-3">
+                <label for="spotlight_title" class="font-weight-bold small">Spotlight Section Heading</label>
+                {{ form.spotlight_title(class="form-control" + (" is-invalid" if form.spotlight_title.errors else ""), id="spotlight_title", placeholder="Featured Groups") }}
+                {% for error in form.spotlight_title.errors %}
+                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="form-group mb-4">
+              <label for="spotlight_subtitle" class="font-weight-bold small">Spotlight Description</label>
+              {{ form.spotlight_subtitle(class="form-control" + (" is-invalid" if form.spotlight_subtitle.errors else ""), id="spotlight_subtitle", rows="2", placeholder="Top-ranked squads actively delivering high-impact software.") }}
+              {% for error in form.spotlight_subtitle.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="explore_title" class="font-weight-bold small">Explore Section Heading</label>
+              {{ form.explore_title(class="form-control" + (" is-invalid" if form.explore_title.errors else ""), id="explore_title", placeholder="Explore Groups") }}
+              {% for error in form.explore_title.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="form-group mb-3">
+              <label for="explore_subtitle" class="font-weight-bold small">Explore Description</label>
+              {{ form.explore_subtitle(class="form-control" + (" is-invalid" if form.explore_subtitle.errors else ""), id="explore_subtitle", rows="2", placeholder="Browse through innovative student engineering teams across disciplines.") }}
+              {% for error in form.explore_subtitle.errors %}
+                <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+              {% endfor %}
             </div>
           </fieldset>
 

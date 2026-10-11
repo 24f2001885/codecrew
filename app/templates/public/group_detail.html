@@ -153,10 +153,22 @@
     </div>
 
     <div class="row">
-      {% if group.tech_tags %}
+      {% set skills = group.get_skills_with_levels() if group.get_skills_with_levels is defined else [] %}
+      {% if skills %}
+        {% for skill in skills %}
+          <div class="col-md-6 mb-4" data-aos="fade-up">
+            <div class="d-flex justify-content-between mb-1">
+              <span class="text-light font-weight-bold text-uppercase">{{ skill.name }}</span>
+              <span class="text-warning small font-weight-bold">{{ skill.level }}%</span>
+            </div>
+            <div class="progress" style="height: 8px; background-color: #1e293b;">
+              <div class="progress-bar bg-warning" role="progressbar" style="width: {{ skill.level }}%;" aria-valuenow="{{ skill.level }}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+          </div>
+        {% endfor %}
+      {% elif group.tech_tags %}
         {% for tag in group.tech_tags %}
-          <!-- Width derived from tag position: 95%, 85%, 75% etc -->
-          {% set proficiency = 95 - (loop.index0 * 5) %}
+          {% set proficiency = 90 %}
           <div class="col-md-6 mb-4" data-aos="fade-up">
             <div class="d-flex justify-content-between mb-1">
               <span class="text-light font-weight-bold text-uppercase">{{ tag }}</span>
