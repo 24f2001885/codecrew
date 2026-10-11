@@ -1,0 +1,22 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2 style="margin: 0 0 16px 0; color: #f8fafc; font-size: 20px; font-weight: 700;">New Project in Your Domain</h2>
+<p style="margin: 0 0 14px 0;">Hello,</p>
+<div style="background-color: rgba(255, 255, 255, 0.04); border-left: 3px solid #f59e0b; padding: 16px 20px; border-radius: 6px; margin: 20px 0; font-size: 15px; color: #f1f5f9; line-height: 1.6;">
+  {{ summary }}
+</div>
+<p style="margin: 0 0 24px 0;">
+  If your team or collective has availability and would like to be considered for this engagement, express your interest below:
+</p>
+<div style="text-align: center; margin: 32px 0;">
+  <a href="{{ interested_url }}" style="display: inline-block; background-color: #f59e0b; color: #080c14; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 8px; text-decoration: none; box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.4);">
+    Express Interest &rarr;
+  </a>
+</div>
+{% endblock %}
+
+{% block footer %}
+<p style="margin: 0 0 10px 0;">To stop receiving project alerts in your domains, <a href="{{ unsubscribe_url }}" style="color: #94a3b8; text-decoration: underline;">unsubscribe here</a>.</p>
+<p style="margin: 0;">&copy; {{ current_year | default(2026) }} CodeCrews. All rights reserved.</p>
+{% endblock %}

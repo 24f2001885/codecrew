@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ subject | default('CodeCrews Notification') }}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #080c14; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #e2e8f0; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #080c14; padding: 40px 15px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #0f172a; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden; box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 28px 32px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(15, 23, 42, 0.8) 100%); border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <div style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em; color: #ffffff;">
+                      CODE<span style="color: #f59e0b;">CREWS</span>
+                    </div>
+                    <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; margin-top: 3px;">
+                      Elite Software Engineering Collectives
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Main Content -->
+          <tr>
+            <td style="padding: 36px 32px 32px 32px; line-height: 1.65; font-size: 15px; color: #cbd5e1;">
+              {% block content %}{% endblock %}
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 32px; background-color: #090e18; border-top: 1px solid rgba(255, 255, 255, 0.05); text-align: center; font-size: 12px; color: #64748b; line-height: 1.6;">
+              {% block footer %}
+              <p style="margin: 0 0 6px 0;">This email was sent securely by the CodeCrews platform.</p>
+              <p style="margin: 0;">&copy; {{ current_year | default(2026) }} CodeCrews. All rights reserved.</p>
+              {% endblock %}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

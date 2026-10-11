@@ -1,6 +1,6 @@
 import math
 from datetime import datetime
-from flask import Blueprint, render_template, request, abort
+from flask import Blueprint, render_template, request, abort, Response
 from app.models.group import Group
 from app.models.member import Member
 from app.models.project import Project
@@ -167,3 +167,44 @@ def group_detail(slug):
         stats=stats,
         form=form,
     )
+
+
+@public_bp.route("/sitemap.xml")
+def sitemap():
+    base = request.host_url.rstrip("/")
+    pages = [
+        {"loc": f"{base}/", "priority": "1.0", "changefreq": "daily"},
+        {"loc": f"{base}/groups", "priority": "0.9", "changefreq": "daily"},
+        {"loc": f"{base}/members", "priority": "0.9", "changefreq": "daily"},
+        {"loc": f"{base}/request-project", "priority": "0.8", "changefreq": "weekly"},
+        {"loc": f"{base}/join", "priority": "0.8", "changefreq": "weekly"},
+    ]
+    for g in Group.query.all():
+        pages.append({
+            "loc": f"{base}/group/{g.slug}",
+            "priority": "0.85",
+            "changefreq": "weekly"
+        })
+    xml = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for p in pages:
+        xml.append('  <url>')
+        xml.append(f'    <loc>{p["loc"]}</loc>')
+        xml.append(f'    <changefreq>{p["changefreq"]}</changefreq>')
+        xml.append(f'    <priority>{p["priority"]}</priority>')
+        xml.append('  </url>')
+    xml.append('</urlset>')
+    return Response("\n".join(xml), mimetype="application/xml")
+
+
+@public_bp.route("/robots.txt")
+def robots():
+    base = request.host_url.rstrip("/")
+    content = f"""User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /coder/
+
+Sitemap: {base}/sitemap.xml
+"""
+    return Response(content, mimetype="text/plain")
+

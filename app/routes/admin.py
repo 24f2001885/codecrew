@@ -1,6 +1,8 @@
 import os
+import csv
+import io
 from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, Response
 from app.extensions import db
 from flask_login import current_user
 from app.models.group import Group
@@ -45,11 +47,21 @@ def dashboard():
     project_count = Project.query.count()
     unread_messages_count = ContactMessage.query.filter_by(is_read=False).count()
     new_requests_count = ProjectRequest.query.filter_by(status="new").count()
+    total_requests_count = ProjectRequest.query.count()
     draft_posts_count = BlogPost.query.filter(BlogPost.published_at.is_(None)).count()
     published_posts_count = BlogPost.query.filter(BlogPost.published_at.is_not(None)).count()
     active_coders_count = CoderUser.query.filter_by(status="active").count()
     pending_applications_count = CoderApplication.query.filter_by(status="pending").count()
+    total_applications_count = CoderApplication.query.count()
     open_grants_count = RequestAccessGrant.query.filter(RequestAccessGrant.revoked_at.is_(None)).count()
+
+    request_pipeline = {
+        "new": new_requests_count,
+        "in_review": ProjectRequest.query.filter_by(status="in_review").count(),
+        "contacted": ProjectRequest.query.filter_by(status="contacted").count(),
+        "closed": ProjectRequest.query.filter_by(status="closed").count(),
+    }
+
     return render_template(
         "admin/dashboard.html",
         group_count=group_count,
@@ -57,12 +69,76 @@ def dashboard():
         project_count=project_count,
         unread_messages_count=unread_messages_count,
         new_requests_count=new_requests_count,
+        total_requests_count=total_requests_count,
         draft_posts_count=draft_posts_count,
         published_posts_count=published_posts_count,
         active_coders_count=active_coders_count,
         pending_applications_count=pending_applications_count,
+        total_applications_count=total_applications_count,
         open_grants_count=open_grants_count,
+        request_pipeline=request_pipeline,
     )
+
+
+# -----------------------------------------------------------------------------
+# Data Export (CSV)
+# -----------------------------------------------------------------------------
+@admin_bp.route("/export/requests.csv")
+def export_requests_csv():
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Name", "Email", "Company", "Project Type", "Budget", "Timeline", "Status", "Created At"])
+    for r in ProjectRequest.query.order_by(ProjectRequest.created_at.desc()).all():
+        writer.writerow([
+            r.id, r.name, r.email, r.company or "", r.project_type,
+            r.budget_range or "", r.timeline or "", r.status,
+            r.created_at.strftime("%Y-%m-%d %H:%M:%S") if r.created_at else ""
+        ])
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=codecrews_project_requests.csv"}
+    )
+
+
+@admin_bp.route("/export/applications.csv")
+def export_applications_csv():
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Name", "Email", "Headline", "Domains", "Verified", "Status", "Created At"])
+    for a in CoderApplication.query.order_by(CoderApplication.created_at.desc()).all():
+        writer.writerow([
+            a.id, a.name, a.email, a.headline or "",
+            ", ".join(a.domain_tags) if a.domain_tags else "",
+            "Yes" if a.email_verified_at else "No",
+            a.status,
+            a.created_at.strftime("%Y-%m-%d %H:%M:%S") if a.created_at else ""
+        ])
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=codecrews_coder_applications.csv"}
+    )
+
+
+@admin_bp.route("/export/members.csv")
+def export_members_csv():
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Name", "Role", "Group", "Skills", "Created At"])
+    for m in Member.query.order_by(Member.name.asc()).all():
+        writer.writerow([
+            m.id, m.name, m.role or "",
+            m.group.name if m.group else "",
+            ", ".join(m.skill_tags) if m.skill_tags else "",
+            m.created_at.strftime("%Y-%m-%d %H:%M:%S") if m.created_at else ""
+        ])
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=codecrews_members.csv"}
+    )
+
 
 
 

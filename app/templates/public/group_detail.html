@@ -56,7 +56,10 @@
           {% if blog_posts %}
             <a href="#blog" class="btn btn-sm btn-outline-warning mr-2 mb-2 px-3 py-2">Blog</a>
           {% endif %}
-          <a href="#contact" class="btn btn-sm btn-warning font-weight-bold mb-2 px-3 py-2">Contact</a>
+          <a href="#contact" class="btn btn-sm btn-warning font-weight-bold mb-2 mr-2 px-3 py-2">Contact</a>
+          <button type="button" class="btn btn-sm btn-outline-light mb-2 px-3 py-2 js-copy-link" data-url="{{ request.base_url }}" aria-label="Share this group">
+            🔗 Share Squad
+          </button>
         </div>
       </div>
       <div class="col-md-4 text-center d-none d-md-block" data-aos="fade-left">

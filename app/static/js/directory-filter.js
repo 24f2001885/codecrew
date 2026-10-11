@@ -57,25 +57,25 @@
       var html = '<ul class="pagination justify-content-center">';
       // Previous
       if (currentPage > 1) {
-        html += '<li class="page-item"><a class="page-link bg-dark text-warning border-secondary js-page-link" href="#" data-page="' + (currentPage - 1) + '">&laquo; Prev</a></li>';
+        html += '<li class="page-item"><a class="page-link text-warning js-page-link" style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; margin: 0 3px;" href="#" data-page="' + (currentPage - 1) + '">&laquo; Prev</a></li>';
       } else {
-        html += '<li class="page-item disabled"><span class="page-link bg-dark text-muted border-secondary">&laquo; Prev</span></li>';
+        html += '<li class="page-item disabled"><span class="page-link text-muted" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 6px; margin: 0 3px;">&laquo; Prev</span></li>';
       }
 
       // Pages
       for (var p = 1; p <= totalPages; p++) {
         if (p === currentPage) {
-          html += '<li class="page-item active"><span class="page-link bg-warning text-dark border-warning font-weight-bold">' + p + '</span></li>';
+          html += '<li class="page-item active"><span class="page-link bg-warning text-dark border-warning font-weight-bold" style="border-radius: 6px; margin: 0 3px;">' + p + '</span></li>';
         } else {
-          html += '<li class="page-item"><a class="page-link bg-dark text-light border-secondary js-page-link" href="#" data-page="' + p + '">' + p + '</a></li>';
+          html += '<li class="page-item"><a class="page-link text-light js-page-link" style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; margin: 0 3px;" href="#" data-page="' + p + '">' + p + '</a></li>';
         }
       }
 
       // Next
       if (currentPage < totalPages) {
-        html += '<li class="page-item"><a class="page-link bg-dark text-warning border-secondary js-page-link" href="#" data-page="' + (currentPage + 1) + '">Next &raquo;</a></li>';
+        html += '<li class="page-item"><a class="page-link text-warning js-page-link" style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; margin: 0 3px;" href="#" data-page="' + (currentPage + 1) + '">Next &raquo;</a></li>';
       } else {
-        html += '<li class="page-item disabled"><span class="page-link bg-dark text-muted border-secondary">Next &raquo;</span></li>';
+        html += '<li class="page-item disabled"><span class="page-link text-muted" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 6px; margin: 0 3px;">Next &raquo;</span></li>';
       }
 
       html += '</ul>';
@@ -85,6 +85,10 @@
     function fetchResults() {
       var requestId = ++currentRequestId;
       var params = buildUrlParams();
+      var $results = $("#directory-results");
+      var $status = $("#directory-status");
+
+      $results.css("opacity", "0.55");
 
       $.getJSON(endpoint + "?" + params.toString())
         .done(function (data) {
@@ -92,10 +96,6 @@
             return; // Ignore stale responses
           }
 
-          var $results = $("#directory-results");
-          var $status = $("#directory-status");
-
-          // 1. Status line
           var total = data.total_count || 0;
           var noun = kind === "groups" ? (total === 1 ? "group" : "groups") : (total === 1 ? "member" : "members");
           if (total > 0) {
@@ -104,14 +104,14 @@
             $status.text("No " + noun + " match your search.");
           }
 
-          // 2. Render cards with fade effect
+          // Render cards with fade effect
           $results.fadeOut(150, function () {
             if (data.html && data.html.trim().length > 0) {
               $results.html(data.html);
             } else {
-              $results.html('<div class="col-12 text-center py-5"><p class="h4 text-muted font-weight-normal">No ' + noun + ' match your search.</p></div>');
+              $results.html('<div class="col-12 text-center py-5 cc-hud-tile my-3"><p class="h4 text-muted font-weight-normal mb-0">No ' + noun + ' match your search.</p></div>');
             }
-            $results.fadeIn(150);
+            $results.css("opacity", "1").fadeIn(150);
 
             // Re-run effects and AOS
             if (typeof AOS !== "undefined") {
@@ -122,12 +122,13 @@
             }
           });
 
-          // 3. Pagination & history URL
+          // Pagination & history URL
           renderPagination(data.page, data.total_pages);
           updateBrowserUrl();
         })
         .fail(function () {
           if (requestId === currentRequestId) {
+            $results.css("opacity", "1");
             $("#directory-status").text("Could not load results. Please try again.");
           }
         });
@@ -146,22 +147,20 @@
       }
 
       clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(function () {
-        fetchResults();
-      }, 250);
+      debounceTimer = setTimeout(fetchResults, 250);
     }
 
-    // Bind event listeners
-    $("#filter-q").on("keyup input", function () {
+    // Input event listeners
+    $("#filter-q").on("input", function () {
       onFilterChange(true);
     });
 
     if (kind === "groups") {
-      $("#filter-tag").on("keyup input", function () {
+      $("#filter-tag").on("input", function () {
         onFilterChange(true);
       });
     } else {
-      $("#filter-skill").on("keyup input", function () {
+      $("#filter-skill").on("input", function () {
         onFilterChange(true);
       });
       $("#filter-group").on("change", function () {
@@ -169,17 +168,36 @@
       });
     }
 
-    // Pagination click handler
+    // Delegated pagination click
     $(document).on("click", "#directory-pagination .js-page-link", function (e) {
       e.preventDefault();
       var targetPage = parseInt($(this).data("page"), 10);
       if (targetPage && targetPage !== page) {
         page = targetPage;
         fetchResults();
-        $("html, body").stop().animate({
-          scrollTop: $("#directory-filter").offset().top - 80
+        $("html, body").animate({
+          scrollTop: $("#directory-filter").offset().top - 90
         }, 300);
       }
+    });
+
+    // Handle browser back/forward buttons
+    window.addEventListener("popstate", function () {
+      var poppedParams = new URLSearchParams(window.location.search);
+      q = poppedParams.get("q") || "";
+      tagOrSkill = kind === "groups" ? (poppedParams.get("tag") || "") : (poppedParams.get("skill") || "");
+      group = poppedParams.get("group") || "";
+      page = parseInt(poppedParams.get("page"), 10) || 1;
+
+      $("#filter-q").val(q);
+      if (kind === "groups") {
+        $("#filter-tag").val(tagOrSkill);
+      } else {
+        $("#filter-skill").val(tagOrSkill);
+        $("#filter-group").val(group);
+      }
+
+      fetchResults();
     });
   });
 })(jQuery);

@@ -6,14 +6,14 @@ from app.extensions import mail
 logger = logging.getLogger(__name__)
 
 
-def _send(subject, body, recipients, extra_headers=None):
+def _send(subject, body, recipients, extra_headers=None, html=None):
     """
     Private helper: sends an email via Flask-Mail safely.
     Logs errors and returns True/False. Never re-raises exceptions.
     """
     try:
         sender = current_app.config.get("MAIL_DEFAULT_SENDER", "noreply@codecrews.example")
-        msg = Message(subject=subject, sender=sender, recipients=recipients, body=body, extra_headers=extra_headers)
+        msg = Message(subject=subject, sender=sender, recipients=recipients, body=body, html=html, extra_headers=extra_headers)
         mail.send(msg)
         logger.info(f"[MAIL SENT] Subject: {subject} to {recipients}")
         return True
@@ -26,7 +26,7 @@ def send_email(subject, recipients, text_body, html_body=None):
     """
     Backwards-compatible wrapper around _send.
     """
-    return _send(subject, text_body, recipients)
+    return _send(subject, text_body, recipients, html=html_body)
 
 
 def send_password_reset_email(admin_user, reset_url):
@@ -124,7 +124,11 @@ def send_coder_invite(coder, token):
 
     subject = "Welcome to CodeCrews — Set Up Your Coder Account"
     body = render_template("emails/coder_invite.txt", coder=coder, invite_url=invite_url)
-    return _send(subject, body, [coder.email])
+    try:
+        html = render_template("emails/coder_invite.html", coder=coder, invite_url=invite_url)
+    except Exception:
+        html = None
+    return _send(subject, body, [coder.email], html=html)
 
 
 def send_coder_password_reset(coder, token):
@@ -139,7 +143,11 @@ def send_coder_password_reset(coder, token):
     max_age_min = current_app.config.get("RESET_TOKEN_MAX_AGE", 3600) // 60
     subject = "CodeCrews Coder Password Reset"
     body = render_template("emails/password_reset_coder.txt", coder=coder, reset_url=reset_url, max_age_minutes=max_age_min)
-    return _send(subject, body, [coder.email])
+    try:
+        html = render_template("emails/password_reset_coder.html", coder=coder, reset_url=reset_url, max_age_minutes=max_age_min)
+    except Exception:
+        html = None
+    return _send(subject, body, [coder.email], html=html)
 
 
 def send_opportunity_assigned(coder, grant):
@@ -155,7 +163,11 @@ def send_opportunity_assigned(coder, grant):
     scope_label = "Brief Only" if grant.scope == "brief_only" else "Brief & Contact Details"
     subject = "New Project Opportunity Assigned — CodeCrews"
     body = render_template("emails/opportunity_assigned.txt", coder=coder, scope=scope_label, opportunity_url=opp_url)
-    return _send(subject, body, [coder.email])
+    try:
+        html = render_template("emails/opportunity_assigned.html", coder=coder, scope=scope_label, opportunity_url=opp_url)
+    except Exception:
+        html = None
+    return _send(subject, body, [coder.email], html=html)
 
 
 def send_application_verify(application, verify_url):
@@ -170,7 +182,16 @@ def send_application_verify(application, verify_url):
         verify_url=verify_url,
         max_age_days=max_age_days,
     )
-    return _send(subject, body, [application.email])
+    try:
+        html = render_template(
+            "emails/application_verify.html",
+            application=application,
+            verify_url=verify_url,
+            max_age_days=max_age_days,
+        )
+    except Exception:
+        html = None
+    return _send(subject, body, [application.email], html=html)
 
 
 def send_application_new_admin(application):
@@ -204,9 +225,18 @@ def send_domain_alert(recipient_email, summary, interested_url, unsubscribe_url)
         interested_url=interested_url,
         unsubscribe_url=unsubscribe_url,
     )
+    try:
+        html = render_template(
+            "emails/domain_alert.html",
+            summary=summary,
+            interested_url=interested_url,
+            unsubscribe_url=unsubscribe_url,
+        )
+    except Exception:
+        html = None
     extra_headers = {
         "List-Unsubscribe": f"<{unsubscribe_url}>",
         "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
     }
-    return _send(subject, body, [recipient_email], extra_headers=extra_headers)
+    return _send(subject, body, [recipient_email], extra_headers=extra_headers, html=html)
 

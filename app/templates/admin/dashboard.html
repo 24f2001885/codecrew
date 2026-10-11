@@ -9,11 +9,24 @@
 
 {% block content %}
 <div class="container-fluid">
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="card bg-dark text-white border-0 shadow-sm p-4">
+  <div class="row mb-4 align-items-center">
+    <div class="col-lg-8 mb-3 mb-lg-0">
+      <div class="card bg-dark text-white border-0 shadow-sm p-4" style="border-radius: 14px;">
         <h2 class="h3 font-weight-bold mb-1">Welcome back, Super Admin!</h2>
         <p class="text-muted mb-0">CodeCrews platform status: All core services initialized and protected by role-based namespaces.</p>
+      </div>
+    </div>
+    <div class="col-lg-4 text-lg-right">
+      <div class="btn-group shadow-sm">
+        <a href="{{ url_for('admin.export_requests_csv') }}" class="btn btn-outline-secondary btn-sm font-weight-bold" title="Export Project Requests to CSV">
+          📥 Requests CSV
+        </a>
+        <a href="{{ url_for('admin.export_applications_csv') }}" class="btn btn-outline-secondary btn-sm font-weight-bold" title="Export Coder Applications to CSV">
+          📥 Coder Pool CSV
+        </a>
+        <a href="{{ url_for('admin.export_members_csv') }}" class="btn btn-outline-secondary btn-sm font-weight-bold" title="Export Members to CSV">
+          📥 Members CSV
+        </a>
       </div>
     </div>
   </div>
@@ -95,6 +108,81 @@
           <h6 class="text-muted text-uppercase font-weight-bold mb-2">Open Access Grants</h6>
           <h3 class="font-weight-bold text-info mb-0">{{ open_grants_count|default(0) }}</h3>
           <a href="{{ url_for('admin.project_requests') }}" class="small text-primary font-weight-bold">View Requests &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pipeline & Analytics Breakdown Section -->
+  <div class="row mb-4">
+    <div class="col-lg-6 mb-4 mb-lg-0">
+      <div class="card border-0 shadow-sm h-100" style="border-radius: 14px;">
+        <div class="card-header bg-white border-bottom py-3">
+          <h6 class="font-weight-bold mb-0 text-dark">📊 Project Request Pipeline Breakdown</h6>
+        </div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between mb-2 small text-muted font-weight-bold">
+            <span>Status Pipeline</span>
+            <span>Total: {{ total_requests_count|default(0) }}</span>
+          </div>
+          {% set total_req = total_requests_count|default(1) or 1 %}
+          <div class="progress mb-3" style="height: 12px; border-radius: 6px; overflow: hidden; background: #e2e8f0;">
+            <div class="progress-bar bg-info" style="width: {{ (request_pipeline.new / total_req * 100)|round|int if request_pipeline else 0 }}%;" title="New: {{ request_pipeline.new if request_pipeline else 0 }}"></div>
+            <div class="progress-bar bg-warning" style="width: {{ (request_pipeline.in_review / total_req * 100)|round|int if request_pipeline else 0 }}%;" title="In Review: {{ request_pipeline.in_review if request_pipeline else 0 }}"></div>
+            <div class="progress-bar bg-success" style="width: {{ (request_pipeline.contacted / total_req * 100)|round|int if request_pipeline else 0 }}%;" title="Contacted: {{ request_pipeline.contacted if request_pipeline else 0 }}"></div>
+            <div class="progress-bar bg-secondary" style="width: {{ (request_pipeline.closed / total_req * 100)|round|int if request_pipeline else 0 }}%;" title="Closed: {{ request_pipeline.closed if request_pipeline else 0 }}"></div>
+          </div>
+          <div class="row text-center mt-3 small">
+            <div class="col-3">
+              <span class="d-block font-weight-bold text-info">{{ request_pipeline.new if request_pipeline else 0 }}</span>
+              <span class="text-muted">New</span>
+            </div>
+            <div class="col-3">
+              <span class="d-block font-weight-bold text-warning">{{ request_pipeline.in_review if request_pipeline else 0 }}</span>
+              <span class="text-muted">In Review</span>
+            </div>
+            <div class="col-3">
+              <span class="d-block font-weight-bold text-success">{{ request_pipeline.contacted if request_pipeline else 0 }}</span>
+              <span class="text-muted">Contacted</span>
+            </div>
+            <div class="col-3">
+              <span class="d-block font-weight-bold text-muted">{{ request_pipeline.closed if request_pipeline else 0 }}</span>
+              <span class="text-muted">Closed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100" style="border-radius: 14px;">
+        <div class="card-header bg-white border-bottom py-3">
+          <h6 class="font-weight-bold mb-0 text-dark">⚡ Coder Pool & Access Grants Health</h6>
+        </div>
+        <div class="card-body d-flex flex-column justify-content-between">
+          <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+            <div>
+              <span class="font-weight-bold text-dark d-block">Active Coder Users</span>
+              <small class="text-muted">Coders with accepted platform invitations</small>
+            </div>
+            <span class="badge badge-success px-3 py-2 font-weight-bold" style="font-size: 0.9rem;">{{ active_coders_count|default(0) }} Active</span>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+            <div>
+              <span class="font-weight-bold text-dark d-block">Active Opportunity Grants</span>
+              <small class="text-muted">Client briefs actively shared with coders</small>
+            </div>
+            <span class="badge badge-info px-3 py-2 font-weight-bold" style="font-size: 0.9rem;">{{ open_grants_count|default(0) }} Grants</span>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+            <div>
+              <span class="font-weight-bold text-dark d-block">Pending Applicant Queue</span>
+              <small class="text-muted">Verified applicants awaiting review</small>
+            </div>
+            <span class="badge badge-warning px-3 py-2 font-weight-bold" style="font-size: 0.9rem;">{{ pending_applications_count|default(0) }} Pending</span>
+          </div>
         </div>
       </div>
     </div>
