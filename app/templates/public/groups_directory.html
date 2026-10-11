@@ -4,29 +4,34 @@
 {% block title %}Groups Directory — CodeCrews{% endblock %}
 
 {% block content %}
-<section class="hero-wrap hero-wrap-2" style="background: #0b1120; padding: 70px 0 40px;">
-  <div class="container text-center">
-    <h1 class="text-white font-weight-bold mb-2">Groups</h1>
-    <p class="text-muted mb-0">Browse through innovative student engineering teams across technologies and domains.</p>
+<section class="hero-wrap hero-wrap-2 position-relative overflow-hidden" style="background: #080c14; padding: 80px 0 45px; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+  <div class="container text-center position-relative" style="z-index: 2;">
+    <div class="cc-hero-badge mb-2">
+      <span class="cc-radar-dot"></span> Engineering Collectives
+    </div>
+    <h1 class="text-white font-weight-bold mb-2 cc-gradient-heading display-4">Groups Directory</h1>
+    <p class="text-muted mb-0 lead" style="max-width: 650px; margin: 0 auto; font-size: 1.1rem;">
+      Browse through innovative student engineering teams, specialized squads, and active project collectives.
+    </p>
   </div>
 </section>
 
-<section class="ftco-section py-5" style="background-color: #0b1120;">
+<section class="ftco-section py-5">
   <div class="container">
     {# Live filter bar #}
-    <div id="directory-filter" data-endpoint="{{ url_for('api.groups') }}" data-kind="groups" class="mb-4">
-      <div class="row">
+    <div id="directory-filter" data-endpoint="{{ url_for('api.groups') }}" data-kind="groups" class="mb-4 cc-hud-tile p-3">
+      <div class="row align-items-center">
         <div class="col-md-8 mb-3 mb-md-0">
-          <input type="text" id="filter-q" class="form-control bg-dark text-white border-secondary" placeholder="Search groups by name or tagline..." aria-label="Search groups" value="{{ q or '' }}">
+          <input type="text" id="filter-q" class="form-control text-white" style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 0.7rem 1rem;" placeholder="Search groups by name or tagline..." aria-label="Search groups" value="{{ q or '' }}">
         </div>
         <div class="col-md-4">
-          <input type="text" id="filter-tag" class="form-control bg-dark text-white border-secondary" placeholder="Filter by tech tag (e.g. React)..." aria-label="Filter by tag" value="{{ tag or '' }}">
+          <input type="text" id="filter-tag" class="form-control text-white" style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 0.7rem 1rem;" placeholder="Filter by tech tag (e.g. React)..." aria-label="Filter by tag" value="{{ tag or '' }}">
         </div>
       </div>
     </div>
 
     {# Aria-live status line #}
-    <div id="directory-status" class="text-muted small mb-4" aria-live="polite">
+    <div id="directory-status" class="text-muted small mb-4 font-weight-medium" aria-live="polite">
       {% if total_count > 0 %}
         {{ total_count }} group{{ 's' if total_count != 1 else '' }}
       {% else %}
@@ -41,8 +46,8 @@
           {{ group_card(group) }}
         {% endfor %}
       {% else %}
-        <div class="col-12 text-center py-5">
-          <p class="h4 text-muted font-weight-normal">No groups match your search.</p>
+        <div class="col-12 text-center py-5 cc-hud-tile my-3">
+          <p class="h4 text-muted font-weight-normal mb-0">No groups match your search.</p>
         </div>
       {% endif %}
     </div>
@@ -53,13 +58,13 @@
         <ul class="pagination justify-content-center">
           {% if pagination.has_prev %}
             <li class="page-item">
-              <a class="page-link bg-dark text-warning border-secondary" href="{{ url_for('public.groups', page=pagination.prev_num, q=q, tag=tag) }}" aria-label="Previous">
+              <a class="page-link text-warning" style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; margin: 0 3px;" href="{{ url_for('public.groups', page=pagination.prev_num, q=q, tag=tag) }}" aria-label="Previous">
                 &laquo; Prev
               </a>
             </li>
           {% else %}
             <li class="page-item disabled">
-              <span class="page-link bg-dark text-muted border-secondary">&laquo; Prev</span>
+              <span class="page-link text-muted" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 6px; margin: 0 3px;">&laquo; Prev</span>
             </li>
           {% endif %}
 
@@ -67,27 +72,27 @@
             {% if p %}
               {% if p == pagination.page %}
                 <li class="page-item active" aria-current="page">
-                  <span class="page-link bg-warning text-dark border-warning font-weight-bold">{{ p }}</span>
+                  <span class="page-link bg-warning text-dark border-warning font-weight-bold" style="border-radius: 6px; margin: 0 3px;">{{ p }}</span>
                 </li>
               {% else %}
                 <li class="page-item">
-                  <a class="page-link bg-dark text-light border-secondary" href="{{ url_for('public.groups', page=p, q=q, tag=tag) }}">{{ p }}</a>
+                  <a class="page-link text-light" style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; margin: 0 3px;" href="{{ url_for('public.groups', page=p, q=q, tag=tag) }}">{{ p }}</a>
                 </li>
               {% endif %}
             {% else %}
-              <li class="page-item disabled"><span class="page-link bg-dark text-muted border-secondary">&hellip;</span></li>
+              <li class="page-item disabled"><span class="page-link text-muted" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 6px; margin: 0 3px;">&hellip;</span></li>
             {% endif %}
           {% endfor %}
 
           {% if pagination.has_next %}
             <li class="page-item">
-              <a class="page-link bg-dark text-warning border-secondary" href="{{ url_for('public.groups', page=pagination.next_num, q=q, tag=tag) }}" aria-label="Next">
+              <a class="page-link text-warning" style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; margin: 0 3px;" href="{{ url_for('public.groups', page=pagination.next_num, q=q, tag=tag) }}" aria-label="Next">
                 Next &raquo;
               </a>
             </li>
           {% else %}
             <li class="page-item disabled">
-              <span class="page-link bg-dark text-muted border-secondary">Next &raquo;</span>
+              <span class="page-link text-muted" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 6px; margin: 0 3px;">Next &raquo;</span>
             </li>
           {% endif %}
         </ul>
