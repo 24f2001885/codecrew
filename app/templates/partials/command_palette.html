@@ -1,0 +1,62 @@
+<!-- Command Palette Modal (Cmd+K / Ctrl+K) -->
+<div class="modal fade" id="ccCommandPalette" tabindex="-1" role="dialog" aria-labelledby="ccCommandPaletteLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 580px;">
+    <div class="modal-content text-white border-0 shadow-lg" style="background: rgba(11, 17, 32, 0.96); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.12) !important; border-radius: 16px; overflow: hidden;">
+      <div class="modal-header border-0 pb-0 px-4 pt-4 align-items-center">
+        <div class="w-100 d-flex align-items-center" style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(241, 178, 75, 0.35); border-radius: 10px; padding: 0.6rem 1rem;">
+          <span class="text-warning mr-2" style="font-size: 1.1rem;">🔍</span>
+          <input type="text" id="ccPaletteInput" class="form-control bg-transparent text-white border-0 p-0 shadow-none" placeholder="Type a destination or action... (e.g. Groups, Request, Join)" style="font-size: 1rem;" aria-label="Command search">
+          <span class="badge badge-dark text-muted ml-2 font-mono small" style="background: rgba(255, 255, 255, 0.08); font-size: 0.7rem;">ESC to exit</span>
+        </div>
+      </div>
+
+      <div class="modal-body px-4 py-3" style="max-height: 380px; overflow-y: auto;">
+        <div class="small text-muted font-weight-bold text-uppercase mb-2 font-mono" style="letter-spacing: 0.5px; font-size: 0.72rem;">Navigation</div>
+        <div class="list-group list-group-flush mb-3">
+          <a href="{{ url_for('public.index') }}" class="list-group-item list-group-item-action bg-transparent text-light border-0 py-2 px-3 rounded cc-palette-item d-flex align-items-center justify-content-between">
+            <span>🏠 Home &mdash; Discover Collectives</span>
+            <span class="badge badge-secondary small" style="background: rgba(255, 255, 255, 0.08);">/</span>
+          </a>
+          <a href="{{ url_for('public.groups') }}" class="list-group-item list-group-item-action bg-transparent text-light border-0 py-2 px-3 rounded cc-palette-item d-flex align-items-center justify-content-between">
+            <span>👥 Groups &mdash; Engineering Squads Directory</span>
+            <span class="badge badge-secondary small" style="background: rgba(255, 255, 255, 0.08);">/groups</span>
+          </a>
+          <a href="{{ url_for('public.members') }}" class="list-group-item list-group-item-action bg-transparent text-light border-0 py-2 px-3 rounded cc-palette-item d-flex align-items-center justify-content-between">
+            <span>⚡ Our Members &mdash; Developers & Engineers</span>
+            <span class="badge badge-secondary small" style="background: rgba(255, 255, 255, 0.08);">/members</span>
+          </a>
+          <a href="{{ url_for('requests.request_project') }}" class="list-group-item list-group-item-action bg-transparent text-light border-0 py-2 px-3 rounded cc-palette-item d-flex align-items-center justify-content-between">
+            <span>🚀 Request a Project &mdash; Client Inquiries</span>
+            <span class="badge badge-warning text-dark small font-weight-bold">Lead</span>
+          </a>
+          <a href="{{ url_for('join.join') }}" class="list-group-item list-group-item-action bg-transparent text-light border-0 py-2 px-3 rounded cc-palette-item d-flex align-items-center justify-content-between">
+            <span>💻 Join as a Coder &mdash; Talent Pool</span>
+            <span class="badge badge-info small" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">Coder</span>
+          </a>
+        </div>
+
+        <div class="small text-muted font-weight-bold text-uppercase mb-2 font-mono" style="letter-spacing: 0.5px; font-size: 0.72rem;">Portals & Management</div>
+        <div class="list-group list-group-flush mb-2">
+          <a href="{{ url_for('admin.dashboard') }}" class="list-group-item list-group-item-action bg-transparent text-light border-0 py-2 px-3 rounded cc-palette-item d-flex align-items-center justify-content-between">
+            <span>🛡️ Admin Dashboard</span>
+            <span class="badge badge-secondary small" style="background: rgba(255, 255, 255, 0.08);">/admin</span>
+          </a>
+          <a href="{{ url_for('coder_auth.login') }}" class="list-group-item list-group-item-action bg-transparent text-light border-0 py-2 px-3 rounded cc-palette-item d-flex align-items-center justify-content-between">
+            <span>🟢 Coder Sign-in</span>
+            <span class="badge badge-secondary small" style="background: rgba(255, 255, 255, 0.08);">/coder/login</span>
+          </a>
+        </div>
+
+        <div id="ccPaletteEmpty" class="text-center py-4 text-muted" style="display: none;">
+          <span class="d-block mb-1">🔍 No matches found</span>
+          <small>Try searching for "groups", "members", "join", or "request"</small>
+        </div>
+      </div>
+      
+      <div class="modal-footer border-0 pt-0 px-4 pb-3 justify-content-between text-muted small" style="border-top: 1px solid rgba(255, 255, 255, 0.06) !important;">
+        <span>Press <kbd style="background: #1e293b; color: #f1b24b; border: 1px solid rgba(255,255,255,0.1);">Ctrl+K</kbd> anytime</span>
+        <span>CodeCrews Spotlight</span>
+      </div>
+    </div>
+  </div>
+</div>

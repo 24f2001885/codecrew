@@ -8,6 +8,7 @@
   <title>{% block title %}{{ seo_for().title }}{% endblock %}</title>
   <meta name="description" content="{% block meta_description %}{{ seo_for().description }}{% endblock %}">
   <link rel="canonical" href="{{ request.base_url }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
 
   <!-- OpenGraph / Facebook -->
   <meta property="og:type" content="website">
@@ -50,6 +51,7 @@
     {% block content %}{% endblock %}
   </main>
 
+  {% include "partials/command_palette.html" %}
   {% include "partials/footer.html" %}
 
   <!-- Vendor JS -->

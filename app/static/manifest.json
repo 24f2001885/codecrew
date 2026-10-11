@@ -1,0 +1,17 @@
+{
+  "name": "CodeCrews Developer Collectives",
+  "short_name": "CodeCrews",
+  "description": "Unified ecosystem of high-performing student developer collectives and production software portfolios.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080c14",
+  "theme_color": "#080c14",
+  "icons": [
+    {
+      "src": "/static/images/bg_1.jpg",
+      "sizes": "192x192 512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

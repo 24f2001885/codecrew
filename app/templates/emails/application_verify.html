@@ -1,0 +1,22 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2 style="margin: 0 0 16px 0; color: #f8fafc; font-size: 20px; font-weight: 700;">Verify Your Application</h2>
+<p style="margin: 0 0 14px 0;">Hello <strong style="color: #f1f5f9;">{{ application.name }}</strong>,</p>
+<p style="margin: 0 0 20px 0;">
+  Thank you for applying to join the CodeCrews coder network. To confirm your application and begin receiving matching client opportunities, please verify your email address:
+</p>
+<div style="text-align: center; margin: 32px 0;">
+  <a href="{{ verify_url }}" style="display: inline-block; background-color: #f59e0b; color: #080c14; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 8px; text-decoration: none; box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.4);">
+    Verify Email Address &rarr;
+  </a>
+</div>
+<p style="margin: 20px 0 0 0; font-size: 14px; color: #cbd5e1;">
+  This link is valid for <strong>{{ max_age_days }} days</strong>. Once verified, our matching engine will pair you with engineering leads and client inquiries in your specialized stack.
+</p>
+<p style="margin: 24px 0 0 0; font-size: 13px; color: #94a3b8; border-top: 1px dashed rgba(255, 255, 255, 0.1); padding-top: 18px;">
+  If you did not submit this application, you can safely ignore this email.<br>
+  Verification link:<br>
+  <a href="{{ verify_url }}" style="color: #38bdf8; word-break: break-all;">{{ verify_url }}</a>
+</p>
+{% endblock %}
