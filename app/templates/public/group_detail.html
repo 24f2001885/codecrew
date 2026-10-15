@@ -54,6 +54,11 @@
               🗓️ Est. {{ group.founded_year }}
             </span>
           {% endif %}
+          {% if group.reviews_count > 0 %}
+            <span class="badge badge-warning text-dark font-weight-bold mr-2 py-1 px-2 d-inline-flex align-items-center" style="font-size: 0.8rem;">
+              ★ {{ group.average_rating }} ({{ group.reviews_count }} Review{{ 's' if group.reviews_count != 1 else '' }})
+            </span>
+          {% endif %}
           <span class="badge cc-badge-status badge-success py-1 px-2 d-inline-flex align-items-center" style="background: rgba(160, 246, 105, 0.2); color: #a0f669; border: 1px solid rgba(160, 246, 105, 0.4); font-size: 0.8rem;">
             <span class="cc-radar-dot mr-1"></span>Active Engineering Squad
           </span>
@@ -84,6 +89,7 @@
           <a href="#tech-stack" class="btn btn-sm btn-outline-warning mr-2 mb-2 px-3 py-2 font-weight-medium">Tech Stack</a>
           <a href="#projects" class="btn btn-sm btn-outline-warning mr-2 mb-2 px-3 py-2 font-weight-medium">Projects ({{ projects|length }})</a>
           <a href="#blog" class="btn btn-sm btn-outline-warning mr-2 mb-2 px-3 py-2 font-weight-medium">Dev Log ({{ blog_posts|length }})</a>
+          <a href="#reviews" class="btn btn-sm btn-outline-warning mr-2 mb-2 px-3 py-2 font-weight-medium">Reviews ({{ group.reviews_count }})</a>
           <a href="#contact" class="btn btn-sm btn-warning font-weight-bold mb-2 mr-2 px-3 py-2">Contact Squad</a>
           <button type="button" class="btn btn-sm btn-outline-light mb-2 px-3 py-2 js-copy-link" data-url="{{ request.base_url }}" aria-label="Share this group landing page">
             🔗 Share Squad
@@ -294,6 +300,70 @@
         <div class="col-12 text-center py-5 cc-hud-tile my-3">
           <p class="h5 text-muted font-weight-normal mb-1">No dev log entries published yet.</p>
           <p class="text-muted small mb-0">{{ group.name }} is heads-down building. Check back soon for their technical breakdowns!</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- Verified Client Reviews & Testimonials Section -->
+<section class="ftco-section py-5" id="reviews" style="background: rgba(11, 17, 32, 0.4);">
+  <div class="container">
+    <div class="row mb-4 align-items-end">
+      <div class="col-md-8" data-aos="fade-up">
+        <h2 class="text-white font-weight-bold mb-1 border-left pl-3" style="border-left: 4px solid #f59e0b !important;">
+          Verified Client Reviews <span class="badge badge-warning text-dark ml-2 small" style="font-size: 0.85rem; vertical-align: middle;">{{ group.reviews_count }}</span>
+        </h2>
+        <p class="text-muted mb-0">Authentic feedback and ratings from customers who contracted {{ group.name }} through CodeCrews.</p>
+      </div>
+      <div class="col-md-4 text-md-right mt-3 mt-md-0" data-aos="fade-up">
+        <div class="d-inline-flex align-items-center p-2 rounded" style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(255, 255, 255, 0.08);">
+          <span class="text-warning font-weight-bold font-mono h4 mb-0 mr-2">★ {{ group.average_rating }}</span>
+          <span class="text-muted small">Squad Trust Score</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      {% if group.active_reviews %}
+        {% for rev in group.active_reviews %}
+          <div class="col-md-6 mb-4" data-aos="fade-up">
+            <div class="card cc-card border-0 shadow-sm p-4 h-100" style="border-radius: 14px;">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                  <span class="text-warning font-weight-bold">
+                    {% for i in range(rev.rating) %}★{% endfor %}
+                  </span>
+                  <span class="badge badge-success ml-2 py-1 px-2 font-mono small" style="font-size: 0.7rem;">
+                    &check; VERIFIED CONTRACT
+                  </span>
+                </div>
+                <span class="text-muted small font-mono">{{ rev.created_at.strftime('%b %Y') }}</span>
+              </div>
+
+              {% if rev.review_title %}
+                <h5 class="text-white font-weight-bold mb-2" style="font-size: 1.1rem;">{{ rev.review_title }}</h5>
+              {% endif %}
+
+              <p class="text-light small mb-3 flex-grow-1" style="line-height: 1.6; color: #cbd5e1 !important; font-style: italic;">
+                &ldquo;{{ rev.comment }}&rdquo;
+              </p>
+
+              <div class="pt-2 border-top d-flex justify-content-between align-items-center" style="border-color: rgba(255, 255, 255, 0.08) !important;">
+                <div>
+                  <span class="font-weight-bold text-white small">{{ rev.client_name }}</span>
+                  {% if rev.client_company %}
+                    <span class="text-muted small"> &middot; {{ rev.client_company }}</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="col-12 text-center py-5 cc-hud-tile my-3">
+          <p class="h5 text-muted font-weight-normal mb-1">No client reviews yet.</p>
+          <p class="text-muted small mb-0">Be the first to collaborate with {{ group.name }}! Use the contact form below to start a project.</p>
         </div>
       {% endif %}
     </div>

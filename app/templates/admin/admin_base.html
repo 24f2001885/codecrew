@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}Admin — CodeCrews{% endblock %}</title>
 
   <!-- Google Fonts -->
@@ -111,7 +112,24 @@
             </ol>
           </nav>
         </div>
-        <div class="user-badge">
+        <div class="user-badge d-flex align-items-center">
+          <!-- Notification Bell Dropdown -->
+          <div class="dropdown mr-3">
+            <button class="btn btn-light btn-sm rounded-circle position-relative p-0 d-flex align-items-center justify-content-center" type="button" id="adminNotifBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Notifications" style="width: 36px; height: 36px; border: 1px solid #dee2e6;">
+              <span style="font-size: 1.1rem; line-height: 1;">🔔</span>
+              <span id="notifBadge" class="badge badge-danger position-absolute" style="top: -4px; right: -4px; font-size: 0.65rem; border-radius: 10px; padding: 2px 5px; display: none;">0</span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-right shadow-lg p-0" aria-labelledby="adminNotifBtn" style="width: 340px; max-width: 90vw; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; z-index: 1060;">
+              <div class="d-flex justify-content-between align-items-center py-2 px-3 bg-light border-bottom">
+                <span class="font-weight-bold small text-dark"><span class="mr-1">🔔</span> Notifications</span>
+                <button type="button" id="markAllReadBtn" class="btn btn-link btn-sm p-0 text-primary small font-weight-bold" style="font-size: 0.75rem; text-decoration: none;">Mark all read</button>
+              </div>
+              <div id="notifList" style="max-height: 360px; overflow-y: auto;">
+                <div class="text-center py-3 text-muted small">Loading alerts...</div>
+              </div>
+            </div>
+          </div>
+
           <span class="badge badge-warning text-dark px-2 py-1 font-weight-bold">Super Admin</span>
         </div>
       </header>
@@ -131,6 +149,83 @@
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
   <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+  <script>
+    $(document).ready(function() {
+      function getCsrf() {
+        return $('meta[name="csrf-token"]').attr('content') || '';
+      }
+
+      function loadAdminNotifications() {
+        $.getJSON("{{ url_for('notifications.recent_notifications') }}", function(data) {
+          if (!data) return;
+          var badge = $("#notifBadge");
+          if (data.unread_count > 0) {
+            badge.text(data.unread_count > 99 ? '99+' : data.unread_count).show();
+          } else {
+            badge.hide();
+          }
+
+          var list = $("#notifList");
+          if (!data.notifications || data.notifications.length === 0) {
+            list.html('<div class="text-center py-4 text-muted small"><div style="font-size: 1.5rem; opacity: 0.5;">🔕</div>No notifications yet</div>');
+            return;
+          }
+
+          var html = '';
+          data.notifications.forEach(function(item) {
+            var bgStyle = item.is_read ? 'background: #ffffff;' : 'background: #fefce8; font-weight: 500;';
+            var unreadDot = item.is_read ? '' : '<span class="badge badge-warning badge-pill ml-1" style="font-size: 0.55rem; padding: 2px 5px;">NEW</span>';
+            var catIcon = '🔔';
+            if (item.category === 'offer_accepted') catIcon = '🎉';
+            else if (item.category === 'offer_declined') catIcon = '❌';
+            else if (item.category === 'discussion_reply') catIcon = '💬';
+            else if (item.category === 'milestone_update') catIcon = '🏁';
+            else if (item.category === 'review_received') catIcon = '⭐';
+            else if (item.category === 'access_grant') catIcon = '🚀';
+
+            var link = item.link_url ? item.link_url : '#';
+            html += '<a href="' + link + '" class="dropdown-item px-3 py-2 border-bottom notif-item d-flex align-items-start" data-id="' + item.id + '" style="' + bgStyle + ' white-space: normal; text-decoration: none;">' +
+              '<span class="mr-2" style="font-size: 1.15rem; line-height: 1.2;">' + catIcon + '</span>' +
+              '<div class="flex-grow-1" style="min-width: 0;">' +
+                '<div class="d-flex justify-content-between align-items-center">' +
+                  '<span class="small text-dark font-weight-bold">' + $('<div>').text(item.title).html() + unreadDot + '</span>' +
+                  '<span class="text-muted small" style="font-size: 0.7rem;">' + (item.time_ago || '') + '</span>' +
+                '</div>' +
+                '<div class="small text-muted text-truncate" style="font-size: 0.8rem; line-height: 1.3;">' + $('<div>').text(item.message).html() + '</div>' +
+              '</div>' +
+            '</a>';
+          });
+          list.html(html);
+        });
+      }
+
+      loadAdminNotifications();
+      setInterval(loadAdminNotifications, 10000);
+
+      $(document).on('click', '.notif-item', function() {
+        var notifId = $(this).data('id');
+        if (notifId) {
+          $.ajax({
+            url: '/notifications/api/' + notifId + '/read',
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCsrf() }
+          });
+        }
+      });
+
+      $(document).on('click', '#markAllReadBtn', function(e) {
+        e.preventDefault();
+        $.ajax({
+          url: "{{ url_for('notifications.read_all_notifications') }}",
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCsrf() },
+          success: function() {
+            loadAdminNotifications();
+          }
+        });
+      });
+    });
+  </script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

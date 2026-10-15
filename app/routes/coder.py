@@ -21,6 +21,7 @@ from app.services.access import (
     active_grants_query,
 )
 from app.services.audit import record_audit
+from app.services.notifications import create_notification
 from app.forms.coder_forms import CoderProfileForm, CoderProjectForm
 
 coder_bp = Blueprint("coder", __name__, url_prefix="/coder")
@@ -462,4 +463,16 @@ def submit_milestone(request_id, milestone_id):
     db.session.commit()
     flash(f"Milestone '{milestone.title}' deliverables submitted for client sign-off.", "success")
     return redirect(url_for("coder.opportunity_detail", request_id=request_id))
+
+
+@coder_bp.route("/opportunities/<request_id>/discussion/messages")
+def opportunity_discussion_messages(request_id):
+    req_obj, _ = get_granted_request_or_404(current_user, request_id)
+    messages = req_obj.discussion_messages.order_by(ProjectDiscussionMessage.created_at.asc()).all()
+    return jsonify({
+        "messages": [m.to_dict() for m in messages],
+        "count": len(messages),
+        "status": req_obj.status,
+    })
+
 

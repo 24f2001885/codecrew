@@ -11,6 +11,8 @@ from app.models.group_chat_message import GroupChatMessage
 from app.models.project_offer import ProjectOffer
 from app.models.project_discussion import ProjectDiscussionMessage
 from app.models.project_milestone import ProjectMilestone
+from app.models.squad_review import SquadReview
+from app.models.app_notification import AppNotification
 
 
 def create_sample_data():
@@ -530,6 +532,71 @@ def create_sample_coder(admin=None, username=None, password=None, email=None):
             db.session.add(ms3)
             db.session.commit()
             print(f"[SAMPLE CODER] Seeded sprint delivery milestones for project '{sample_req.name}'.")
+
+        # Seed verified sample squad review if none exists
+        if SquadReview.query.filter_by(group_id=coder.member.group_id).count() == 0:
+            review = SquadReview(
+                group_id=coder.member.group_id,
+                project_request_id=sample_req.id,
+                client_name="Sarah Jenkins",
+                client_company="Fintech Apex Solutions",
+                rating=5,
+                review_title="Flawless engineering and top-tier cloud architecture",
+                comment="Acme Devs delivered our distributed telemetry platform ahead of schedule with zero production hiccups. Their communication, milestone transparency, and codebase cleanliness were on par with senior engineering consultancies.",
+                verified=True,
+            )
+            db.session.add(review)
+            db.session.commit()
+            print(f"[SAMPLE CODER] Seeded verified squad review for '{coder.member.group.name}'.")
+
+        # Seed sample notifications for coder if none exist
+        if AppNotification.query.filter_by(recipient_type="coder", recipient_id=str(coder.id)).count() == 0:
+            n1 = AppNotification(
+                recipient_type="coder",
+                recipient_id=str(coder.id),
+                title="New Project Match!",
+                message="Your squad Acme Devs was granted access to client brief 'Fintech Telemetry Platform'.",
+                category="access_grant",
+                link_url=f"/coder/opportunities/{sample_req.id}",
+                is_read=False,
+            )
+            n2 = AppNotification(
+                recipient_type="coder",
+                recipient_id=str(coder.id),
+                title="Discussion Reply",
+                message="Sarah Jenkins posted a new message in project inquiry discussion.",
+                category="discussion_reply",
+                link_url=f"/coder/opportunities/{sample_req.id}",
+                is_read=False,
+            )
+            n3 = AppNotification(
+                recipient_type="coder",
+                recipient_id=str(coder.id),
+                title="5-Star Review Received!",
+                message="Fintech Apex Solutions submitted a 5-star verified review for Acme Devs.",
+                category="review_received",
+                link_url="/group/acme-devs#reviews",
+                is_read=True,
+            )
+            db.session.add(n1)
+            db.session.add(n2)
+            db.session.add(n3)
+            db.session.commit()
+            print(f"[SAMPLE CODER] Seeded notifications for coder '{coder.username}'.")
+
+        if AppNotification.query.filter_by(recipient_type="admin", recipient_id=str(admin_user.id)).count() == 0:
+            na1 = AppNotification(
+                recipient_type="admin",
+                recipient_id=str(admin_user.id),
+                title="New Project Request Submitted",
+                message="Sarah Jenkins submitted a new inquiry for 'Fintech Telemetry Platform'.",
+                category="access_grant",
+                link_url=f"/admin/project-requests/{sample_req.id}",
+                is_read=False,
+            )
+            db.session.add(na1)
+            db.session.commit()
+            print(f"[SAMPLE DATA] Seeded notification for admin '{admin_user.username}'.")
 
     return coder
 

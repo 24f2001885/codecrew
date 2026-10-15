@@ -16,6 +16,8 @@ from app.models.group_chat_message import GroupChatMessage
 from app.models.project_offer import ProjectOffer
 from app.models.project_discussion import ProjectDiscussionMessage
 from app.models.project_milestone import ProjectMilestone
+from app.models.squad_review import SquadReview
+from app.models.app_notification import AppNotification
 
 __all__ = [
     "AdminUser",
@@ -36,5 +38,7 @@ __all__ = [
     "ProjectOffer",
     "ProjectDiscussionMessage",
     "ProjectMilestone",
+    "SquadReview",
+    "AppNotification",
 ]
 

@@ -144,6 +144,7 @@ def create_app(config_name=None):
     from app.routes.coder import coder_bp
     # P8 blueprint:
     from app.routes.join import join_bp
+    from app.routes.notifications import notifications_bp
 
     flask_app.register_blueprint(public_bp)
     flask_app.register_blueprint(auth_bp)
@@ -155,6 +156,7 @@ def create_app(config_name=None):
     flask_app.register_blueprint(coder_auth_bp)
     flask_app.register_blueprint(coder_bp)
     flask_app.register_blueprint(join_bp)
+    flask_app.register_blueprint(notifications_bp)
 
     # Register CLI commands
     from app.cli import register_cli_commands

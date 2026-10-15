@@ -140,6 +140,59 @@
           </div>
         {% endif %}
 
+        <!-- Verified Review Section for Completed Projects -->
+        {% if req_item.status == 'completed' %}
+          {% if req_item.review %}
+            <div class="card cc-card border-0 shadow-sm p-4 mb-4" style="border-radius: 16px; border: 1px solid rgba(245, 158, 11, 0.3) !important;">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h4 class="text-white font-weight-bold mb-0">⭐ Your Review for {{ req_item.assigned_group.name if req_item.assigned_group else 'Squad' }}</h4>
+                <span class="badge badge-success px-2 py-1 font-mono">● Published to Portfolio</span>
+              </div>
+              <div class="text-warning mb-2 h5">
+                {% for i in range(req_item.review.rating) %}★{% endfor %}
+              </div>
+              {% if req_item.review.review_title %}
+                <h6 class="text-white font-weight-bold mb-1">{{ req_item.review.review_title }}</h6>
+              {% endif %}
+              <p class="text-light small mb-0 font-italic">&ldquo;{{ req_item.review.comment }}&rdquo;</p>
+            </div>
+          {% else %}
+            <div class="card cc-card border-0 shadow-sm p-4 mb-4" style="border-radius: 16px; border: 1px solid rgba(245, 158, 11, 0.4) !important;">
+              <h4 class="text-white font-weight-bold mb-2 d-flex align-items-center">
+                <span class="mr-2 text-warning">⭐</span> Rate & Review {{ req_item.assigned_group.name if req_item.assigned_group else 'Your Squad' }}
+              </h4>
+              <p class="text-muted small mb-3">Your project is completed! Share your experience with future clients. Your rating will be featured on the squad's public portfolio.</p>
+
+              <form method="POST" action="{{ url_for('requests.submit_review', id=req_item.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-row mb-3">
+                  <div class="col-md-5 mb-2 mb-md-0">
+                    <label class="small font-weight-bold text-light mb-1">Star Rating <span class="text-danger">*</span></label>
+                    <select name="rating" class="form-control text-white" style="background: rgba(8, 12, 20, 0.85); border: 1px solid rgba(255, 255, 255, 0.15);">
+                      <option value="5" selected>★★★★★ 5 Stars (Exceptional)</option>
+                      <option value="4">★★★★☆ 4 Stars (Great)</option>
+                      <option value="3">★★★☆☆ 3 Stars (Good)</option>
+                      <option value="2">★★☆☆☆ 2 Stars (Fair)</option>
+                      <option value="1">★☆☆☆☆ 1 Star (Poor)</option>
+                    </select>
+                  </div>
+                  <div class="col-md-7">
+                    <label class="small font-weight-bold text-light mb-1">Review Title (Optional)</label>
+                    <input type="text" name="review_title" class="form-control text-white" style="background: rgba(8, 12, 20, 0.85); border: 1px solid rgba(255, 255, 255, 0.15);" placeholder="e.g. Outstanding speed and scalable code!">
+                  </div>
+                </div>
+                <div class="form-group mb-3">
+                  <label class="small font-weight-bold text-light mb-1">Your Testimonial & Feedback <span class="text-danger">*</span></label>
+                  <textarea name="comment" rows="3" class="form-control text-white" style="background: rgba(8, 12, 20, 0.85); border: 1px solid rgba(255, 255, 255, 0.15);" placeholder="Describe working with the squad, code quality, communication, and overall experience..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-warning font-weight-bold px-4 py-2 shadow">
+                  ⭐ Submit Verified Review
+                </button>
+              </form>
+            </div>
+          {% endif %}
+        {% endif %}
+
         <!-- Request Brief Summary -->
         <div class="card cc-card border-0 shadow-sm p-4 mb-4" style="border-radius: 16px;">
           <h4 class="text-white font-weight-bold mb-3 d-flex align-items-center">
@@ -175,13 +228,13 @@
             <h4 class="text-white font-weight-bold mb-0 d-flex align-items-center">
               <span class="mr-2 text-warning">💬</span> Project Discussion & Inquiries
             </h4>
-            <span class="badge badge-dark text-muted">{{ discussion_messages|length }} messages</span>
+            <span id="discussionCounter" class="badge badge-dark text-muted">{{ discussion_messages|length }} messages</span>
           </div>
           <p class="text-muted small mb-3">
             Communicate directly with the engineering squads and CodeCrews coordinators about terms, milestones, and deliverables.
           </p>
 
-          <div class="p-3 rounded mb-3" style="height: 340px; overflow-y: auto; background: rgba(8, 12, 20, 0.85); border: 1px solid rgba(255, 255, 255, 0.08);">
+          <div id="discussionStream" data-count="{{ discussion_messages|length }}" class="p-3 rounded mb-3" style="height: 340px; overflow-y: auto; background: rgba(8, 12, 20, 0.85); border: 1px solid rgba(255, 255, 255, 0.08);">
             {% if discussion_messages %}
               {% for msg in discussion_messages %}
                 <div class="mb-3">
@@ -313,6 +366,51 @@
         {% endif %}
       </div>
     </div>
-  </div>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  $(document).ready(function() {
+    var pollUrl = "{{ url_for('requests.hub_discussion_messages', id=req_item.id) }}";
+    var container = $("#discussionStream");
+
+    // Scroll to bottom initially
+    if (container.length) {
+      container.scrollTop(container[0].scrollHeight);
+    }
+
+    // Auto-refresh discussion messages every 4 seconds
+    setInterval(function() {
+      $.getJSON(pollUrl, function(data) {
+        if (data && data.messages) {
+          var currentCount = parseInt(container.attr("data-count") || "0", 10);
+          if (data.count > currentCount) {
+            var html = "";
+            data.messages.forEach(function(msg) {
+              var senderColor = msg.sender_type === 'client' ? 'text-warning' : (msg.sender_type === 'coder' ? 'text-info' : 'text-muted');
+              var bubbleStyle = msg.sender_type === 'client' ? 'background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3);' : (msg.sender_type === 'coder' ? 'background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.25);' : 'background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.85rem; color: #94a3b8;');
+              html += '<div class="mb-3">' +
+                '<div class="d-flex justify-content-between align-items-center mb-1">' +
+                  '<span class="font-weight-bold small ' + senderColor + '">' +
+                    $('<div>').text(msg.sender_name).html() +
+                    ' <span class="badge badge-dark ml-1 font-mono small" style="font-size: 0.65rem;">' + (msg.sender_type || '').toUpperCase() + '</span>' +
+                  '</span>' +
+                  '<span class="text-muted small" style="font-size: 0.75rem;">' + (msg.time_formatted || '') + '</span>' +
+                '</div>' +
+                '<div class="p-3 rounded text-white" style="' + bubbleStyle + ' font-size: 0.95rem; line-height: 1.5; word-break: break-word;">' +
+                  $('<div>').text(msg.content).html() +
+                '</div>' +
+              '</div>';
+            });
+            container.html(html);
+            container.attr("data-count", data.count);
+            container.scrollTop(container[0].scrollHeight);
+            $("#discussionCounter").text(data.count + " messages");
+          }
+        }
+      });
+    }, 4000);
+  });
+</script>
 {% endblock %}

@@ -55,5 +55,20 @@ class Group(db.Model):
     def cover_image(self, val):
         self.cover_image_path = val
 
+    @property
+    def reviews_count(self):
+        return self.reviews.filter_by(verified=True).count()
+
+    @property
+    def average_rating(self):
+        revs = self.reviews.filter_by(verified=True).all()
+        if not revs:
+            return 5.0
+        return round(sum(r.rating for r in revs) / len(revs), 1)
+
+    @property
+    def active_reviews(self):
+        return self.reviews.filter_by(verified=True).order_by(db.desc("created_at")).all()
+
     def __repr__(self):
         return f"<Group {self.name} ({self.slug})>"

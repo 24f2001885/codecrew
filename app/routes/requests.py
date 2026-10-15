@@ -1,15 +1,17 @@
 import logging
 from datetime import datetime, timezone
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify
 from app.extensions import db, limiter
 from app.models.project_request import ProjectRequest
 from app.models.project_offer import ProjectOffer
 from app.models.project_discussion import ProjectDiscussionMessage
 from app.models.project_milestone import ProjectMilestone
+from app.models.squad_review import SquadReview
 from app.models.group import Group
 from app.models.coder_user import CoderUser
 from app.models.member import Member
 from app.models.request_access_grant import RequestAccessGrant
+from app.services.notifications import create_notification
 from app.forms.request_forms import RequestForm
 from app.services.private_files import save_private
 from app.services.uploads import UploadError
@@ -300,4 +302,87 @@ def chat_representative(slug):
 
     flash(f"Direct inquiry room created with {group.name}! Chat directly with the squad representative below.", "success")
     return redirect(url_for("requests.request_hub", id=project_req.id))
+
+
+@requests_bp.route("/request/<id>/hub/review", methods=["POST"])
+def submit_review(id):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    if not req_item.assigned_group_id:
+        flash("Cannot review a project without an assigned squad.", "warning")
+        return redirect(url_for("requests.request_hub", id=id))
+
+    if req_item.status != "completed":
+        flash("Reviews can only be submitted once the project is completed.", "warning")
+        return redirect(url_for("requests.request_hub", id=id))
+
+    if req_item.review:
+        flash("You have already submitted a review for this project.", "info")
+        return redirect(url_for("requests.request_hub", id=id))
+
+    try:
+        rating = int(request.form.get("rating", 5))
+        if rating < 1 or rating > 5:
+            flash("Please provide a rating between 1 and 5.", "warning")
+            return redirect(url_for("requests.request_hub", id=id))
+    except (ValueError, TypeError):
+        flash("Please provide a valid rating number.", "warning")
+        return redirect(url_for("requests.request_hub", id=id))
+
+    review_title = request.form.get("review_title", "").strip() or None
+    comment = request.form.get("comment", "").strip()
+
+    if not comment:
+        flash("Please provide a comment for your review.", "danger")
+        return redirect(url_for("requests.request_hub", id=id))
+
+    review = SquadReview(
+        project_request_id=req_item.id,
+        group_id=req_item.assigned_group_id,
+        client_name=req_item.name,
+        client_company=req_item.company,
+        rating=rating,
+        review_title=review_title,
+        comment=comment,
+        verified=True,
+    )
+    db.session.add(review)
+
+    # Add discussion record
+    stars_str = "⭐" * rating
+    disc_msg = ProjectDiscussionMessage(
+        project_request_id=req_item.id,
+        sender_type="system",
+        sender_name="Platform System",
+        content=f"🌟 Client {req_item.name} posted a verified review ({stars_str}): \"{comment}\"",
+    )
+    db.session.add(disc_msg)
+    db.session.commit()
+
+    # Notify squad coders
+    squad_coders = CoderUser.query.join(Member).filter(Member.group_id == req_item.assigned_group_id).all()
+    for cu in squad_coders:
+        create_notification(
+            recipient_type="coder",
+            recipient_id=cu.id,
+            title="⭐ New Verified Client Review!",
+            message=f"{req_item.name} rated your squad {rating}/5 stars: \"{comment[:80]}...\"",
+            link_url=url_for("coder.opportunity_detail", request_id=req_item.id),
+            category="review_received",
+        )
+
+    flash("Thank you! Your verified client review and rating have been published to the squad's public portfolio.", "success")
+    return redirect(url_for("requests.request_hub", id=id))
+
+
+@requests_bp.route("/request/<id>/hub/discussion/messages", methods=["GET"])
+def hub_discussion_messages(id):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    messages = req_item.discussion_messages.order_by(ProjectDiscussionMessage.created_at.asc()).all()
+    return jsonify({
+        "messages": [m.to_dict() for m in messages],
+        "count": len(messages),
+        "status": req_item.status,
+        "progress_percentage": req_item.progress_percentage,
+    })
+
 
