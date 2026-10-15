@@ -10,6 +10,8 @@ from app.models.member import Member
 from app.models.project import Project
 from app.models.contact_message import ContactMessage
 from app.models.project_request import ProjectRequest
+from app.models.project_offer import ProjectOffer
+from app.models.project_discussion import ProjectDiscussionMessage
 from app.models.blog_post import BlogPost
 from app.models.site_settings import SiteSettings
 from app.models.coder_user import CoderUser
@@ -1158,6 +1160,8 @@ def project_request_detail(id):
     req_item = db.session.get(ProjectRequest, id) or abort(404)
     grants = RequestAccessGrant.query.filter_by(project_request_id=req_item.id).order_by(RequestAccessGrant.granted_at.desc()).all()
     active_coders = CoderUser.query.filter_by(status="active").order_by(CoderUser.username.asc()).all()
+    offers = req_item.offers.order_by(ProjectOffer.created_at.desc()).all()
+    discussion_messages = req_item.discussion_messages.order_by(ProjectDiscussionMessage.created_at.asc()).all()
 
     form = GrantAccessForm()
     form.coder_id.choices = [(c.id, f"{c.username} ({c.email})") for c in active_coders]
@@ -1168,7 +1172,26 @@ def project_request_detail(id):
         grants=grants,
         form=form,
         active_coders=active_coders,
+        offers=offers,
+        discussion_messages=discussion_messages,
     )
+
+
+@admin_bp.route("/project-requests/<id>/discuss", methods=["POST"], endpoint="project_request_discuss")
+def project_request_discuss(id):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    content = request.form.get("content", "").strip()
+    if content:
+        msg = ProjectDiscussionMessage(
+            project_request_id=req_item.id,
+            sender_type="admin",
+            sender_name="Platform Admin",
+            content=content,
+        )
+        db.session.add(msg)
+        db.session.commit()
+        flash("Message posted to project discussion.", "success")
+    return redirect(url_for("admin.project_request_detail", id=id))
 
 
 @admin_bp.route("/project-requests/<id>/notes", methods=["POST"], endpoint="project_request_notes")

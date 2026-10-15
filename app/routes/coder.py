@@ -1,9 +1,13 @@
 import os
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import current_user
 from app.extensions import db
 from app.models.project import Project
 from app.models.member import Member
+from app.models.coder_user import CoderUser
+from app.models.group_chat_message import GroupChatMessage
+from app.models.project_offer import ProjectOffer
+from app.models.project_discussion import ProjectDiscussionMessage
 from app.security.decorators import coder_required, apply_guard_to_blueprint
 from app.services.slugs import unique_slug
 from app.services.uploads import save_upload, delete_upload, replace_upload, UploadError
@@ -32,6 +36,7 @@ def dashboard():
     # Counts
     project_count = Project.query.filter_by(group_id=group.id).count() if group else 0
     active_grants_count = active_grants_query(coder.id).count()
+    chat_message_count = GroupChatMessage.query.filter_by(group_id=group.id).count() if group else 0
 
     return render_template(
         "coder/dashboard.html",
@@ -40,7 +45,60 @@ def dashboard():
         group=group,
         project_count=project_count,
         active_grants_count=active_grants_count,
+        chat_message_count=chat_message_count,
     )
+
+
+@coder_bp.route("/chat", methods=["GET", "POST"])
+def chat():
+    member = current_user.member
+    if not member or not member.group_id:
+        flash("You need to be part of an engineering squad to enter the squad room.", "warning")
+        return redirect(url_for("coder.dashboard"))
+
+    group = member.group
+    if request.method == "POST":
+        content = request.form.get("content", "").strip()
+        if content:
+            msg = GroupChatMessage(
+                group_id=group.id,
+                coder_id=current_user.id,
+                content=content,
+            )
+            db.session.add(msg)
+            db.session.commit()
+            flash("Message posted to squad room.", "success")
+            return redirect(url_for("coder.chat"))
+
+    messages = (
+        GroupChatMessage.query.filter_by(group_id=group.id)
+        .order_by(GroupChatMessage.created_at.asc())
+        .limit(100)
+        .all()
+    )
+    squad_coders = CoderUser.query.join(Member).filter(Member.group_id == group.id).all()
+
+    return render_template(
+        "coder/chat.html",
+        group=group,
+        messages=messages,
+        squad_coders=squad_coders,
+    )
+
+
+@coder_bp.route("/chat/messages")
+def chat_messages():
+    member = current_user.member
+    if not member or not member.group_id:
+        return jsonify({"messages": []})
+
+    messages = (
+        GroupChatMessage.query.filter_by(group_id=member.group_id)
+        .order_by(GroupChatMessage.created_at.asc())
+        .limit(100)
+        .all()
+    )
+    return jsonify({"messages": [m.to_dict() for m in messages]})
 
 
 @coder_bp.route("/profile", methods=["GET", "POST"])
@@ -236,11 +294,99 @@ def opportunities():
 def opportunity_detail(request_id):
     req_obj, grant_obj = get_granted_request_or_404(current_user, request_id)
     serialized = serialize_request_for_coder(req_obj, grant_obj)
+    member = current_user.member
+    existing_offer = None
+    if member and member.group_id:
+        existing_offer = ProjectOffer.query.filter_by(
+            project_request_id=req_obj.id,
+            group_id=member.group_id,
+        ).first()
+
+    discussion_messages = req_obj.discussion_messages.order_by(ProjectDiscussionMessage.created_at.asc()).all()
+
     return render_template(
         "coder/opportunity_detail.html",
         opportunity=serialized,
         grant=grant_obj,
+        existing_offer=existing_offer,
+        discussion_messages=discussion_messages,
     )
+
+
+@coder_bp.route("/opportunities/<request_id>/offer", methods=["POST"])
+def submit_offer(request_id):
+    req_obj, grant_obj = get_granted_request_or_404(current_user, request_id)
+    member = current_user.member
+    if not member or not member.group_id:
+        flash("You must belong to an engineering group to submit an offer.", "danger")
+        return redirect(url_for("coder.opportunity_detail", request_id=request_id))
+
+    proposed_budget = request.form.get("proposed_budget", "").strip()
+    proposed_timeline = request.form.get("proposed_timeline", "").strip()
+    pitch = request.form.get("pitch", "").strip()
+    deliverables_raw = request.form.get("deliverables", "").strip()
+
+    if not proposed_budget or not proposed_timeline or not pitch:
+        flash("Please provide proposed budget, timeline, and pitch.", "danger")
+        return redirect(url_for("coder.opportunity_detail", request_id=request_id))
+
+    deliverables = [d.strip() for d in deliverables_raw.splitlines() if d.strip()]
+
+    existing_offer = ProjectOffer.query.filter_by(
+        project_request_id=req_obj.id,
+        group_id=member.group_id,
+    ).first()
+
+    if existing_offer:
+        existing_offer.proposed_budget = proposed_budget
+        existing_offer.proposed_timeline = proposed_timeline
+        existing_offer.pitch = pitch
+        existing_offer.deliverables = deliverables
+        existing_offer.coder_id = current_user.id
+        flash(f"Squad proposal updated ({proposed_budget}, {proposed_timeline}).", "success")
+    else:
+        new_offer = ProjectOffer(
+            project_request_id=req_obj.id,
+            group_id=member.group_id,
+            coder_id=current_user.id,
+            proposed_budget=proposed_budget,
+            proposed_timeline=proposed_timeline,
+            pitch=pitch,
+            deliverables=deliverables,
+            status="pending",
+        )
+        db.session.add(new_offer)
+
+        disc_msg = ProjectDiscussionMessage(
+            project_request_id=req_obj.id,
+            sender_type="system",
+            sender_name="Platform System",
+            content=f"🚀 Squad '{member.group.name}' submitted an offer: {proposed_budget} ({proposed_timeline}).",
+        )
+        db.session.add(disc_msg)
+        flash(f"Squad proposal submitted to client ({proposed_budget}, {proposed_timeline}).", "success")
+
+    db.session.commit()
+    return redirect(url_for("coder.opportunity_detail", request_id=request_id))
+
+
+@coder_bp.route("/opportunities/<request_id>/discuss", methods=["POST"])
+def post_discussion_message(request_id):
+    req_obj, grant_obj = get_granted_request_or_404(current_user, request_id)
+    content = request.form.get("content", "").strip()
+    if content:
+        sender_name = current_user.member.name if (current_user.member and current_user.member.name) else current_user.username
+        disc_msg = ProjectDiscussionMessage(
+            project_request_id=req_obj.id,
+            sender_type="coder",
+            sender_name=f"{sender_name} ({current_user.group.name if current_user.group else 'Squad'})",
+            sender_coder_id=current_user.id,
+            content=content,
+        )
+        db.session.add(disc_msg)
+        db.session.commit()
+        flash("Message sent to project discussion.", "success")
+    return redirect(url_for("coder.opportunity_detail", request_id=request_id))
 
 
 @coder_bp.route("/opportunities/<request_id>/attachment")

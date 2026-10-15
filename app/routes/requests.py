@@ -1,7 +1,9 @@
 import logging
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from app.extensions import db, limiter
 from app.models.project_request import ProjectRequest
+from app.models.project_offer import ProjectOffer
+from app.models.project_discussion import ProjectDiscussionMessage
 from app.forms.request_forms import RequestForm
 from app.services.private_files import save_private
 from app.services.uploads import UploadError
@@ -76,3 +78,85 @@ def request_project():
             return redirect(url_for("requests.request_project"))
 
     return render_template("public/request_project.html", form=form)
+
+
+@requests_bp.route("/request/<id>/hub", methods=["GET"])
+def request_hub(id):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    offers = req_item.offers.order_by(ProjectOffer.created_at.desc()).all()
+    discussion_messages = req_item.discussion_messages.order_by(ProjectDiscussionMessage.created_at.asc()).all()
+
+    return render_template(
+        "public/request_hub.html",
+        req_item=req_item,
+        offers=offers,
+        discussion_messages=discussion_messages,
+    )
+
+
+@requests_bp.route("/request/<id>/hub/accept-offer/<offer_id>", methods=["POST"])
+def accept_offer(id, offer_id):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    offer = db.session.get(ProjectOffer, offer_id) or abort(404)
+
+    if offer.project_request_id != req_item.id:
+        abort(400)
+
+    # Accept this offer and decline others
+    offer.status = "accepted"
+    for other in req_item.offers:
+        if other.id != offer.id:
+            other.status = "declined"
+
+    req_item.status = "assigned"
+    req_item.assigned_group_id = offer.group_id
+
+    disc_msg = ProjectDiscussionMessage(
+        project_request_id=req_item.id,
+        sender_type="system",
+        sender_name="Platform System",
+        content=f"🎉 Offer accepted! Customer has officially awarded the project to squad '{offer.group.name}' at {offer.proposed_budget} ({offer.proposed_timeline}).",
+    )
+    db.session.add(disc_msg)
+    db.session.commit()
+
+    flash(f"Congratulations! You accepted the offer from '{offer.group.name}'. You can now chat directly below to coordinate project milestones.", "success")
+    return redirect(url_for("requests.request_hub", id=id))
+
+
+@requests_bp.route("/request/<id>/hub/discuss", methods=["POST"])
+def client_discuss(id):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    content = request.form.get("content", "").strip()
+    sender_name = request.form.get("sender_name", "").strip() or req_item.name
+
+    if content:
+        msg = ProjectDiscussionMessage(
+            project_request_id=req_item.id,
+            sender_type="client",
+            sender_name=f"{sender_name} (Client)",
+            content=content,
+        )
+        db.session.add(msg)
+        db.session.commit()
+        flash("Message sent to the engineering squad.", "success")
+
+    return redirect(url_for("requests.request_hub", id=id))
+
+
+@requests_bp.route("/request/find", methods=["GET", "POST"])
+def find_request():
+    matched_requests = []
+    searched_email = ""
+    if request.method == "POST":
+        searched_email = request.form.get("email", "").strip().lower()
+        if searched_email:
+            matched_requests = ProjectRequest.query.filter(
+                db.func.lower(ProjectRequest.email) == searched_email
+            ).order_by(ProjectRequest.created_at.desc()).all()
+
+    return render_template(
+        "public/find_request.html",
+        matched_requests=matched_requests,
+        searched_email=searched_email,
+    )

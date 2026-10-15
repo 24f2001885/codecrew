@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Project Hub #{{ req_item.id[:8] }} — CodeCrews{% endblock %}
+
+{% block content %}
+<section class="hero-wrap hero-wrap-2 position-relative overflow-hidden" style="background: #080c14; padding: 70px 0 40px; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+  <div class="container position-relative" style="z-index: 2;">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+      <div class="cc-hero-badge">
+        <span class="cc-radar-dot"></span> Client Project Hub
+      </div>
+      <div>
+        {% if req_item.status == 'assigned' %}
+          <span class="badge badge-success px-3 py-2 font-weight-bold font-mono" style="font-size: 0.85rem; border-radius: 9999px;">
+            ● PROJECT AWARDED & ACTIVE
+          </span>
+        {% elif offers %}
+          <span class="badge badge-warning text-dark px-3 py-2 font-weight-bold font-mono" style="font-size: 0.85rem; border-radius: 9999px;">
+            ⚡ {{ offers|length }} SQUAD OFFER{{ 'S' if offers|length != 1 else '' }} READY
+          </span>
+        {% else %}
+          <span class="badge badge-info px-3 py-2 font-weight-bold font-mono" style="font-size: 0.85rem; border-radius: 9999px;">
+            🔍 UNDER ADMIN REVIEW
+          </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <h1 class="text-white font-weight-bold mb-2 cc-gradient-heading display-4" style="font-size: 2.2rem;">
+      {{ req_item.name }}'s Project Hub
+    </h1>
+    <p class="text-muted mb-0 lead" style="font-size: 1rem;">
+      Review competing squad proposals, choose your preferred engineering team, and chat directly with your assigned crew.
+    </p>
+  </div>
+</section>
+
+<section class="ftco-section py-5">
+  <div class="container">
+    <div class="row">
+      <!-- Left Column: Request Details & Discussion -->
+      <div class="col-lg-7 mb-4">
+        <!-- Request Brief Summary -->
+        <div class="card cc-card border-0 shadow-sm p-4 mb-4" style="border-radius: 16px;">
+          <h4 class="text-white font-weight-bold mb-3 d-flex align-items-center">
+            <span class="mr-2 text-warning">📋</span> Project Specifications
+          </h4>
+
+          <div class="row mb-2">
+            <div class="col-sm-4 text-muted small font-weight-bold text-uppercase">Project Type:</div>
+            <div class="col-sm-8 text-light"><span class="badge badge-dark border text-warning">{{ req_item.project_type|replace('_', ' ')|title }}</span></div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-sm-4 text-muted small font-weight-bold text-uppercase">Client / Company:</div>
+            <div class="col-sm-8 text-light font-weight-bold">{{ req_item.name }}{% if req_item.company %} &mdash; {{ req_item.company }}{% endif %}</div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-sm-4 text-muted small font-weight-bold text-uppercase">Target Budget:</div>
+            <div class="col-sm-8 text-light font-mono">{{ req_item.budget_range or 'Open to quote' }}</div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-sm-4 text-muted small font-weight-bold text-uppercase">Timeline:</div>
+            <div class="col-sm-8 text-light font-mono">{{ req_item.timeline or 'Flexible' }}</div>
+          </div>
+
+          <div class="mt-3 pt-3" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
+            <div class="text-muted small font-weight-bold text-uppercase mb-1">Description & Requirements:</div>
+            <div class="p-3 rounded text-light" style="background: rgba(8, 12, 20, 0.7); border: 1px solid rgba(255, 255, 255, 0.06); line-height: 1.6; white-space: pre-wrap;">{{ req_item.description }}</div>
+          </div>
+        </div>
+
+        <!-- Direct Discussion / Chat Stream -->
+        <div class="card cc-card border-0 shadow-sm p-4" style="border-radius: 16px;">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="text-white font-weight-bold mb-0 d-flex align-items-center">
+              <span class="mr-2 text-warning">💬</span> Project Discussion & Inquiries
+            </h4>
+            <span class="badge badge-dark text-muted">{{ discussion_messages|length }} messages</span>
+          </div>
+          <p class="text-muted small mb-3">
+            Communicate directly with the engineering squads and CodeCrews coordinators about terms, milestones, and deliverables.
+          </p>
+
+          <div class="p-3 rounded mb-3" style="height: 340px; overflow-y: auto; background: rgba(8, 12, 20, 0.85); border: 1px solid rgba(255, 255, 255, 0.08);">
+            {% if discussion_messages %}
+              {% for msg in discussion_messages %}
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="font-weight-bold small {% if msg.sender_type == 'client' %}text-warning{% elif msg.sender_type == 'coder' %}text-info{% else %}text-muted{% endif %}">
+                      {{ msg.sender_name }}
+                      <span class="badge badge-dark ml-1 font-mono small" style="font-size: 0.65rem;">{{ msg.sender_type|upper }}</span>
+                    </span>
+                    <span class="text-muted small" style="font-size: 0.75rem;">{{ msg.created_at.strftime('%b %d, %I:%M %p') }}</span>
+                  </div>
+                  <div class="p-3 rounded text-white" style="{% if msg.sender_type == 'client' %}background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3);{% elif msg.sender_type == 'coder' %}background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.25);{% else %}background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.85rem; color: #94a3b8;{% endif %} font-size: 0.95rem; line-height: 1.5; word-break: break-word;">
+                    {{ msg.content }}
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="text-center py-5 text-muted">
+                <div class="h3 mb-2">💬</div>
+                <p class="mb-0 small">No messages yet. Ask a question or discuss specifications below.</p>
+              </div>
+            {% endif %}
+          </div>
+
+          <form method="POST" action="{{ url_for('requests.client_discuss', id=req_item.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="input-group">
+              <input type="text" name="content" class="form-control text-white" style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px 0 0 8px; padding: 0.75rem 1rem;" placeholder="Type a message to the engineering squads..." required autocomplete="off">
+              <div class="input-group-append">
+                <button type="submit" class="btn btn-warning font-weight-bold px-4" style="border-radius: 0 8px 8px 0;">
+                  Send
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Right Column: Competing Squad Proposals -->
+      <div class="col-lg-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="text-white font-weight-bold mb-0 d-flex align-items-center">
+            <span class="mr-2 text-warning">🚀</span> Squad Proposals ({{ offers|length }})
+          </h4>
+        </div>
+        <p class="text-muted small mb-4">
+          Compare the engineering approaches, budget quotes, and delivery timelines submitted by student collectives. Choose the proposal you want to proceed with.
+        </p>
+
+        {% if offers %}
+          {% for offer in offers %}
+            <div class="card cc-card border-0 shadow-sm p-4 mb-4 position-relative" style="border-radius: 16px; {% if offer.status == 'accepted' %}border: 2px solid #10b981 !important; box-shadow: 0 0 30px rgba(16, 185, 129, 0.2) !important;{% elif offer.status == 'declined' %}opacity: 0.6;{% endif %}">
+              {% if offer.status == 'accepted' %}
+                <span class="badge badge-success position-absolute px-3 py-1 font-weight-bold" style="top: 14px; right: 14px; border-radius: 9999px;">
+                  🏆 ACCEPTED SQUAD
+                </span>
+              {% elif offer.status == 'declined' %}
+                <span class="badge badge-danger position-absolute px-3 py-1 font-weight-bold" style="top: 14px; right: 14px; border-radius: 9999px;">
+                  Declined
+                </span>
+              {% else %}
+                <span class="badge badge-warning text-dark position-absolute px-3 py-1 font-weight-bold" style="top: 14px; right: 14px; border-radius: 9999px;">
+                  Available Offer
+                </span>
+              {% endif %}
+
+              <h4 class="font-weight-bold text-white mb-1">
+                <a href="{{ url_for('public.group_detail', slug=offer.group.slug) }}" class="text-white text-decoration-none" target="_blank">
+                  {{ offer.group.name }} &nearr;
+                </a>
+              </h4>
+              <p class="text-muted small mb-3">{{ offer.group.tagline or 'Active student engineering team' }}</p>
+
+              <!-- Quote & Timeline Strip -->
+              <div class="d-flex justify-content-between align-items-center p-3 rounded mb-3" style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(255, 255, 255, 0.08);">
+                <div>
+                  <div class="text-muted small text-uppercase font-mono" style="font-size: 0.7rem;">Quote</div>
+                  <div class="text-warning font-weight-bold font-mono h5 mb-0">{{ offer.proposed_budget }}</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-muted small text-uppercase font-mono" style="font-size: 0.7rem;">Timeline</div>
+                  <div class="text-light font-weight-bold font-mono h5 mb-0">{{ offer.proposed_timeline }}</div>
+                </div>
+              </div>
+
+              <!-- Pitch -->
+              <div class="mb-3">
+                <div class="text-muted small font-weight-bold text-uppercase mb-1">Technical Pitch & Methodology:</div>
+                <div class="p-3 rounded text-light small" style="background: rgba(8, 12, 20, 0.6); border: 1px solid rgba(255, 255, 255, 0.05); line-height: 1.6; white-space: pre-wrap;">{{ offer.pitch }}</div>
+              </div>
+
+              <!-- Deliverables -->
+              {% if offer.deliverables %}
+                <div class="mb-4">
+                  <div class="text-muted small font-weight-bold text-uppercase mb-2">Key Milestones & Deliverables:</div>
+                  <ul class="list-unstyled mb-0 small">
+                    {% for d in offer.deliverables %}
+                      <li class="d-flex align-items-baseline mb-1 text-light">
+                        <span class="text-warning mr-2">&check;</span>
+                        <span>{{ d }}</span>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              {% endif %}
+
+              <!-- Action Button -->
+              {% if req_item.status != 'assigned' and offer.status == 'pending' %}
+                <form method="POST" action="{{ url_for('requests.accept_offer', id=req_item.id, offer_id=offer.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-warning btn-block font-weight-bold py-2 shadow" style="border-radius: 8px;">
+                    ✅ Accept This Squad's Offer & Proceed
+                  </button>
+                </form>
+              {% elif offer.status == 'accepted' %}
+                <div class="alert alert-success text-center font-weight-bold mb-0 py-2 small" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #34d399;">
+                  You have chosen this squad to build your project!
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="card cc-card border-0 shadow-sm p-5 text-center" style="border-radius: 16px;">
+            <div class="h2 mb-3 text-warning">⏳</div>
+            <h5 class="text-white font-weight-bold mb-2">Awaiting Squad Proposals</h5>
+            <p class="text-muted small mb-0">
+              Admin has assigned your request to qualified engineering collectives. Squads are currently reviewing your brief and formulating their quotes and delivery plans. Check back shortly!
+            </p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

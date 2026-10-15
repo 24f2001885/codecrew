@@ -32,5 +32,13 @@ class ProjectRequest(db.Model):
     def attachment(self, val):
         self.attachment_path = val
 
+    @property
+    def active_offers(self):
+        return self.offers.filter_by(status="pending").all()
+
+    @property
+    def accepted_offer(self):
+        return self.offers.filter_by(status="accepted").first()
+
     def __repr__(self):
         return f"<ProjectRequest from {self.name} ({self.status})>"

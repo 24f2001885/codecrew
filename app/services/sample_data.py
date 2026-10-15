@@ -7,6 +7,9 @@ from app.models.admin_user import AdminUser
 from app.models.coder_user import CoderUser
 from app.models.project_request import ProjectRequest
 from app.models.request_access_grant import RequestAccessGrant
+from app.models.group_chat_message import GroupChatMessage
+from app.models.project_offer import ProjectOffer
+from app.models.project_discussion import ProjectDiscussionMessage
 
 
 def create_sample_data():
@@ -433,5 +436,65 @@ def create_sample_coder(admin=None, username=None, password=None, email=None):
             db.session.commit()
             print(f"[SAMPLE CODER] Granted {len(sample_requests[:2])} opportunities to '{coder.username}'.")
 
+    # Seed sample squad chat messages if none exist
+    if coder.member and coder.member.group_id:
+        chat_count = GroupChatMessage.query.filter_by(group_id=coder.member.group_id).count()
+        if chat_count == 0:
+            m1 = GroupChatMessage(
+                group_id=coder.member.group_id,
+                coder_id=coder.id,
+                content="Welcome to the Acme Devs insider room! We can coordinate architecture, tasks, and client bids here.",
+            )
+            m2 = GroupChatMessage(
+                group_id=coder.member.group_id,
+                coder_id=coder.id,
+                content="Reviewing the new client inquiry from Fintech Apex Solutions. Looks like a solid fit for our Python/Flask cloud stack.",
+            )
+            db.session.add(m1)
+            db.session.add(m2)
+            db.session.commit()
+            print(f"[SAMPLE CODER] Seeded insider squad room messages for '{coder.member.group.name}'.")
+
+    # Seed sample project offer and discussion if requests exist
+    sample_req = ProjectRequest.query.first()
+    if sample_req and coder.member and coder.member.group_id:
+        existing_offer = ProjectOffer.query.filter_by(project_request_id=sample_req.id, group_id=coder.member.group_id).first()
+        if not existing_offer:
+            offer = ProjectOffer(
+                project_request_id=sample_req.id,
+                group_id=coder.member.group_id,
+                coder_id=coder.id,
+                proposed_budget="$18,500",
+                proposed_timeline="6 weeks",
+                pitch="Acme Devs specializes in production distributed systems and cloud platforms. We propose a resilient microservices architecture with PostgreSQL timeseries aggregation, Dockerized deployment on AWS, and a responsive telemetry dashboard.",
+                deliverables=[
+                    "Phase 1: Architecture specification & database schema",
+                    "Phase 2: Merchant API & telemetry webhook pipeline",
+                    "Phase 3: Interactive dashboard UI & alerting",
+                    "Phase 4: Automated CI/CD & production deployment",
+                ],
+                status="pending",
+            )
+            db.session.add(offer)
+
+            d1 = ProjectDiscussionMessage(
+                project_request_id=sample_req.id,
+                sender_type="client",
+                sender_name=f"{sample_req.name} (Client)",
+                content="Hello Acme Devs! We reviewed your squad portfolio and love your CloudPulse project. How soon could we start discovery if we award this project?",
+            )
+            d2 = ProjectDiscussionMessage(
+                project_request_id=sample_req.id,
+                sender_type="coder",
+                sender_name=f"{coder.member.name} (Acme Devs)",
+                sender_coder_id=coder.id,
+                content="Hi Sarah! We can kick off sprint 1 within 48 hours of agreement. Our full proposal and milestone schedule is submitted above.",
+            )
+            db.session.add(d1)
+            db.session.add(d2)
+            db.session.commit()
+            print(f"[SAMPLE CODER] Seeded sample squad proposal and discussion thread for project '{sample_req.name}'.")
+
     return coder
+
 

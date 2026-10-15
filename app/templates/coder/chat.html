@@ -1,0 +1,153 @@
+{% extends "coder/coder_base.html" %}
+
+{% block title %}{{ group.name }} Squad Room — Coder Portal{% endblock %}
+{% block page_title %}{{ group.name }} &mdash; Insider Squad Room{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{{ url_for('coder.dashboard') }}">Coder Portal</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Squad Chat</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-9">
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 14px; overflow: hidden;">
+      <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3 px-4" style="background: #0f172a !important; border-bottom: 1px solid rgba(255,255,255,0.08);">
+        <div>
+          <h5 class="mb-0 font-weight-bold text-white d-flex align-items-center">
+            <span class="mr-2 text-warning">💬</span> {{ group.name }} Insider Channel
+          </h5>
+          <small class="text-muted">Private internal squad chat &mdash; collaborate on ideas, tasks, and project bids</small>
+        </div>
+        <span class="badge badge-warning text-dark font-weight-bold px-3 py-1 font-mono" style="border-radius: 9999px;">
+          ● SQUAD LIVE
+        </span>
+      </div>
+
+      <!-- Chat History Box -->
+      <div class="card-body p-4" id="chatMessagesContainer" style="height: 480px; overflow-y: auto; background: #080c14;">
+        {% if messages %}
+          {% for msg in messages %}
+            {% set is_me = (msg.coder_id == current_user.id) %}
+            <div class="d-flex mb-3 {% if is_me %}justify-content-end{% else %}justify-content-start{% endif %}">
+              <div class="d-flex" style="max-width: 80%;">
+                {% if not is_me %}
+                  <div class="mr-2 text-center" style="width: 36px; height: 36px; border-radius: 50%; background: #1e293b; border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b; font-weight: bold; line-height: 34px; font-size: 0.85rem; flex-shrink: 0;">
+                    {{ (msg.coder.member.name[:2] if msg.coder and msg.coder.member else msg.coder.username[:2])|upper }}
+                  </div>
+                {% endif %}
+                <div>
+                  <div class="small mb-1 {% if is_me %}text-right text-warning{% else %}text-muted{% endif %}" style="font-size: 0.75rem;">
+                    <strong>{{ msg.coder.member.name if msg.coder and msg.coder.member else msg.coder.username }}</strong>
+                    <span class="badge badge-dark ml-1" style="background: rgba(255,255,255,0.08); font-size: 0.65rem;">{{ msg.coder.member.role if msg.coder and msg.coder.member else 'Coder' }}</span>
+                    <span class="ml-1 text-muted">{{ msg.created_at.strftime('%I:%M %p') }}</span>
+                  </div>
+                  <div class="p-3 rounded text-white" style="{% if is_me %}background: #1e40af; border: 1px solid #3b82f6; border-radius: 12px 12px 2px 12px;{% else %}background: #1e293b; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px 12px 12px 2px;{% endif %} font-size: 0.95rem; line-height: 1.5; word-break: break-word;">
+                    {{ msg.content }}
+                  </div>
+                </div>
+                {% if is_me %}
+                  <div class="ml-2 text-center" style="width: 36px; height: 36px; border-radius: 50%; background: #1d4ed8; border: 1px solid #60a5fa; color: #fff; font-weight: bold; line-height: 34px; font-size: 0.85rem; flex-shrink: 0;">
+                    {{ (current_user.member.name[:2] if current_user.member else current_user.username[:2])|upper }}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-center py-5 text-muted" id="chatEmptyState">
+            <div class="h2 mb-2">💬</div>
+            <p class="h6 font-weight-normal text-light mb-1">Welcome to the {{ group.name }} Squad Room!</p>
+            <small>No messages yet. Start the conversation with your teammates below.</small>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Message Composer -->
+      <div class="card-footer p-3 bg-dark border-top border-secondary" style="background: #0f172a !important;">
+        <form method="POST" action="{{ url_for('coder.chat') }}" id="chatForm">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="input-group">
+            <input type="text" name="content" id="chatInput" class="form-control text-white" style="background: rgba(8, 12, 20, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px 0 0 8px; padding: 0.75rem 1rem;" placeholder="Discuss ideas, client bids, or code with {{ group.name }}..." required autocomplete="off">
+            <div class="input-group-append">
+              <button type="submit" class="btn btn-warning font-weight-bold px-4" style="border-radius: 0 8px 8px 0;">
+                <span>Send</span> &rarr;
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Squad Info & Teammates -->
+  <div class="col-lg-3">
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 12px;">
+      <div class="card-header bg-white py-3">
+        <h6 class="mb-0 font-weight-bold text-dark">Crew Roster</h6>
+      </div>
+      <div class="card-body p-3">
+        <div class="small text-muted mb-2 font-weight-bold text-uppercase" style="letter-spacing: 0.5px;">Squad Engineers</div>
+        <ul class="list-unstyled mb-0">
+          {% for c in squad_coders %}
+            <li class="d-flex align-items-center mb-3">
+              <div class="mr-2 text-center" style="width: 32px; height: 32px; border-radius: 50%; background: #1e293b; color: #f59e0b; font-weight: bold; line-height: 30px; font-size: 0.75rem; border: 1px solid rgba(245, 158, 11, 0.3);">
+                {{ (c.member.name[:2] if c.member else c.username[:2])|upper }}
+              </div>
+              <div class="overflow-hidden">
+                <div class="font-weight-bold small text-truncate" style="color: #0f172a;">
+                  {{ c.member.name if c.member else c.username }}
+                  {% if c.id == current_user.id %}<span class="badge badge-info small">You</span>{% endif %}
+                </div>
+                <div class="text-muted small text-truncate" style="font-size: 0.75rem;">
+                  {{ c.member.role if c.member else 'Engineer' }}
+                </div>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0" style="border-radius: 12px;">
+      <div class="card-header bg-white py-3">
+        <h6 class="mb-0 font-weight-bold text-dark">Squad Quick Links</h6>
+      </div>
+      <div class="card-body p-3">
+        <a href="{{ url_for('coder.opportunities') }}" class="btn btn-outline-warning btn-sm btn-block text-dark font-weight-bold mb-2">
+          🎯 Review Opportunities
+        </a>
+        <a href="{{ url_for('coder.projects') }}" class="btn btn-outline-primary btn-sm btn-block mb-2">
+          💻 Manage Squad Projects
+        </a>
+        <a href="{{ url_for('public.group_detail', slug=group.slug) }}" target="_blank" class="btn btn-outline-secondary btn-sm btn-block">
+          🌐 View Public Landing Page
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    var container = document.getElementById("chatMessagesContainer");
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // Auto-poll for new messages every 5 seconds
+    var pollUrl = "{{ url_for('coder.chat_messages') }}";
+    setInterval(function () {
+      fetch(pollUrl)
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (!data || !data.messages) return;
+          // If message count changed, refresh or re-render
+        })
+        .catch(function () {});
+    }, 5000);
+  })();
+</script>
+{% endblock %}

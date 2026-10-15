@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Track Your Project Request — CodeCrews{% endblock %}
+
+{% block content %}
+<section class="hero-wrap hero-wrap-2 position-relative overflow-hidden" style="background: #080c14; padding: 80px 0 45px; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+  <div class="container text-center position-relative" style="z-index: 2;">
+    <div class="cc-hero-badge mb-2">
+      <span class="cc-radar-dot"></span> Client Portal
+    </div>
+    <h1 class="text-white font-weight-bold mb-2 cc-gradient-heading display-4">Track Project Inquiries</h1>
+    <p class="text-muted mb-0 lead" style="max-width: 600px; margin: 0 auto; font-size: 1.1rem;">
+      Enter your email address to find and access your Project Hubs, review squad offers, and chat with team leads.
+    </p>
+  </div>
+</section>
+
+<section class="ftco-section py-5">
+  <div class="container" style="max-width: 720px;">
+    <div class="card cc-card border-0 shadow-sm p-4 p-md-5 mb-4" style="border-radius: 16px;">
+      <form method="POST" action="{{ url_for('requests.find_request') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group mb-3">
+          <label class="font-weight-bold text-white mb-2">Your Contact Email</label>
+          <div class="input-group">
+            <input type="email" name="email" class="form-control text-white" style="background: rgba(8, 12, 20, 0.8); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px 0 0 8px; padding: 0.75rem 1rem;" placeholder="e.g. client@example.com" value="{{ searched_email }}" required>
+            <div class="input-group-append">
+              <button type="submit" class="btn btn-warning font-weight-bold px-4" style="border-radius: 0 8px 8px 0;">
+                Find Inquiries
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      {% if searched_email %}
+        <hr style="border-color: rgba(255, 255, 255, 0.08);" class="my-4">
+        {% if matched_requests %}
+          <h5 class="text-white font-weight-bold mb-3">Matching Project Requests ({{ matched_requests|length }})</h5>
+          <div class="list-group list-group-flush">
+            {% for req in matched_requests %}
+              <div class="list-group-item bg-transparent border-secondary text-white px-0 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                  <div class="font-weight-bold text-warning">{{ req.project_type|replace('_', ' ')|title }}</div>
+                  <small class="text-muted">Submitted {{ req.created_at.strftime('%b %d, %Y') }} &middot; Status: <span class="badge badge-dark border">{{ req.status|title }}</span></small>
+                </div>
+                <div>
+                  <a href="{{ url_for('requests.request_hub', id=req.id) }}" class="btn btn-sm btn-outline-warning font-weight-bold">
+                    Open Project Hub &rarr;
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-center py-4 text-muted">
+            <div class="h3 mb-2">🔍</div>
+            <p class="mb-0">No project requests found under "<strong>{{ searched_email }}</strong>".</p>
+            <small class="d-block mt-2">
+              Want to start a new project? <a href="{{ url_for('requests.request_project') }}" class="text-warning font-weight-bold">Request a project here &rarr;</a>
+            </small>
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

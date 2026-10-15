@@ -12,6 +12,9 @@ from app.models.audit_log import AuditLog
 from app.models.coder_application import CoderApplication
 from app.models.domain_alert import DomainAlert
 from app.models.domain_alert_delivery import DomainAlertDelivery
+from app.models.group_chat_message import GroupChatMessage
+from app.models.project_offer import ProjectOffer
+from app.models.project_discussion import ProjectDiscussionMessage
 
 __all__ = [
     "AdminUser",
@@ -28,5 +31,8 @@ __all__ = [
     "CoderApplication",
     "DomainAlert",
     "DomainAlertDelivery",
+    "GroupChatMessage",
+    "ProjectOffer",
+    "ProjectDiscussionMessage",
 ]
 
