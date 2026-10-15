@@ -27,9 +27,19 @@
         <li class="nav-item cta mr-md-2 {% if request.endpoint == 'requests.request_project' %}active{% endif %}">
           <a href="{{ url_for('requests.request_project') }}" class="nav-link"><span>Request a Project</span></a>
         </li>
+        {% if current_user.is_authenticated and current_user.role == 'coder' %}
+        <li class="nav-item ml-lg-2">
+          <a href="{{ url_for('coder.dashboard') }}" class="btn btn-outline-primary btn-sm my-2 my-lg-0 py-2 px-3"><span class="mr-1">⚡</span>Coder Portal</a>
+        </li>
+        {% elif current_user.is_authenticated and current_user.role == 'super_admin' %}
+        <li class="nav-item ml-lg-2">
+          <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-warning btn-sm my-2 my-lg-0 py-2 px-3"><span class="mr-1">🛡️</span>Admin Panel</a>
+        </li>
+        {% else %}
         <li class="nav-item ml-lg-2 {% if request.endpoint and request.endpoint.startswith('join.') %}active{% endif %}">
           <a href="{{ url_for('join.join') }}" class="btn btn-outline-primary btn-sm my-2 my-lg-0 py-2 px-3">Join as a Coder</a>
         </li>
+        {% endif %}
         <li class="nav-item ml-lg-2">
           <button type="button" class="btn btn-sm btn-outline-secondary d-none d-lg-inline-flex align-items-center text-muted px-2 py-1" data-toggle="modal" data-target="#ccCommandPalette" aria-label="Quick search" style="border-radius: 8px; border-color: rgba(255, 255, 255, 0.15); font-size: 0.8rem; background: rgba(255, 255, 255, 0.04);">
             <span class="mr-2">🔍 Search</span>

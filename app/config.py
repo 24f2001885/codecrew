@@ -49,6 +49,9 @@ class BaseConfig:
     # Seed credentials
     ADMIN_SEED_USERNAME = os.environ.get("ADMIN_SEED_USERNAME", "admin")
     ADMIN_SEED_PASSWORD = os.environ.get("ADMIN_SEED_PASSWORD", "change-me-before-running-seed")
+    CODER_SEED_USERNAME = os.environ.get("CODER_SEED_USERNAME", "coder")
+    CODER_SEED_PASSWORD = os.environ.get("CODER_SEED_PASSWORD", "coderpassword123")
+    CODER_SEED_EMAIL = os.environ.get("CODER_SEED_EMAIL", "coder@codecrews.example")
 
 
 class DevConfig(BaseConfig):

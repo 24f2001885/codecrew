@@ -1,8 +1,12 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from app.extensions import db
 from app.models.group import Group
 from app.models.member import Member
 from app.models.project import Project
+from app.models.admin_user import AdminUser
+from app.models.coder_user import CoderUser
+from app.models.project_request import ProjectRequest
+from app.models.request_access_grant import RequestAccessGrant
 
 
 def create_sample_data():
@@ -298,3 +302,136 @@ def create_sample_data():
     db.session.commit()
     print(f"[SAMPLE DATA] Successfully created {count} sample groups.")
     return count
+
+
+def create_sample_coder(admin=None, username=None, password=None, email=None):
+    """
+    Idempotent sample coder generator:
+    Creates an active CoderUser linked to a sample member (e.g. Alex Vance of Acme Devs)
+    and grants access to sample project requests so the coder portal features (dashboard,
+    projects, opportunities, profile) are immediately demonstrable.
+    """
+    coder_username = username or "coder"
+    coder_password = password or "coderpassword123"
+    coder_email = email or "coder@codecrews.example"
+
+    existing_coder = CoderUser.query.filter(
+        (CoderUser.username == coder_username) | (CoderUser.email == coder_email)
+    ).first()
+
+    if existing_coder:
+        if existing_coder.status != "active":
+            existing_coder.status = "active"
+            existing_coder.activated_at = datetime.now(timezone.utc)
+            db.session.commit()
+        print(f"[SAMPLE CODER] Coder account already exists: {existing_coder.username} (status={existing_coder.status})")
+        coder = existing_coder
+    else:
+        # Pick a member who does not have an active coder account yet
+        member = (
+            Member.query.join(Group)
+            .filter(Group.slug == "acme-devs", Member.name == "Alex Vance")
+            .first()
+        )
+        if not member:
+            # Fallback to any member without a coder user
+            all_members = Member.query.all()
+            for m in all_members:
+                if not getattr(m, "coder_account", None):
+                    member = m
+                    break
+
+        if not member:
+            # If no members exist at all, populate sample data first
+            create_sample_data()
+            member = (
+                Member.query.join(Group)
+                .filter(Group.slug == "acme-devs", Member.name == "Alex Vance")
+                .first()
+                or Member.query.first()
+            )
+
+        if not member:
+            print("[SAMPLE CODER] Error: Could not find or create a member to link coder account.")
+            return None
+
+        admin_user = admin or AdminUser.query.first()
+        admin_id = admin_user.id if admin_user else None
+
+        coder = CoderUser(
+            member_id=member.id,
+            username=coder_username,
+            email=coder_email,
+            status="active",
+            activated_at=datetime.now(timezone.utc),
+            invite_sent_at=datetime.now(timezone.utc),
+            created_by_admin_id=admin_id,
+        )
+        coder.set_password(coder_password)
+        db.session.add(coder)
+        db.session.commit()
+        print(f"[SAMPLE CODER] Created active coder '{coder.username}' linked to member '{member.name}' ({member.group.name if member.group else 'No Group'}).")
+
+    # Ensure admin user for grant creation
+    admin_user = admin or AdminUser.query.first()
+
+    # Seed sample project requests & grants if none exist for this coder
+    if admin_user:
+        sample_requests = ProjectRequest.query.all()
+        if not sample_requests:
+            req1 = ProjectRequest(
+                name="Sarah Jenkins",
+                email="sarah.jenkins@fintechapex.example",
+                company="Fintech Apex Solutions",
+                project_type="web_app",
+                budget_range="$15,000 - $25,000",
+                timeline="6 - 8 weeks",
+                description="We are seeking an engineering squad to design and deploy an interactive merchant analytics portal with real-time payment telemetry and webhooks.",
+                domain_tags=["python", "flask", "docker", "cloud"],
+                status="assigned",
+                assigned_group_id=coder.member.group_id if coder.member else None,
+            )
+            req2 = ProjectRequest(
+                name="Marcus Brody",
+                email="m.brody@iotdynamics.example",
+                company="IoT Dynamics",
+                project_type="api_backend",
+                budget_range="$8,000 - $12,000",
+                timeline="4 weeks",
+                description="High-throughput telemetry ingestion pipeline for IoT edge gateways with MQTT event streaming and timeseries persistence.",
+                domain_tags=["python", "postgresql", "docker"],
+                status="in_review",
+                assigned_group_id=coder.member.group_id if coder.member else None,
+            )
+            db.session.add(req1)
+            db.session.add(req2)
+            db.session.commit()
+            sample_requests = [req1, req2]
+
+        # Check and grant opportunities
+        active_grants = RequestAccessGrant.query.filter_by(coder_id=coder.id).all()
+        if not active_grants and sample_requests:
+            grant1 = RequestAccessGrant(
+                project_request_id=sample_requests[0].id,
+                coder_id=coder.id,
+                scope="brief_and_contact",
+                granted_by_admin_id=admin_user.id,
+                granted_at=datetime.now(timezone.utc),
+            )
+            db.session.add(grant1)
+
+            if len(sample_requests) > 1:
+                grant2 = RequestAccessGrant(
+                    project_request_id=sample_requests[1].id,
+                    coder_id=coder.id,
+                    scope="brief_only",
+                    granted_by_admin_id=admin_user.id,
+                    granted_at=datetime.now(timezone.utc),
+                )
+                db.session.add(grant2)
+
+            db.session.commit()
+            print(f"[SAMPLE CODER] Granted {len(sample_requests[:2])} opportunities to '{coder.username}'.")
+
+    return coder
+
