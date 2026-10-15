@@ -188,9 +188,16 @@
           <span class="font-weight-bold text-warning h5 mb-0">{{ project.title }}</span>
         </div>
       {% endif %}
-      <span class="badge cc-badge-status badge-success position-absolute d-inline-flex align-items-center" style="top: 10px; right: 10px; background: rgba(160, 246, 105, 0.2); color: #a0f669; border: 1px solid rgba(160, 246, 105, 0.4);">
-        <span class="cc-radar-dot mr-1"></span>Completed
-      </span>
+      <div class="position-absolute d-flex align-items-center gap-1" style="top: 10px; right: 10px;">
+        {% if project.featured %}
+          <span class="badge badge-warning cc-badge-featured mr-1" style="font-size: 0.75rem; font-weight: 700;">
+            <span class="cc-radar-dot mr-1"></span>Featured
+          </span>
+        {% endif %}
+        <span class="badge cc-badge-status badge-success d-inline-flex align-items-center" style="background: rgba(160, 246, 105, 0.2); color: #a0f669; border: 1px solid rgba(160, 246, 105, 0.4); font-size: 0.75rem;">
+          {{ project.status|capitalize if project.status else 'Completed' }}
+        </span>
+      </div>
     </div>
 
     <div class="card-body d-flex flex-column p-4">
@@ -199,9 +206,17 @@
           {{ project.title }}
         </a>
       </h5>
-      <p class="text-muted small flex-grow-1 mb-3">
-        {{ project.summary or project.description[:120] if project.description else 'Featured collaborative project.' }}
+      <p class="card-text text-muted small flex-grow-1 mb-3">
+        {{ project.summary or ((project.description[:120] ~ '...') if project.description and project.description|length > 120 else project.description) or 'Featured collaborative software project.' }}
       </p>
+
+      {% if project.group %}
+        <div class="mb-3">
+          <a href="{{ url_for('public.group_detail', slug=project.group.slug) }}" class="badge badge-dark text-muted" style="background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 9999px; padding: 0.3rem 0.6rem; text-decoration: none;">
+            By {{ project.group.name }}
+          </a>
+        </div>
+      {% endif %}
 
       {% if project.tech_tags %}
         <div class="tech-tags mb-3">
@@ -211,15 +226,185 @@
         </div>
       {% endif %}
 
-      <div class="project-links mt-auto pt-2 d-flex justify-content-between" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
-        {% if project.demo_url %}
-          <a href="{{ project.demo_url }}" target="_blank" rel="noopener noreferrer" class="text-warning small font-weight-bold">Live Demo &rarr;</a>
-        {% endif %}
-        {% if project.github_url %}
-          <a href="{{ project.github_url }}" target="_blank" rel="noopener noreferrer" class="text-muted small">Source Code</a>
-        {% endif %}
+      <div class="project-links mt-auto pt-3 d-flex align-items-center justify-content-between" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
+        <a href="#project-modal-{{ project.id }}" class="js-project-popup text-warning small font-weight-bold text-decoration-none">
+          Details &rarr;
+        </a>
+        <div class="d-flex align-items-center gap-2">
+          {% if project.demo_url or project.live_url %}
+            <a href="{{ project.demo_url or project.live_url }}" target="_blank" rel="noopener noreferrer" class="badge badge-warning text-dark font-weight-bold px-2 py-1" style="border-radius: 4px;" title="Live Preview">Live</a>
+          {% endif %}
+          {% if project.github_url %}
+            <a href="{{ project.github_url }}" target="_blank" rel="noopener noreferrer" class="badge badge-secondary text-light px-2 py-1" style="background: rgba(255, 255, 255, 0.1); border-radius: 4px;" title="Source Code">GitHub</a>
+          {% endif %}
+        </div>
       </div>
+    </div>
+  </div>
+
+  {# Inline hidden Magnific Popup content #}
+  <div id="project-modal-{{ project.id }}" class="mfp-hide cc-project-modal text-white p-4 p-md-5 mx-auto rounded shadow-lg" style="max-width: 720px; text-align: left; background: rgba(17, 24, 39, 0.96); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px;">
+    {% if project.screenshot %}
+      <div class="mb-4" style="max-height: 280px; overflow: hidden; border-radius: 10px; background: #0b1120;">
+        <img src="{{ url_for('static', filename=project.screenshot) }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ project.title }}">
+      </div>
+    {% endif %}
+
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+      <span class="badge badge-success cc-badge-status" style="background: rgba(160, 246, 105, 0.2); color: #a0f669; border: 1px solid rgba(160, 246, 105, 0.4);">
+        {{ project.status|capitalize if project.status else 'Completed' }}
+      </span>
+      {% if project.group %}
+        <a href="{{ url_for('public.group_detail', slug=project.group.slug) }}" class="badge badge-secondary" style="background: rgba(255, 255, 255, 0.1); border-radius: 9999px; padding: 0.35rem 0.75rem; text-decoration: none;">
+          Collective: {{ project.group.name }} &rarr;
+        </a>
+      {% endif %}
+    </div>
+
+    <h3 class="font-weight-bold text-white mt-2 mb-2">{{ project.title }}</h3>
+
+    {% if project.summary %}
+      <p class="lead text-light mb-3" style="color: #cbd5e1 !important; font-size: 1.05rem;">
+        {{ project.summary }}
+      </p>
+    {% endif %}
+
+    {% if project.tech_tags %}
+      <div class="mb-4">
+        <h6 class="text-muted text-uppercase small font-weight-bold" style="letter-spacing: 0.5px;">Tech Stack</h6>
+        {% for tag in project.tech_tags %}
+          <span class="badge cc-tag mr-1 mb-1">{{ tag }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="project-description mb-4 text-light" style="line-height: 1.7; white-space: pre-line; color: #94a3b8 !important;">
+      {{ project.description or project.summary or 'Production software project built by CodeCrews collective.' }}
+    </div>
+
+    {% if project.gallery_images and project.gallery_images|length > 0 %}
+      <div class="mb-4">
+        <h6 class="text-muted text-uppercase small font-weight-bold mb-2" style="letter-spacing: 0.5px;">Gallery Previews</h6>
+        <div class="row">
+          {% for img in project.gallery_images %}
+            <div class="col-6 col-md-4 mb-2">
+              <a href="{{ url_for('static', filename=img) }}" target="_blank" rel="noopener noreferrer" class="d-block overflow-hidden rounded" style="height: 100px; background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.1);">
+                <img src="{{ url_for('static', filename=img) }}" class="w-100 h-100" style="object-fit: cover;" alt="Preview">
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="d-flex align-items-center flex-wrap gap-2 pt-3" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
+      {% if project.demo_url or project.live_url %}
+        <a href="{{ project.demo_url or project.live_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-warning font-weight-bold mr-2 mb-2 px-3 py-2" style="border-radius: 8px;">
+          Launch Live App &rarr;
+        </a>
+      {% endif %}
+      {% if project.github_url %}
+        <a href="{{ project.github_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light mr-2 mb-2 px-3 py-2" style="border-radius: 8px;">
+          View Source Repository
+        </a>
+      {% endif %}
+      {% if project.group %}
+        <a href="{{ url_for('public.group_detail', slug=project.group.slug) }}" class="btn btn-outline-secondary mb-2 px-3 py-2 text-muted" style="border-radius: 8px;">
+          View {{ project.group.name }}
+        </a>
+      {% endif %}
     </div>
   </div>
 </div>
 {% endmacro %}
+
+
+{% macro blog_card(post) %}
+<div class="col-md-6 col-lg-4 mb-4" data-aos="fade-up">
+  <div class="card h-100 cc-card border-0 shadow-sm overflow-hidden">
+    {% if post.cover_image_path %}
+      <div class="card-img-wrapper position-relative" style="height: 190px; overflow: hidden; background: #0f172a;">
+        <img src="{{ url_for('static', filename=post.cover_image_path) }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ post.title }}">
+      </div>
+    {% else %}
+      <div class="card-img-wrapper position-relative d-flex align-items-center justify-content-center" style="height: 160px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%); border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+        <span class="text-warning font-mono small font-weight-bold">&lt;dev-log&gt;</span>
+      </div>
+    {% endif %}
+
+    <div class="card-body d-flex flex-column p-4">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="text-warning small font-weight-bold">
+          {{ post.published_at.strftime('%b %d, %Y') if post.published_at else post.created_at.strftime('%b %d, %Y') }}
+        </span>
+        {% if post.group %}
+          <a href="{{ url_for('public.group_detail', slug=post.group.slug) }}" class="badge badge-dark text-muted" style="background: rgba(255, 255, 255, 0.07); border-radius: 9999px; text-decoration: none;">
+            {{ post.group.name }}
+          </a>
+        {% endif %}
+      </div>
+
+      <h5 class="font-weight-bold text-white mb-2">
+        <a href="{{ url_for('public.blog_detail', slug=post.slug) }}" class="text-white text-decoration-none">
+          {{ post.title }}
+        </a>
+      </h5>
+
+      <p class="card-text text-muted small flex-grow-1 mb-3">
+        {{ ((post.content[:140] ~ '...') if post.content|length > 140 else post.content) }}
+      </p>
+
+      {% if post.tags %}
+        <div class="blog-tags mb-3">
+          {% for t in post.tags[:3] %}
+            <span class="badge cc-tag mr-1 mb-1">{{ t }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="card-meta d-flex justify-content-between align-items-center pt-3 text-muted small" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
+        <a href="{{ url_for('public.blog_detail', slug=post.slug) }}" class="text-warning small font-weight-bold text-decoration-none">
+          Read Article &rarr;
+        </a>
+        <a href="#blog-modal-{{ post.id }}" class="js-blog-popup text-muted small text-decoration-none" title="Quick Read">
+          Quick View
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {# Inline hidden Magnific Popup content for quick read #}
+  <div id="blog-modal-{{ post.id }}" class="mfp-hide cc-blog-modal text-white p-4 p-md-5 mx-auto rounded shadow-lg" style="max-width: 720px; text-align: left; background: rgba(17, 24, 39, 0.96); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px;">
+    {% if post.cover_image_path %}
+      <div class="mb-4" style="max-height: 260px; overflow: hidden; border-radius: 8px;">
+        <img src="{{ url_for('static', filename=post.cover_image_path) }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ post.title }}">
+      </div>
+    {% endif %}
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <span class="text-warning small font-weight-bold text-uppercase">
+        {{ post.published_at.strftime('%B %d, %Y') if post.published_at else post.created_at.strftime('%B %d, %Y') }}
+      </span>
+      {% if post.group %}
+        <span class="badge badge-secondary" style="background: rgba(255, 255, 255, 0.1);">{{ post.group.name }}</span>
+      {% endif %}
+    </div>
+    <h3 class="font-weight-bold text-white mt-1 mb-3">{{ post.title }}</h3>
+    {% if post.tags %}
+      <div class="mb-4">
+        {% for t in post.tags %}
+          <span class="badge cc-tag mr-1 mb-1">{{ t }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <div class="blog-content text-light mb-4" style="line-height: 1.8; white-space: pre-line; color: #cbd5e1 !important;">
+      {{ post.content }}
+    </div>
+    <div class="pt-3 text-right" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
+      <a href="{{ url_for('public.blog_detail', slug=post.slug) }}" class="btn btn-warning btn-sm font-weight-bold px-3">
+        Full Article Page &rarr;
+      </a>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+

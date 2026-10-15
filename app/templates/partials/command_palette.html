@@ -21,9 +21,17 @@
             <span>👥 Groups &mdash; Engineering Squads Directory</span>
             <span class="badge badge-secondary small" style="background: rgba(255, 255, 255, 0.08);">/groups</span>
           </a>
+          <a href="{{ url_for('public.projects') }}" class="list-group-item list-group-item-action bg-transparent text-light border-0 py-2 px-3 rounded cc-palette-item d-flex align-items-center justify-content-between">
+            <span>💻 Top Projects &mdash; Production Portfolio</span>
+            <span class="badge badge-secondary small" style="background: rgba(255, 255, 255, 0.08);">/projects</span>
+          </a>
           <a href="{{ url_for('public.members') }}" class="list-group-item list-group-item-action bg-transparent text-light border-0 py-2 px-3 rounded cc-palette-item d-flex align-items-center justify-content-between">
             <span>⚡ Our Members &mdash; Developers & Engineers</span>
             <span class="badge badge-secondary small" style="background: rgba(255, 255, 255, 0.08);">/members</span>
+          </a>
+          <a href="{{ url_for('public.blog') }}" class="list-group-item list-group-item-action bg-transparent text-light border-0 py-2 px-3 rounded cc-palette-item d-flex align-items-center justify-content-between">
+            <span>📰 Dev Log &mdash; Architecture & Engineering Blog</span>
+            <span class="badge badge-secondary small" style="background: rgba(255, 255, 255, 0.08);">/blog</span>
           </a>
           <a href="{{ url_for('requests.request_project') }}" class="list-group-item list-group-item-action bg-transparent text-light border-0 py-2 px-3 rounded cc-palette-item d-flex align-items-center justify-content-between">
             <span>🚀 Request a Project &mdash; Client Inquiries</span>

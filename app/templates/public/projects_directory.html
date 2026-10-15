@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import project_card %}
+
+{% block title %}Top Projects & Portfolio — CodeCrews{% endblock %}
+
+{% block content %}
+<section class="hero-wrap hero-wrap-2 position-relative overflow-hidden" style="background: #080c14; padding: 80px 0 45px; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+  <div class="container text-center position-relative" style="z-index: 2;">
+    <div class="cc-hero-badge mb-2">
+      <span class="cc-radar-dot"></span> Production Showcase
+    </div>
+    <h1 class="text-white font-weight-bold mb-2 cc-gradient-heading display-4">Top Projects</h1>
+    <p class="text-muted mb-0 lead" style="max-width: 680px; margin: 0 auto; font-size: 1.1rem;">
+      Explore real-world software, client prototypes, algorithms, and open source tools built by CodeCrews collectives.
+    </p>
+  </div>
+</section>
+
+<section class="ftco-section py-5">
+  <div class="container">
+    {# Live filter bar #}
+    <form method="GET" action="{{ url_for('public.projects') }}" id="directory-filter" class="mb-4 cc-hud-tile p-3">
+      <div class="row align-items-center">
+        <div class="col-md-5 mb-3 mb-md-0">
+          <input type="text" name="q" id="filter-q" class="form-control text-white" style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 0.7rem 1rem;" placeholder="Search projects by title or description..." aria-label="Search projects" value="{{ q or '' }}">
+        </div>
+        <div class="col-md-3 mb-3 mb-md-0">
+          <select name="group" id="filter-group" class="form-control text-white" style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 0.55rem 1rem; height: calc(1.5em + 1.4rem + 2px);" aria-label="Filter by group">
+            <option value="">All collectives</option>
+            {% for g in all_groups %}
+              <option value="{{ g.slug }}" {% if group_slug == g.slug %}selected{% endif %}>{{ g.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3 mb-3 mb-md-0">
+          <input type="text" name="tag" id="filter-tag" class="form-control text-white" style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 0.7rem 1rem;" placeholder="Filter by tech tag (e.g. React)..." aria-label="Filter by tag" value="{{ tag or '' }}">
+        </div>
+        <div class="col-md-1 text-md-right">
+          <button type="submit" class="btn btn-warning font-weight-bold w-100" style="border-radius: 8px; padding: 0.7rem 0.5rem;" aria-label="Filter">
+            Go
+          </button>
+        </div>
+      </div>
+    </form>
+
+    {# Status line #}
+    <div id="directory-status" class="text-muted small mb-4 font-weight-medium" aria-live="polite">
+      {% if total_count > 0 %}
+        Found {{ total_count }} project{{ 's' if total_count != 1 else '' }}
+      {% else %}
+        No projects match your search criteria.
+      {% endif %}
+    </div>
+
+    {# Results container #}
+    <div class="row" id="directory-results">
+      {% if projects %}
+        {% for project in projects %}
+          {{ project_card(project) }}
+        {% endfor %}
+      {% else %}
+        <div class="col-12 text-center py-5 cc-hud-tile my-3">
+          <p class="h4 text-muted font-weight-normal mb-2">No projects found.</p>
+          <p class="text-muted small mb-0">Try clearing filters or searching for different keywords.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    {# Server-rendered pagination #}
+    <nav id="directory-pagination" aria-label="Projects pagination" class="mt-5">
+      {% if pagination.pages > 1 %}
+        <ul class="pagination justify-content-center">
+          {% if pagination.has_prev %}
+            <li class="page-item">
+              <a class="page-link text-warning" style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; margin: 0 3px;" href="{{ url_for('public.projects', page=pagination.prev_num, q=q, group=group_slug, tag=tag) }}" aria-label="Previous">
+                &laquo; Prev
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link text-muted" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 6px; margin: 0 3px;">&laquo; Prev</span>
+            </li>
+          {% endif %}
+
+          {% for p in pagination.iter_pages(left_edge=2, left_current=2, right_current=2, right_edge=2) %}
+            {% if p %}
+              {% if p == pagination.page %}
+                <li class="page-item active" aria-current="page">
+                  <span class="page-link bg-warning text-dark border-warning font-weight-bold" style="border-radius: 6px; margin: 0 3px;">{{ p }}</span>
+                </li>
+              {% else %}
+                <li class="page-item">
+                  <a class="page-link text-light" style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; margin: 0 3px;" href="{{ url_for('public.projects', page=p, q=q, group=group_slug, tag=tag) }}">{{ p }}</a>
+                </li>
+              {% endif %}
+            {% else %}
+              <li class="page-item disabled"><span class="page-link text-muted" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 6px; margin: 0 3px;">&hellip;</span></li>
+            {% endif %}
+          {% endfor %}
+
+          {% if pagination.has_next %}
+            <li class="page-item">
+              <a class="page-link text-warning" style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; margin: 0 3px;" href="{{ url_for('public.projects', page=pagination.next_num, q=q, group=group_slug, tag=tag) }}" aria-label="Next">
+                Next &raquo;
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link text-muted" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 6px; margin: 0 3px;">Next &raquo;</span>
+            </li>
+          {% endif %}
+        </ul>
+      {% endif %}
+    </nav>
+  </div>
+</section>
+{% endblock %}

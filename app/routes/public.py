@@ -6,7 +6,7 @@ from app.models.member import Member
 from app.models.project import Project
 from app.models.blog_post import BlogPost
 from app.forms.contact_forms import ContactForm
-from app.services.search import search_groups, search_members
+from app.services.search import search_groups, search_members, search_projects, search_blog_posts
 
 public_bp = Blueprint("public", __name__)
 
@@ -51,6 +51,32 @@ def index():
         .all()
     )
 
+    # Top & featured projects across all engineering collectives
+    featured_projects = (
+        Project.query.filter_by(featured=True)
+        .order_by(Project.created_at.desc())
+        .limit(6)
+        .all()
+    )
+    if not featured_projects:
+        featured_projects = (
+            Project.query.order_by(Project.created_at.desc())
+            .limit(6)
+            .all()
+        )
+
+    # Latest engineering insights and blog posts
+    now = datetime.utcnow()
+    latest_posts = (
+        BlogPost.query.filter(
+            BlogPost.published_at.is_not(None),
+            BlogPost.published_at <= now,
+        )
+        .order_by(BlogPost.published_at.desc())
+        .limit(3)
+        .all()
+    )
+
     from app.services.site_context import platform_stats
     stats = platform_stats()
 
@@ -58,8 +84,11 @@ def index():
         "public/home.html",
         featured_groups=featured_groups,
         teaser_groups=teaser_groups,
+        featured_projects=featured_projects,
+        latest_posts=latest_posts,
         stats=stats,
     )
+
 
 
 
@@ -169,13 +198,121 @@ def group_detail(slug):
     )
 
 
+@public_bp.route("/projects", endpoint="projects")
+def projects():
+    q = request.args.get("q", "")
+    group_slug = request.args.get("group", "")
+    tag = request.args.get("tag", "")
+    page_arg = request.args.get("page", 1)
+
+    try:
+        page = int(page_arg)
+        if page < 1:
+            page = 1
+    except (ValueError, TypeError):
+        page = 1
+
+    result = search_projects(q=q, group_slug=group_slug, tag=tag, page=page, per_page=12)
+    pagination = SearchPagination(
+        items=result["items"],
+        page=result["page"],
+        total_pages=result["total_pages"],
+        total_count=result["total_count"],
+    )
+
+    all_groups = Group.query.order_by(Group.name.asc()).all()
+
+    return render_template(
+        "public/projects_directory.html",
+        pagination=pagination,
+        projects=result["items"],
+        total_count=result["total_count"],
+        all_groups=all_groups,
+        q=q,
+        group_slug=group_slug,
+        tag=tag,
+    )
+
+
+@public_bp.route("/blogs")
+@public_bp.route("/blog", endpoint="blog")
+def blog():
+    q = request.args.get("q", "")
+    group_slug = request.args.get("group", "")
+    tag = request.args.get("tag", "")
+    page_arg = request.args.get("page", 1)
+
+    try:
+        page = int(page_arg)
+        if page < 1:
+            page = 1
+    except (ValueError, TypeError):
+        page = 1
+
+    result = search_blog_posts(q=q, group_slug=group_slug, tag=tag, page=page, per_page=9)
+    pagination = SearchPagination(
+        items=result["items"],
+        page=result["page"],
+        total_pages=result["total_pages"],
+        total_count=result["total_count"],
+    )
+
+    all_groups = Group.query.order_by(Group.name.asc()).all()
+
+    return render_template(
+        "public/blog_directory.html",
+        pagination=pagination,
+        posts=result["items"],
+        total_count=result["total_count"],
+        all_groups=all_groups,
+        q=q,
+        group_slug=group_slug,
+        tag=tag,
+    )
+
+
+@public_bp.route("/group/<group_slug>/blog/<slug>")
+@public_bp.route("/blog/<slug>", endpoint="blog_detail")
+def blog_detail(slug, group_slug=None):
+    now = datetime.utcnow()
+    query = BlogPost.query.filter(
+        BlogPost.slug == slug,
+        BlogPost.published_at.is_not(None),
+        BlogPost.published_at <= now,
+    )
+    if group_slug:
+        query = query.join(Group).filter(Group.slug == group_slug)
+    post = query.first_or_404()
+
+    # Related articles
+    related_posts = (
+        BlogPost.query.filter(
+            BlogPost.id != post.id,
+            BlogPost.published_at.is_not(None),
+            BlogPost.published_at <= now,
+        )
+        .order_by(BlogPost.published_at.desc())
+        .limit(3)
+        .all()
+    )
+
+    return render_template(
+        "public/blog_detail.html",
+        post=post,
+        related_posts=related_posts,
+    )
+
+
 @public_bp.route("/sitemap.xml")
 def sitemap():
     base = request.host_url.rstrip("/")
+    now = datetime.utcnow()
     pages = [
         {"loc": f"{base}/", "priority": "1.0", "changefreq": "daily"},
         {"loc": f"{base}/groups", "priority": "0.9", "changefreq": "daily"},
         {"loc": f"{base}/members", "priority": "0.9", "changefreq": "daily"},
+        {"loc": f"{base}/projects", "priority": "0.9", "changefreq": "daily"},
+        {"loc": f"{base}/blog", "priority": "0.85", "changefreq": "daily"},
         {"loc": f"{base}/request-project", "priority": "0.8", "changefreq": "weekly"},
         {"loc": f"{base}/join", "priority": "0.8", "changefreq": "weekly"},
     ]
@@ -184,6 +321,12 @@ def sitemap():
             "loc": f"{base}/group/{g.slug}",
             "priority": "0.85",
             "changefreq": "weekly"
+        })
+    for p in BlogPost.query.filter(BlogPost.published_at.is_not(None), BlogPost.published_at <= now).all():
+        pages.append({
+            "loc": f"{base}/blog/{p.slug}",
+            "priority": "0.75",
+            "changefreq": "monthly"
         })
     xml = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     for p in pages:
