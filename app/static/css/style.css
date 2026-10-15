@@ -512,3 +512,64 @@ select:focus-visible {
     transform: none !important;
   }
 }
+
+/* ==========================================================================
+   Member Card & Dossier Modal (Popup) Enhancements
+   ========================================================================== */
+.cc-member-card {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.cc-member-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(245, 158, 11, 0.35) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 25px rgba(245, 158, 11, 0.12) !important;
+}
+
+.cc-member-name-link {
+  transition: color 0.2s ease;
+}
+
+.cc-member-name-link:hover {
+  color: #f59e0b !important;
+  text-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
+.cc-member-modal {
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Magnific Popup smooth fade and scale entrance */
+.mfp-bg {
+  background: rgba(4, 7, 13, 0.88) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  opacity: 0;
+  transition: all 0.25s ease-out;
+}
+
+.mfp-bg.mfp-ready {
+  opacity: 0.95;
+}
+
+.mfp-bg.mfp-removing {
+  opacity: 0;
+}
+
+.mfp-wrap .mfp-content {
+  opacity: 0;
+  transform: scale(0.96) translateY(10px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mfp-wrap.mfp-ready .mfp-content {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+.mfp-wrap.mfp-removing .mfp-content {
+  opacity: 0;
+  transform: scale(0.96) translateY(10px);
+}

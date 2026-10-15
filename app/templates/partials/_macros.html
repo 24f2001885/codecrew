@@ -46,33 +46,35 @@
 
 {% macro member_card(member) %}
 <div class="col-md-6 col-lg-4 mb-4" data-aos="fade-up">
-  <div class="card h-100 cc-card border-0 shadow-sm p-4 text-center" data-member-id="{{ member.id }}">
-    <div class="member-avatar mb-3 mx-auto" style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; background: #1e293b; border: 2px solid rgba(241, 178, 75, 0.35); box-shadow: 0 0 16px rgba(241, 178, 75, 0.15);">
-      {% if member.photo %}
-        <img src="{{ url_for('static', filename=member.photo) }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ member.name }} photo">
-      {% else %}
-        <div class="d-flex align-items-center justify-content-center h-100 text-warning font-weight-bold h4 mb-0">
-          {{ member.name[:2]|upper }}
-        </div>
-      {% endif %}
+  <div class="card h-100 cc-card border-0 shadow-sm p-4 text-center cc-member-card position-relative" data-member-id="{{ member.id }}">
+    <div class="member-avatar mb-3 mx-auto position-relative" style="width: 104px; height: 104px; border-radius: 50%; overflow: hidden; background: #1e293b; border: 2px solid rgba(241, 178, 75, 0.4); box-shadow: 0 0 20px rgba(241, 178, 75, 0.18);">
+      <a href="#member-popup-{{ member.id }}" class="js-member-popup d-block w-100 h-100" aria-label="View {{ member.name }}'s dossier">
+        {% if member.photo %}
+          <img src="{{ url_for('static', filename=member.photo) }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ member.name }} photo">
+        {% else %}
+          <div class="d-flex align-items-center justify-content-center w-100 h-100 text-warning font-weight-bold h4 mb-0">
+            {{ member.name[:2]|upper }}
+          </div>
+        {% endif %}
+      </a>
     </div>
 
     <h5 class="font-weight-bold text-white mb-1">
-      <a href="#member-popup-{{ member.id }}" class="js-member-popup text-white text-decoration-none">
+      <a href="#member-popup-{{ member.id }}" class="js-member-popup text-white text-decoration-none cc-member-name-link">
         {{ member.name }}
       </a>
     </h5>
-    <p class="text-warning small mb-2 font-weight-medium">{{ member.role or 'Member' }}</p>
+    <p class="text-warning small mb-2 font-weight-medium font-mono">&lt;{{ member.role or 'Member' }} /&gt;</p>
 
     {% if member.group %}
       <div class="mb-2">
-        <a href="{{ url_for('public.group_detail', slug=member.group.slug) }}" class="badge badge-dark text-muted" style="background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 9999px; padding: 0.3rem 0.6rem;">
-          {{ member.group.name }}
+        <a href="{{ url_for('public.group_detail', slug=member.group.slug) }}" class="badge badge-dark text-muted cc-group-pill" style="background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 9999px; padding: 0.35rem 0.75rem;">
+          👥 {{ member.group.name }}
         </a>
       </div>
     {% endif %}
 
-    <p class="text-muted small flex-grow-1 mb-3">
+    <p class="text-muted small flex-grow-1 mb-3" style="line-height: 1.55;">
       {{ member.bio or 'Software developer crafting robust systems.' }}
     </p>
 
@@ -84,92 +86,142 @@
       </div>
     {% endif %}
 
-    <div class="member-actions d-flex justify-content-center align-items-center gap-2 mt-auto pt-2">
-      <a href="#member-popup-{{ member.id }}" class="btn btn-sm btn-outline-info js-member-popup mx-1" aria-label="View {{ member.name }}'s profile" style="border-radius: 6px;">
-        Profile
+    <div class="member-actions d-flex justify-content-center align-items-center flex-wrap gap-1 mt-auto pt-2" style="border-top: 1px solid rgba(255, 255, 255, 0.06);">
+      <a href="#member-popup-{{ member.id }}" class="btn btn-sm btn-outline-info js-member-popup mx-1 my-1 px-3" aria-label="View {{ member.name }}'s profile" style="border-radius: 6px; font-weight: 600;">
+        🔍 Profile
       </a>
       {% if member.github_url %}
-        <a href="{{ member.github_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mx-1 text-light" aria-label="{{ member.name }} GitHub" style="border-radius: 6px;">
+        <a href="{{ member.github_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mx-1 my-1 text-light" aria-label="{{ member.name }} GitHub" style="border-radius: 6px;">
           GH
         </a>
       {% endif %}
       {% if member.linkedin_url %}
-        <a href="{{ member.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mx-1 text-light" aria-label="{{ member.name }} LinkedIn" style="border-radius: 6px;">
+        <a href="{{ member.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mx-1 my-1 text-light" aria-label="{{ member.name }} LinkedIn" style="border-radius: 6px;">
           IN
         </a>
       {% endif %}
       {% if member.resume_pdf %}
-        <a href="{{ url_for('static', filename=member.resume_pdf) }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-warning mx-1 font-weight-bold" aria-label="Download {{ member.name }}'s resume" style="border-radius: 6px;">
+        <a href="{{ url_for('static', filename=member.resume_pdf) }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-warning mx-1 my-1 font-weight-bold" aria-label="Download {{ member.name }}'s resume" style="border-radius: 6px;">
           Resume
         </a>
       {% endif %}
     </div>
   </div>
 
-  {# Inline hidden Magnific Popup content #}
-  <div id="member-popup-{{ member.id }}" class="mfp-hide cc-member-modal text-white p-4 mx-auto rounded shadow-lg" style="max-width: 600px; text-align: left; background: rgba(17, 24, 39, 0.96); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px;">
-    <div class="d-flex align-items-center mb-4">
-      <div class="mr-3" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; background: #1e293b; border: 2px solid rgba(241, 178, 75, 0.4); flex-shrink: 0;">
+  {# Inline hidden Magnific Popup modal #}
+  <div id="member-popup-{{ member.id }}" class="mfp-hide cc-member-modal text-white p-4 p-md-5 mx-auto shadow-lg position-relative" style="max-width: 640px; text-align: left; background: rgba(11, 17, 32, 0.98); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 35px rgba(245, 158, 11, 0.15);">
+    <button title="Close (Esc)" type="button" class="mfp-close text-white" style="position: absolute; top: 16px; right: 20px; font-size: 28px; opacity: 0.75; cursor: pointer; background: transparent; border: 0; outline: none;">&times;</button>
+
+    <!-- Header / Bio Strip -->
+    <div class="d-flex align-items-center mb-4 pb-3" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+      <div class="mr-3" style="width: 84px; height: 84px; border-radius: 50%; overflow: hidden; background: #1e293b; border: 2px solid #f59e0b; flex-shrink: 0; box-shadow: 0 0 16px rgba(245, 158, 11, 0.3);">
         {% if member.photo %}
           <img src="{{ url_for('static', filename=member.photo) }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ member.name }} photo">
         {% else %}
-          <div class="d-flex align-items-center justify-content-center h-100 text-warning font-weight-bold h4 mb-0">
+          <div class="d-flex align-items-center justify-content-center h-100 text-warning font-weight-bold h3 mb-0">
             {{ member.name[:2]|upper }}
           </div>
         {% endif %}
       </div>
       <div>
-        <h4 class="font-weight-bold text-white mb-1">{{ member.name }}</h4>
-        <p class="text-warning mb-1">{{ member.role or 'Member' }}</p>
+        <div class="d-flex align-items-center flex-wrap gap-2">
+          <h3 class="font-weight-bold text-white mb-0 mr-2">{{ member.name }}</h3>
+          {% if member.coder_account %}
+            <span class="badge badge-success px-2 py-1 small" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #34d399; font-size: 0.72rem; border-radius: 6px;">
+              ⚡ Insider Coder
+            </span>
+          {% endif %}
+        </div>
+        <p class="text-warning mb-1 font-weight-medium font-mono" style="font-size: 0.95rem;">&lt;{{ member.role or 'Engineer' }} /&gt;</p>
         {% if member.group %}
-          <a href="{{ url_for('public.group_detail', slug=member.group.slug) }}" class="badge badge-secondary" style="background: rgba(255, 255, 255, 0.1); border-radius: 9999px;">
-            {{ member.group.name }}
+          <a href="{{ url_for('public.group_detail', slug=member.group.slug) }}" class="badge badge-secondary px-2 py-1" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 9999px;">
+            👥 {{ member.group.name }}
           </a>
         {% endif %}
       </div>
     </div>
     
-    <div class="mb-3">
-      <h6 class="text-muted text-uppercase small font-weight-bold" style="letter-spacing: 0.5px;">Bio</h6>
-      <p class="text-light" style="white-space: pre-line; line-height: 1.6;">{{ member.bio or 'Software developer crafting robust systems.' }}</p>
+    <!-- Bio Section -->
+    <div class="mb-4">
+      <h6 class="text-muted text-uppercase small font-weight-bold font-mono mb-2" style="letter-spacing: 0.5px;">About & Background</h6>
+      <div class="p-3 rounded" style="background: rgba(17, 24, 39, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); line-height: 1.65; color: #cbd5e1;">
+        {{ member.bio or 'Software developer crafting robust systems and high-throughput architectures.' }}
+      </div>
     </div>
 
+    <!-- Skills Section -->
     {% if member.skill_tags and member.skill_tags|length > 0 %}
-      <div class="mb-3">
-        <h6 class="text-muted text-uppercase small font-weight-bold" style="letter-spacing: 0.5px;">Skills</h6>
-        <div>
+      <div class="mb-4">
+        <h6 class="text-muted text-uppercase small font-weight-bold font-mono mb-2" style="letter-spacing: 0.5px;">Core Proficiencies</h6>
+        <div class="d-flex flex-wrap">
           {% for skill in member.skill_tags %}
-            <span class="badge cc-tag mr-1 mb-1">{{ skill }}</span>
+            <span class="badge cc-tag mr-2 mb-2 px-3 py-2" style="font-size: 0.85rem;">{{ skill }}</span>
           {% endfor %}
         </div>
       </div>
     {% endif %}
 
-    <div class="d-flex align-items-center gap-2 mb-3">
-      {% if member.github_url %}
-        <a href="{{ member.github_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mr-2 text-light" aria-label="{{ member.name }} GitHub">GitHub</a>
-      {% endif %}
-      {% if member.linkedin_url %}
-        <a href="{{ member.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mr-2 text-light" aria-label="{{ member.name }} LinkedIn">LinkedIn</a>
-      {% endif %}
-      {% if member.twitter_url %}
-        <a href="{{ member.twitter_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mr-2 text-light" aria-label="{{ member.name }} Twitter">Twitter</a>
-      {% endif %}
-      {% if member.resume_pdf %}
-        <a href="{{ url_for('static', filename=member.resume_pdf) }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-warning font-weight-bold" aria-label="Download {{ member.name }}'s resume">Download Resume</a>
-      {% endif %}
+    <!-- Connect & Social Handles -->
+    <div class="mb-4">
+      <h6 class="text-muted text-uppercase small font-weight-bold font-mono mb-2" style="letter-spacing: 0.5px;">Public Handles & Channels</h6>
+      <div class="d-flex flex-wrap gap-2">
+        {% if member.github_url %}
+          <a href="{{ member.github_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-light mr-2 mb-2 px-3 py-2 font-mono" style="background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.15); border-radius: 8px;" aria-label="{{ member.name }} GitHub">
+            🐙 GitHub &nearr;
+          </a>
+        {% endif %}
+        {% if member.linkedin_url %}
+          <a href="{{ member.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-info mr-2 mb-2 px-3 py-2 font-mono" style="background: rgba(56, 189, 248, 0.06); border-color: rgba(56, 189, 248, 0.3); border-radius: 8px;" aria-label="{{ member.name }} LinkedIn">
+            💼 LinkedIn &nearr;
+          </a>
+        {% endif %}
+        {% if member.twitter_url %}
+          <a href="{{ member.twitter_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-light mr-2 mb-2 px-3 py-2 font-mono" style="background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.15); border-radius: 8px;" aria-label="{{ member.name }} Twitter">
+            🐦 Twitter/X &nearr;
+          </a>
+        {% endif %}
+        {% if not member.github_url and not member.linkedin_url and not member.twitter_url %}
+          <span class="text-muted small">No external handles linked.</span>
+        {% endif %}
+      </div>
     </div>
 
+    <!-- Downloadable Resume Banner -->
+    <div class="mb-4 p-3 rounded" style="background: rgba(17, 24, 39, 0.7); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 12px;">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex align-items-center">
+          <span class="mr-3 text-warning h3 mb-0">📄</span>
+          <div>
+            <div class="text-white font-weight-bold" style="font-size: 0.95rem;">Curriculum Vitae / Resume</div>
+            <div class="text-muted small">Official verified technical credentials and achievements</div>
+          </div>
+        </div>
+        <div>
+          {% if member.resume_pdf %}
+            <a href="{{ url_for('static', filename=member.resume_pdf) }}" download target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-warning font-weight-bold px-3 py-2 shadow-sm" aria-label="Download {{ member.name }}'s resume" style="border-radius: 8px;">
+              <span class="mr-1">📥</span> Download PDF Resume
+            </a>
+          {% else %}
+            <span class="badge badge-secondary px-2 py-1 text-muted" style="background: rgba(255, 255, 255, 0.06); border-radius: 6px;">Available on Request</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Group Projects -->
     {% if member.group and member.group.projects %}
-      <div class="mt-4 pt-3" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
-        <h6 class="text-muted text-uppercase small font-weight-bold mb-2" style="letter-spacing: 0.5px;">Group Projects</h6>
-        <ul class="list-unstyled mb-0">
+      <div class="pt-3" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
+        <h6 class="text-muted text-uppercase small font-weight-bold font-mono mb-2" style="letter-spacing: 0.5px;">Squad Production Portfolio</h6>
+        <div class="row">
           {% for proj in member.group.projects %}
-            <li class="mb-1">
-              <a href="{{ url_for('public.group_detail', slug=member.group.slug) }}#projects" class="text-info font-weight-medium">{{ proj.title }}</a>
-            </li>
+            <div class="col-sm-6 mb-2">
+              <a href="{{ url_for('public.group_detail', slug=member.group.slug) }}#projects" class="d-block p-2 rounded text-decoration-none cc-hud-tile" style="border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                <div class="text-warning font-weight-bold small">&bull; {{ proj.title }}</div>
+                <div class="text-muted small text-truncate">{{ proj.summary or 'Production deployment' }}</div>
+              </a>
+            </div>
           {% endfor %}
-        </ul>
+        </div>
       </div>
     {% endif %}
   </div>
