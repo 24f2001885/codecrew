@@ -165,5 +165,15 @@ def create_app(config_name=None):
     # Ensure models are loaded for SQLAlchemy & Flask-Migrate
     with flask_app.app_context():
         from app import models as _models  # noqa: F401
+        try:
+            with db.engine.connect() as conn:
+                cols = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(project_milestones)").fetchall()]
+                if cols and "escrow_amount" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE project_milestones ADD COLUMN escrow_amount FLOAT DEFAULT 0.0")
+                if cols and "escrow_status" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE project_milestones ADD COLUMN escrow_status VARCHAR(20) DEFAULT 'unfunded'")
+                conn.commit()
+        except Exception:
+            pass
 
     return flask_app

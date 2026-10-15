@@ -1,4 +1,5 @@
 import logging
+import uuid
 from datetime import datetime, timezone
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify
 from app.extensions import db, limiter
@@ -11,6 +12,7 @@ from app.models.group import Group
 from app.models.coder_user import CoderUser
 from app.models.member import Member
 from app.models.request_access_grant import RequestAccessGrant
+from app.models.project_payment import ProjectPayment
 from app.services.notifications import create_notification
 from app.forms.request_forms import RequestForm
 from app.services.private_files import save_private
@@ -94,6 +96,7 @@ def request_hub(id):
     offers = req_item.offers.order_by(ProjectOffer.created_at.desc()).all()
     discussion_messages = req_item.discussion_messages.order_by(ProjectDiscussionMessage.created_at.asc()).all()
     milestones = req_item.milestones.all()
+    payments = req_item.payments.all()
 
     return render_template(
         "public/request_hub.html",
@@ -101,6 +104,7 @@ def request_hub(id):
         offers=offers,
         discussion_messages=discussion_messages,
         milestones=milestones,
+        payments=payments,
     )
 
 
@@ -384,5 +388,153 @@ def hub_discussion_messages(id):
         "status": req_item.status,
         "progress_percentage": req_item.progress_percentage,
     })
+
+
+@requests_bp.route("/request/<id>/hub/deposit", methods=["POST"])
+def deposit_escrow(id):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    if not req_item.assigned_group_id:
+        flash("Cannot fund escrow before assigning an engineering squad.", "warning")
+        return redirect(url_for("requests.request_hub", id=id))
+
+    try:
+        amount = float(request.form.get("amount", 0.0))
+        if amount <= 0:
+            flash("Deposit amount must be greater than $0.", "danger")
+            return redirect(url_for("requests.request_hub", id=id))
+    except (ValueError, TypeError):
+        flash("Invalid deposit amount specified.", "danger")
+        return redirect(url_for("requests.request_hub", id=id))
+
+    milestone_id = request.form.get("milestone_id", "").strip() or None
+    milestone = None
+    if milestone_id:
+        milestone = db.session.get(ProjectMilestone, milestone_id)
+        if milestone and milestone.project_request_id != req_item.id:
+            milestone = None
+
+    payment_type = request.form.get("payment_type", "milestone" if milestone else "deposit").strip()
+    title = request.form.get("title", "").strip()
+    if not title:
+        title = f"Escrow Deposit for {milestone.title}" if milestone else "Project Escrow Deposit"
+
+    payer_name = request.form.get("payer_name", "").strip() or req_item.name
+    payer_email = request.form.get("payer_email", "").strip() or req_item.email
+
+    txn_ref = f"ESC-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+
+    payment = ProjectPayment(
+        project_request_id=req_item.id,
+        group_id=req_item.assigned_group_id,
+        milestone_id=milestone.id if milestone else None,
+        payment_type=payment_type,
+        title=title,
+        amount=amount,
+        currency="USD",
+        status="held_in_escrow",
+        transaction_reference=txn_ref,
+        payment_method="Simulated Escrow Card (•••• 4242)",
+        payer_name=payer_name,
+        payer_email=payer_email,
+    )
+    db.session.add(payment)
+
+    if milestone:
+        milestone.escrow_amount = amount
+        milestone.escrow_status = "funded"
+
+    # Post system message to project discussion
+    disc_msg = ProjectDiscussionMessage(
+        project_request_id=req_item.id,
+        sender_type="system",
+        sender_name="Platform System",
+        content=f"💳 Secure Escrow Funded: Client {payer_name} deposited ${amount:,.2f} into secure escrow (Ref: {txn_ref}) for '{title}'.",
+    )
+    db.session.add(disc_msg)
+    db.session.commit()
+
+    # Notify squad coders
+    squad_coders = CoderUser.query.join(Member).filter(Member.group_id == req_item.assigned_group_id).all()
+    for cu in squad_coders:
+        create_notification(
+            recipient_type="coder",
+            recipient_id=cu.id,
+            title=f"💳 ${amount:,.2f} Escrow Funded!",
+            message=f"Client {payer_name} deposited ${amount:,.2f} into secure escrow for '{title}'.",
+            link_url=url_for("coder.opportunity_detail", request_id=req_item.id),
+            category="milestone_update",
+        )
+
+    flash(f"Payment of ${amount:,.2f} securely deposited into escrow! Transaction reference: {txn_ref}", "success")
+    return redirect(url_for("requests.request_hub", id=id))
+
+
+@requests_bp.route("/request/<id>/hub/milestone/<milestone_id>/release-payment", methods=["POST"])
+def release_payment(id, milestone_id):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    milestone = db.session.get(ProjectMilestone, milestone_id) or abort(404)
+    if milestone.project_request_id != req_item.id:
+        abort(400)
+
+    # Find held payment for this milestone
+    payment = ProjectPayment.query.filter_by(
+        project_request_id=req_item.id,
+        milestone_id=milestone.id,
+        status="held_in_escrow",
+    ).first()
+
+    # Fallback to any held payment if milestone_id wasn't directly linked
+    if not payment:
+        payment = ProjectPayment.query.filter_by(
+            project_request_id=req_item.id,
+            status="held_in_escrow",
+        ).first()
+
+    if not payment:
+        flash("No funds are currently held in escrow for this milestone.", "warning")
+        return redirect(url_for("requests.request_hub", id=id))
+
+    payment.release()
+    milestone.escrow_status = "released"
+
+    disc_msg = ProjectDiscussionMessage(
+        project_request_id=req_item.id,
+        sender_type="system",
+        sender_name="Platform System",
+        content=f"💸 Escrow Released: Client {req_item.name} approved payout of ${payment.amount:,.2f} to squad '{req_item.assigned_group.name if req_item.assigned_group else 'Squad'}' (Ref: {payment.transaction_reference}).",
+    )
+    db.session.add(disc_msg)
+    db.session.commit()
+
+    # Notify squad coders
+    squad_coders = CoderUser.query.join(Member).filter(Member.group_id == req_item.assigned_group_id).all()
+    for cu in squad_coders:
+        create_notification(
+            recipient_type="coder",
+            recipient_id=cu.id,
+            title=f"💸 ${payment.amount:,.2f} Payout Released!",
+            message=f"Client {req_item.name} has released ${payment.amount:,.2f} from escrow for '{milestone.title}'.",
+            link_url=url_for("coder.wallet"),
+            category="milestone_update",
+        )
+
+    flash(f"Payment of ${payment.amount:,.2f} successfully released from escrow to the engineering squad!", "success")
+    return redirect(url_for("requests.request_hub", id=id))
+
+
+@requests_bp.route("/request/<id>/receipt/<txn_ref>", methods=["GET"])
+def payment_receipt(id, txn_ref):
+    req_item = db.session.get(ProjectRequest, id) or abort(404)
+    payment = ProjectPayment.query.filter_by(
+        project_request_id=req_item.id,
+        transaction_reference=txn_ref,
+    ).first_or_404()
+
+    return render_template(
+        "public/payment_receipt.html",
+        req_item=req_item,
+        payment=payment,
+    )
+
 
 

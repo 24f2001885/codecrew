@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice Receipt #{{ payment.transaction_reference }} — CodeCrews{% endblock %}
+
+{% block content %}
+<section class="ftco-section py-5" style="background: #080c14; min-height: 80vh;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <!-- Receipt Card -->
+        <div class="card border-0 shadow-lg p-4 p-md-5" style="background: #0f172a; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.08) !important; color: #f8fafc;">
+          
+          <!-- Top Row: Branding and Status -->
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 pb-4 mb-4 border-bottom border-secondary">
+            <div>
+              <div class="font-weight-bold text-white mb-1" style="font-size: 1.5rem; letter-spacing: -0.5px;">
+                Code<span class="text-warning">Crews</span>
+              </div>
+              <div class="small text-muted font-mono">OFFICIAL ESCROW RECEIPT</div>
+            </div>
+            <div class="text-right">
+              {% if payment.status == 'released' %}
+                <span class="badge badge-success px-3 py-2 font-weight-bold font-mono" style="font-size: 0.85rem; border-radius: 9999px;">
+                  ● PAID & RELEASED
+                </span>
+              {% elif payment.status == 'held_in_escrow' %}
+                <span class="badge badge-warning text-dark px-3 py-2 font-weight-bold font-mono" style="font-size: 0.85rem; border-radius: 9999px;">
+                  🔒 HELD IN SECURE ESCROW
+                </span>
+              {% else %}
+                <span class="badge badge-secondary px-3 py-2 font-weight-bold font-mono" style="font-size: 0.85rem; border-radius: 9999px;">
+                  {{ payment.status|upper }}
+                </span>
+              {% endif %}
+              <div class="small text-muted mt-1 font-mono">{{ payment.transaction_reference }}</div>
+            </div>
+          </div>
+
+          <!-- Parties & Dates Info -->
+          <div class="row mb-4">
+            <div class="col-sm-6 mb-3 mb-sm-0">
+              <div class="text-muted small font-weight-bold text-uppercase font-mono mb-1">Billed To (Client):</div>
+              <div class="font-weight-bold text-white">{{ payment.payer_name }}</div>
+              {% if req_item.company %}
+                <div class="small text-muted">{{ req_item.company }}</div>
+              {% endif %}
+              <div class="small text-muted">{{ payment.payer_email }}</div>
+            </div>
+            <div class="col-sm-6 text-sm-right">
+              <div class="text-muted small font-weight-bold text-uppercase font-mono mb-1">Beneficiary Squad:</div>
+              <div class="font-weight-bold text-warning">{{ payment.group.name if payment.group else 'Assigned Squad' }}</div>
+              <div class="small text-muted">Project: {{ req_item.name }}</div>
+              <div class="small text-muted">Date: {{ payment.created_at.strftime('%B %d, %Y') }}</div>
+            </div>
+          </div>
+
+          <!-- Payment Details Box -->
+          <div class="p-3 rounded mb-4" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);">
+            <div class="row small">
+              <div class="col-6 col-md-3 mb-2 mb-md-0">
+                <span class="text-muted d-block">Transaction Ref:</span>
+                <span class="font-mono text-light">{{ payment.transaction_reference }}</span>
+              </div>
+              <div class="col-6 col-md-3 mb-2 mb-md-0">
+                <span class="text-muted d-block">Payment Method:</span>
+                <span class="text-light">{{ payment.payment_method }}</span>
+              </div>
+              <div class="col-6 col-md-3">
+                <span class="text-muted d-block">Payment Type:</span>
+                <span class="text-light font-weight-bold text-capitalize">{{ payment.payment_type }}</span>
+              </div>
+              <div class="col-6 col-md-3 text-md-right">
+                <span class="text-muted d-block">Settlement Status:</span>
+                <span class="{% if payment.status == 'released' %}text-success{% else %}text-warning{% endif %} font-weight-bold">
+                  {{ 'Released to Squad' if payment.status == 'released' else 'Held in Escrow' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Line Items Table -->
+          <div class="table-responsive mb-4">
+            <table class="table table-borderless text-white mb-0">
+              <thead style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                <tr class="text-muted small font-mono">
+                  <th>DESCRIPTION</th>
+                  <th>CATEGORY</th>
+                  <th class="text-right">AMOUNT</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                  <td class="py-3">
+                    <span class="font-weight-bold text-white d-block">{{ payment.title }}</span>
+                    {% if payment.milestone %}
+                      <span class="small text-muted">Deliverable milestone for {{ req_item.name }}</span>
+                    {% else %}
+                      <span class="small text-muted">Upfront project escrow deposit</span>
+                    {% endif %}
+                  </td>
+                  <td class="py-3 text-muted small text-capitalize">{{ payment.payment_type }}</td>
+                  <td class="py-3 text-right font-weight-bold text-white font-mono" style="font-size: 1.1rem;">
+                    ${{ '{:,.2f}'.format(payment.amount) }}
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="2" class="text-right text-muted font-weight-bold pt-3">TOTAL:</td>
+                  <td class="text-right font-weight-bold text-warning font-mono pt-3" style="font-size: 1.35rem;">
+                    ${{ '{:,.2f}'.format(payment.amount) }} {{ payment.currency }}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <!-- Escrow Guarantee Notice -->
+          <div class="alert alert-dark border-0 p-3 mb-4 small" style="background: rgba(245, 158, 11, 0.08); border-left: 3px solid #f59e0b !important; color: #cbd5e1;">
+            <strong>CodeCrews Escrow Guarantee:</strong> Client funds deposited into secure escrow are held protected and are only disbursed to engineering squads upon milestone deliverable inspection and client sign-off.
+          </div>
+
+          <!-- Actions -->
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pt-3 border-top border-secondary">
+            <a href="{{ url_for('requests.request_hub', id=req_item.id) }}" class="btn btn-outline-light btn-sm px-3">
+              &larr; Back to Project Hub
+            </a>
+            <button onclick="window.print();" class="btn btn-warning font-weight-bold btn-sm px-4 shadow-sm">
+              🖨️ Print / Save PDF Receipt
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

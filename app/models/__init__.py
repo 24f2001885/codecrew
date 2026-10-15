@@ -18,6 +18,7 @@ from app.models.project_discussion import ProjectDiscussionMessage
 from app.models.project_milestone import ProjectMilestone
 from app.models.squad_review import SquadReview
 from app.models.app_notification import AppNotification
+from app.models.project_payment import ProjectPayment
 
 __all__ = [
     "AdminUser",
@@ -40,5 +41,6 @@ __all__ = [
     "ProjectMilestone",
     "SquadReview",
     "AppNotification",
+    "ProjectPayment",
 ]
 

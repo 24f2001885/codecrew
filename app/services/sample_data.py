@@ -13,6 +13,7 @@ from app.models.project_discussion import ProjectDiscussionMessage
 from app.models.project_milestone import ProjectMilestone
 from app.models.squad_review import SquadReview
 from app.models.app_notification import AppNotification
+from app.models.project_payment import ProjectPayment
 
 
 def create_sample_data():
@@ -532,6 +533,53 @@ def create_sample_coder(admin=None, username=None, password=None, email=None):
             db.session.add(ms3)
             db.session.commit()
             print(f"[SAMPLE CODER] Seeded sprint delivery milestones for project '{sample_req.name}'.")
+
+        # Seed sample payments & escrow if none exist
+        if ProjectPayment.query.filter_by(group_id=coder.member.group_id).count() == 0:
+            first_ms = sample_req.milestones.first()
+            second_ms = sample_req.milestones.offset(1).first() if sample_req.milestones.count() > 1 else None
+
+            p1 = ProjectPayment(
+                project_request_id=sample_req.id,
+                group_id=coder.member.group_id,
+                milestone_id=first_ms.id if first_ms else None,
+                payment_type="milestone",
+                title="Sprint 1: Architecture Specification & Database Schema",
+                amount=4500.0,
+                currency="USD",
+                status="released",
+                transaction_reference="ESC-20261011-A89F12",
+                payment_method="Simulated Escrow Card (•••• 4242)",
+                payer_name=sample_req.name,
+                payer_email=sample_req.email,
+                released_at=datetime.now(timezone.utc),
+            )
+            if first_ms:
+                first_ms.escrow_amount = 4500.0
+                first_ms.escrow_status = "released"
+
+            p2 = ProjectPayment(
+                project_request_id=sample_req.id,
+                group_id=coder.member.group_id,
+                milestone_id=second_ms.id if second_ms else None,
+                payment_type="milestone",
+                title="Sprint 2: Merchant API & Telemetry Pipeline",
+                amount=6500.0,
+                currency="USD",
+                status="held_in_escrow",
+                transaction_reference="ESC-20261014-C43D88",
+                payment_method="Simulated Escrow Card (•••• 4242)",
+                payer_name=sample_req.name,
+                payer_email=sample_req.email,
+            )
+            if second_ms:
+                second_ms.escrow_amount = 6500.0
+                second_ms.escrow_status = "funded"
+
+            db.session.add(p1)
+            db.session.add(p2)
+            db.session.commit()
+            print(f"[SAMPLE CODER] Seeded sample escrow payments for '{coder.member.group.name}'.")
 
         # Seed verified sample squad review if none exists
         if SquadReview.query.filter_by(group_id=coder.member.group_id).count() == 0:

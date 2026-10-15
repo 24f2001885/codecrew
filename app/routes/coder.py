@@ -10,6 +10,7 @@ from app.models.group_chat_message import GroupChatMessage
 from app.models.project_offer import ProjectOffer
 from app.models.project_discussion import ProjectDiscussionMessage
 from app.models.project_milestone import ProjectMilestone
+from app.models.project_payment import ProjectPayment
 from app.security.decorators import coder_required, apply_guard_to_blueprint
 from app.services.slugs import unique_slug
 from app.services.uploads import save_upload, delete_upload, replace_upload, UploadError
@@ -36,10 +37,12 @@ def dashboard():
     member = coder.member
     group = member.group if member else None
 
-    # Counts
+    # Counts & Financials
     project_count = Project.query.filter_by(group_id=group.id).count() if group else 0
     active_grants_count = active_grants_query(coder.id).count()
     chat_message_count = GroupChatMessage.query.filter_by(group_id=group.id).count() if group else 0
+    lifetime_earnings = group.total_lifetime_earnings if group else 0.0
+    escrow_pending = group.current_escrow_holding if group else 0.0
 
     return render_template(
         "coder/dashboard.html",
@@ -49,6 +52,8 @@ def dashboard():
         project_count=project_count,
         active_grants_count=active_grants_count,
         chat_message_count=chat_message_count,
+        lifetime_earnings=lifetime_earnings,
+        escrow_pending=escrow_pending,
     )
 
 
@@ -474,5 +479,36 @@ def opportunity_discussion_messages(request_id):
         "count": len(messages),
         "status": req_obj.status,
     })
+
+
+@coder_bp.route("/wallet")
+def wallet():
+    coder = current_user
+    member = coder.member
+    group = member.group if member else None
+
+    if not group:
+        flash("You need to be part of an engineering squad to access the squad wallet.", "warning")
+        return redirect(url_for("coder.dashboard"))
+
+    payments = ProjectPayment.query.filter_by(group_id=group.id).order_by(ProjectPayment.created_at.desc()).all()
+    released_payments = [p for p in payments if p.status == "released"]
+    escrow_payments = [p for p in payments if p.status == "held_in_escrow"]
+
+    total_released = sum(p.amount for p in released_payments)
+    total_held = sum(p.amount for p in escrow_payments)
+
+    return render_template(
+        "coder/wallet.html",
+        coder=coder,
+        member=member,
+        group=group,
+        payments=payments,
+        released_payments=released_payments,
+        escrow_payments=escrow_payments,
+        total_released=total_released,
+        total_held=total_held,
+    )
+
 
 

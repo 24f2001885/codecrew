@@ -17,6 +17,18 @@ def run():
     with app.app_context():
         db.create_all()
 
+        # Migrate new columns if missing in existing dev SQLite database
+        try:
+            with db.engine.connect() as conn:
+                cols = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(project_milestones)").fetchall()]
+                if cols and "escrow_amount" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE project_milestones ADD COLUMN escrow_amount FLOAT DEFAULT 0.0")
+                if cols and "escrow_status" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE project_milestones ADD COLUMN escrow_status VARCHAR(20) DEFAULT 'unfunded'")
+                conn.commit()
+        except Exception as e:
+            print(f"[MIGRATE] Warning: {e}")
+
         admin = None
         if not args.sample_only:
             username = app.config.get("ADMIN_SEED_USERNAME", "admin")

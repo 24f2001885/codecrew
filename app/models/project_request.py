@@ -52,5 +52,17 @@ class ProjectRequest(db.Model):
     def active_milestones(self):
         return self.milestones.all()
 
+    @property
+    def total_escrow_funded(self):
+        return sum(p.amount for p in self.payments.filter(db.or_(db.text("status='held_in_escrow'"), db.text("status='released'"))).all())
+
+    @property
+    def total_escrow_held(self):
+        return sum(p.amount for p in self.payments.filter_by(status="held_in_escrow").all())
+
+    @property
+    def total_released_to_squad(self):
+        return sum(p.amount for p in self.payments.filter_by(status="released").all())
+
     def __repr__(self):
         return f"<ProjectRequest from {self.name} ({self.status})>"

@@ -70,5 +70,13 @@ class Group(db.Model):
     def active_reviews(self):
         return self.reviews.filter_by(verified=True).order_by(db.desc("created_at")).all()
 
+    @property
+    def total_lifetime_earnings(self):
+        return sum(p.amount for p in self.payments.filter_by(status="released").all())
+
+    @property
+    def current_escrow_holding(self):
+        return sum(p.amount for p in self.payments.filter_by(status="held_in_escrow").all())
+
     def __repr__(self):
         return f"<Group {self.name} ({self.slug})>"

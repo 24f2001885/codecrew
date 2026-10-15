@@ -20,6 +20,10 @@ class ProjectMilestone(db.Model):
     submitted_at = db.Column(db.DateTime, nullable=True)
     completed_at = db.Column(db.DateTime, nullable=True)
 
+    # Escrow financials
+    escrow_amount = db.Column(db.Float, default=0.0, nullable=False)
+    escrow_status = db.Column(db.String(20), default="unfunded", nullable=False, index=True)  # 'unfunded', 'funded', 'released'
+
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
@@ -39,6 +43,9 @@ class ProjectMilestone(db.Model):
             "status": self.status,
             "deliverable_url": self.deliverable_url or "",
             "deliverable_notes": self.deliverable_notes or "",
+            "escrow_amount": self.escrow_amount,
+            "escrow_amount_formatted": f"${self.escrow_amount:,.2f}" if self.escrow_amount else "$0.00",
+            "escrow_status": self.escrow_status,
             "submitted_at": self.submitted_at.strftime("%b %d, %Y") if self.submitted_at else None,
             "completed_at": self.completed_at.strftime("%b %d, %Y") if self.completed_at else None,
             "created_at": self.created_at.strftime("%b %d, %Y") if self.created_at else "",

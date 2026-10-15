@@ -105,15 +105,38 @@
                         </div>
                       {% endif %}
 
-                      <!-- Client Approval Button -->
-                      {% if ms.status == 'submitted' %}
-                        <form method="POST" action="{{ url_for('requests.approve_milestone', id=req_item.id, milestone_id=ms.id) }}" class="mt-2">
-                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                          <button type="submit" class="btn btn-sm btn-success font-weight-bold shadow-sm px-3">
-                            ✅ Review & Approve Milestone
-                          </button>
-                        </form>
-                      {% endif %}
+                      <!-- Milestone Escrow & Approval Actions -->
+                      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3 pt-2" style="border-top: 1px dashed rgba(255, 255, 255, 0.1);">
+                        <div>
+                          {% if ms.escrow_status == 'released' %}
+                            <span class="badge badge-success font-mono small py-1 px-2">● Escrow Paid to Squad (${{ '{:,.2f}'.format(ms.escrow_amount) }})</span>
+                          {% elif ms.escrow_status == 'funded' %}
+                            <span class="badge badge-warning text-dark font-mono small py-1 px-2">🔒 ${{ '{:,.2f}'.format(ms.escrow_amount) }} in Escrow</span>
+                          {% else %}
+                            <span class="badge badge-secondary font-mono small py-1 px-2">Escrow Unfunded</span>
+                          {% endif %}
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                          {% if ms.status == 'submitted' and ms.status != 'completed' %}
+                            <form method="POST" action="{{ url_for('requests.approve_milestone', id=req_item.id, milestone_id=ms.id) }}" class="d-inline mr-2">
+                              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                              <button type="submit" class="btn btn-sm btn-success font-weight-bold shadow-sm px-3">
+                                ✅ Review & Approve Milestone
+                              </button>
+                            </form>
+                          {% endif %}
+
+                          {% if ms.escrow_status == 'funded' %}
+                            <form method="POST" action="{{ url_for('requests.release_payment', id=req_item.id, milestone_id=ms.id) }}" class="d-inline">
+                              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                              <button type="submit" class="btn btn-sm btn-warning font-weight-bold shadow-sm px-3 text-dark">
+                                💸 Release ${{ '{:,.2f}'.format(ms.escrow_amount) }} Payment
+                              </button>
+                            </form>
+                          {% endif %}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 {% endfor %}
@@ -135,6 +158,118 @@
             {% elif req_item.status == 'completed' %}
               <div class="alert alert-success text-center font-weight-bold mt-4 mb-0 py-3" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #34d399;">
                 🏆 Contract Successfully Completed & Fully Delivered!
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <!-- Secure Project Escrow & Payment Center -->
+        {% if req_item.assigned_group_id %}
+          <div class="card cc-card border-0 shadow-sm p-4 mb-4" style="border-radius: 16px; border: 1px solid rgba(245, 158, 11, 0.3) !important;">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+              <h4 class="text-white font-weight-bold mb-0 d-flex align-items-center">
+                <span class="mr-2 text-warning">💳</span> Project Escrow & Payments
+              </h4>
+              <button class="btn btn-warning font-weight-bold btn-sm px-3 shadow-sm text-dark" type="button" data-toggle="collapse" data-target="#depositModal">
+                + Deposit Escrow Funds
+              </button>
+            </div>
+            <p class="text-muted small mb-3">
+              Your payments are held securely in platform escrow and are only released to {{ req_item.assigned_group.name if req_item.assigned_group else 'the squad' }} upon your explicit deliverable approval.
+            </p>
+
+            <!-- Financial Counters -->
+            <div class="row mb-3">
+              <div class="col-sm-4 mb-2 mb-sm-0">
+                <div class="p-3 rounded text-center" style="background: rgba(8, 12, 20, 0.6); border: 1px solid rgba(255, 255, 255, 0.06);">
+                  <div class="text-muted small font-weight-bold text-uppercase">Total Deposited</div>
+                  <div class="h4 font-weight-bold text-white mb-0 font-mono">${{ '{:,.2f}'.format(req_item.total_escrow_funded) }}</div>
+                </div>
+              </div>
+              <div class="col-sm-4 mb-2 mb-sm-0">
+                <div class="p-3 rounded text-center" style="background: rgba(8, 12, 20, 0.6); border: 1px solid rgba(255, 255, 255, 0.06);">
+                  <div class="text-muted small font-weight-bold text-uppercase">Held in Escrow</div>
+                  <div class="h4 font-weight-bold text-warning mb-0 font-mono">${{ '{:,.2f}'.format(req_item.total_escrow_held) }}</div>
+                </div>
+              </div>
+              <div class="col-sm-4">
+                <div class="p-3 rounded text-center" style="background: rgba(8, 12, 20, 0.6); border: 1px solid rgba(255, 255, 255, 0.06);">
+                  <div class="text-muted small font-weight-bold text-uppercase">Released to Squad</div>
+                  <div class="h4 font-weight-bold text-success mb-0 font-mono">${{ '{:,.2f}'.format(req_item.total_released_to_squad) }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Deposit Form (Collapse) -->
+            <div class="collapse mb-3" id="depositModal">
+              <form method="POST" action="{{ url_for('requests.deposit_escrow', id=req_item.id) }}" class="p-3 rounded" style="background: rgba(15, 23, 42, 0.9); border: 1px solid #f59e0b;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <h5 class="text-white font-weight-bold mb-3 small text-uppercase font-mono">🔒 Secure Escrow Checkout (Simulated)</h5>
+                
+                <div class="row">
+                  <div class="col-sm-6 form-group mb-2">
+                    <label class="small font-weight-bold text-muted">Deposit Amount (USD) <span class="text-danger">*</span></label>
+                    <div class="input-group input-group-sm">
+                      <div class="input-group-prepend"><span class="input-group-text bg-dark text-white border-0">$</span></div>
+                      <input type="number" step="0.01" min="1" name="amount" class="form-control" placeholder="2500.00" required>
+                    </div>
+                  </div>
+                  <div class="col-sm-6 form-group mb-2">
+                    <label class="small font-weight-bold text-muted">Allocate to Milestone (Optional)</label>
+                    <select name="milestone_id" class="form-control form-control-sm">
+                      <option value="">General Project Deposit</option>
+                      {% for m in milestones %}
+                        <option value="{{ m.id }}">{{ m.title }} ({{ m.status|title }})</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-sm-6 form-group mb-2">
+                    <label class="small font-weight-bold text-muted">Payer Name</label>
+                    <input type="text" name="payer_name" class="form-control form-control-sm" value="{{ req_item.name }}">
+                  </div>
+                  <div class="col-sm-6 form-group mb-2">
+                    <label class="small font-weight-bold text-muted">Card Details (Pre-filled Test Escrow)</label>
+                    <input type="text" class="form-control form-control-sm bg-dark text-muted font-mono" value="•••• •••• •••• 4242 (Expires 12/28)" readonly>
+                  </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-2">
+                  <button type="button" class="btn btn-sm btn-outline-light mr-2" data-toggle="collapse" data-target="#depositModal">Cancel</button>
+                  <button type="submit" class="btn btn-sm btn-warning font-weight-bold px-3 text-dark">
+                    Confirm & Deposit into Escrow
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Invoices / Receipts List -->
+            {% if payments %}
+              <div class="mt-3 pt-3" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                <div class="small font-weight-bold text-muted text-uppercase font-mono mb-2">Escrow Receipts & Audit:</div>
+                <div class="list-group list-group-flush" style="background: transparent;">
+                  {% for p in payments %}
+                    <div class="d-flex justify-content-between align-items-center py-2 px-3 rounded mb-2" style="background: rgba(8, 12, 20, 0.5); border: 1px solid rgba(255, 255, 255, 0.05);">
+                      <div>
+                        <span class="text-white small font-weight-bold mr-2">{{ p.title }}</span>
+                        {% if p.status == 'released' %}
+                          <span class="badge badge-success small py-0 px-2 font-mono">Released</span>
+                        {% else %}
+                          <span class="badge badge-warning text-dark small py-0 px-2 font-mono">Held in Escrow</span>
+                        {% endif %}
+                        <div class="text-muted font-mono" style="font-size: 0.7rem;">Ref: {{ p.transaction_reference }} &middot; {{ p.created_at.strftime('%b %d, %Y') }}</div>
+                      </div>
+                      <div class="text-right">
+                        <span class="font-weight-bold text-white font-mono mr-2">${{ '{:,.2f}'.format(p.amount) }}</span>
+                        <a href="{{ url_for('requests.payment_receipt', id=req_item.id, txn_ref=p.transaction_reference) }}" target="_blank" class="btn btn-sm btn-outline-warning py-0 px-2 font-mono" style="font-size: 0.75rem;">
+                          Receipt &nearr;
+                        </a>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
               </div>
             {% endif %}
           </div>
