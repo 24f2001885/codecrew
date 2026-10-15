@@ -1,8 +1,11 @@
 import math
+from datetime import datetime
 from sqlalchemy import or_, func
 from app.extensions import db
 from app.models.group import Group
 from app.models.member import Member
+from app.models.project import Project
+from app.models.blog_post import BlogPost
 
 
 def escape_like(val: str) -> str:
@@ -14,11 +17,19 @@ def escape_like(val: str) -> str:
 
 def build_filtered_query(model, query_str=None, tag=None, extra_filters=None):
     """
-    Builds a filtered query or list for Group or Member models.
+    Builds a filtered query or list for Group, Member, Project, or BlogPost models.
     Supports free-text search, tag filtering (with Postgres dialect check vs SQLite Python filter),
     and extra filters such as group_slug.
     """
     query = model.query
+
+    # Base filters for specific models
+    if model == BlogPost:
+        now = datetime.utcnow()
+        query = query.filter(
+            BlogPost.published_at.is_not(None),
+            BlogPost.published_at <= now,
+        )
 
     # 1. Free text filtering
     if query_str and query_str.strip():
@@ -38,19 +49,40 @@ def build_filtered_query(model, query_str=None, tag=None, extra_filters=None):
                     Member.role.ilike(pattern, escape="\\"),
                 )
             )
+        elif model == Project:
+            query = query.filter(
+                or_(
+                    Project.title.ilike(pattern, escape="\\"),
+                    Project.summary.ilike(pattern, escape="\\"),
+                    Project.description.ilike(pattern, escape="\\"),
+                )
+            )
+        elif model == BlogPost:
+            query = query.filter(
+                or_(
+                    BlogPost.title.ilike(pattern, escape="\\"),
+                    BlogPost.content.ilike(pattern, escape="\\"),
+                )
+            )
 
-    # 2. Extra filters (e.g. group_slug, group_id)
+    # 2. Extra filters (e.g. group_slug, group_id, featured_only)
     if extra_filters:
         if "group_slug" in extra_filters and extra_filters["group_slug"]:
             query = query.join(Group).filter(Group.slug == extra_filters["group_slug"])
         if "group_id" in extra_filters and extra_filters["group_id"]:
             query = query.filter(model.group_id == extra_filters["group_id"])
+        if model == Project and extra_filters.get("featured_only"):
+            query = query.filter(Project.featured.is_(True))
 
     # 3. Stable ordering
     if model == Group:
         query = query.order_by(Group.name.asc())
     elif model == Member:
         query = query.order_by(Member.name.asc())
+    elif model == Project:
+        query = query.order_by(Project.featured.desc(), Project.created_at.desc())
+    elif model == BlogPost:
+        query = query.order_by(BlogPost.published_at.desc())
 
     # 4. Tag filtering
     if tag and tag.strip():
@@ -58,8 +90,18 @@ def build_filtered_query(model, query_str=None, tag=None, extra_filters=None):
         dialect_name = getattr(db.engine, "dialect", None)
         dialect_str = dialect_name.name if dialect_name else "sqlite"
 
-        if dialect_str == "postgresql":
-            tag_col = Group.tech_tags if model == Group else Member.skill_tags
+        if model == Group:
+            tag_col = Group.tech_tags
+        elif model == Member:
+            tag_col = Member.skill_tags
+        elif model == Project:
+            tag_col = Project.tech_tags
+        elif model == BlogPost:
+            tag_col = BlogPost.tags
+        else:
+            tag_col = None
+
+        if dialect_str == "postgresql" and tag_col is not None:
             # Lowercased text cast containment
             query = query.filter(func.lower(tag_col.cast(db.Text)).like(f'%"{cleaned_tag}"%'))
             return query
@@ -68,7 +110,16 @@ def build_filtered_query(model, query_str=None, tag=None, extra_filters=None):
             candidates = query.limit(2000).all()
 
             def _match_tag(item):
-                tag_list = item.tech_tags if model == Group else item.skill_tags
+                if model == Group:
+                    tag_list = item.tech_tags
+                elif model == Member:
+                    tag_list = item.skill_tags
+                elif model == Project:
+                    tag_list = item.tech_tags
+                elif model == BlogPost:
+                    tag_list = item.tags
+                else:
+                    tag_list = []
                 if not tag_list or not isinstance(tag_list, list):
                     return False
                 return any(str(t).strip().lower() == cleaned_tag for t in tag_list)
@@ -125,3 +176,21 @@ def search_members(q=None, group_slug=None, skill=None, page=1):
     extra = {"group_slug": group_slug} if group_slug else None
     query_or_list = build_filtered_query(Member, query_str=q, tag=skill, extra_filters=extra)
     return paginate(query_or_list, page=page, per_page=12)
+
+
+def search_projects(q=None, group_slug=None, tag=None, featured_only=False, page=1, per_page=12):
+    """Public helper for project searching and pagination."""
+    extra = {}
+    if group_slug:
+        extra["group_slug"] = group_slug
+    if featured_only:
+        extra["featured_only"] = True
+    query_or_list = build_filtered_query(Project, query_str=q, tag=tag, extra_filters=extra or None)
+    return paginate(query_or_list, page=page, per_page=per_page)
+
+
+def search_blog_posts(q=None, group_slug=None, tag=None, page=1, per_page=9):
+    """Public helper for published blog posts searching and pagination."""
+    extra = {"group_slug": group_slug} if group_slug else None
+    query_or_list = build_filtered_query(BlogPost, query_str=q, tag=tag, extra_filters=extra)
+    return paginate(query_or_list, page=page, per_page=per_page)

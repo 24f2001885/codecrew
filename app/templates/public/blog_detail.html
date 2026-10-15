@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import blog_card %}
+
+{% block title %}{{ post.title }} — CodeCrews Dev Log{% endblock %}
+
+{% block content %}
+<article class="article-wrap py-5" style="background: #080c14; min-height: 80vh;">
+  <div class="container" style="max-width: 860px;">
+    <!-- Breadcrumb / Back Navigation -->
+    <div class="mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <a href="{{ url_for('public.blog') }}" class="text-warning font-weight-bold text-decoration-none small">
+        &larr; Back to Dev Log
+      </a>
+      {% if post.group %}
+        <a href="{{ url_for('public.group_detail', slug=post.group.slug) }}" class="badge badge-dark text-muted" style="background: rgba(255, 255, 255, 0.08); border-radius: 9999px; padding: 0.4rem 0.8rem; text-decoration: none;">
+          Published by {{ post.group.name }}
+        </a>
+      {% endif %}
+    </div>
+
+    <!-- Article Header -->
+    <header class="mb-4">
+      <div class="d-flex align-items-center gap-3 text-muted small mb-2">
+        <span class="text-warning font-weight-bold font-mono">
+          {{ post.published_at.strftime('%B %d, %Y') if post.published_at else post.created_at.strftime('%B %d, %Y') }}
+        </span>
+        <span>&bull;</span>
+        <span>{{ (post.content.split()|length // 200) + 1 }} min read</span>
+      </div>
+
+      <h1 class="text-white font-weight-bold display-4 mb-3 cc-gradient-heading" style="line-height: 1.2;">
+        {{ post.title }}
+      </h1>
+
+      {% if post.tags %}
+        <div class="mb-4">
+          {% for t in post.tags %}
+            <a href="{{ url_for('public.blog', tag=t) }}" class="badge cc-tag mr-1 mb-1 text-decoration-none">{{ t }}</a>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </header>
+
+    <!-- Cover Image -->
+    {% if post.cover_image_path %}
+      <div class="mb-5 overflow-hidden rounded shadow-lg" style="max-height: 420px; border: 1px solid rgba(255, 255, 255, 0.1); background: #0f172a;">
+        <img src="{{ url_for('static', filename=post.cover_image_path) }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ post.title }}">
+      </div>
+    {% endif %}
+
+    <!-- Article Body -->
+    <div class="article-content text-light mb-5 p-4 p-md-5 cc-hud-tile" style="font-size: 1.12rem; line-height: 1.85; color: #cbd5e1 !important; white-space: pre-line;">
+      {{ post.content }}
+    </div>
+
+    <!-- Share and Collective Card -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 p-4 cc-hud-tile mb-5">
+      <div>
+        <h5 class="text-white font-weight-bold mb-1">Found this valuable?</h5>
+        <p class="text-muted small mb-0">Share this post with fellow developers and engineering teams.</p>
+      </div>
+      <div>
+        <button type="button" class="btn btn-warning font-weight-bold js-copy-link" data-url="{{ request.base_url }}" style="border-radius: 8px;">
+          🔗 Copy Link
+        </button>
+      </div>
+    </div>
+
+    {% if post.group %}
+      <!-- Collective Bio Card -->
+      <div class="p-4 p-md-5 cc-hud-tile mb-5">
+        <div class="row align-items-center">
+          <div class="col-md-2 text-center mb-3 mb-md-0">
+            {% if post.group.cover_image %}
+              <img src="{{ url_for('static', filename=post.group.cover_image) }}" class="rounded-circle" style="width: 75px; height: 75px; object-fit: cover; border: 2px solid #f59e0b;" alt="{{ post.group.name }}">
+            {% else %}
+              <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center text-warning font-weight-bold h4 mb-0" style="width: 75px; height: 75px; background: rgba(245, 158, 11, 0.1); border: 2px solid #f59e0b;">
+                {{ post.group.name[:2]|upper }}
+              </div>
+            {% endif %}
+          </div>
+          <div class="col-md-7 mb-3 mb-md-0">
+            <h5 class="text-white font-weight-bold mb-1">{{ post.group.name }}</h5>
+            <p class="text-muted small mb-0">{{ post.group.tagline or 'Active engineering team delivering specialized software systems.' }}</p>
+          </div>
+          <div class="col-md-3 text-md-right">
+            <a href="{{ url_for('public.group_detail', slug=post.group.slug) }}" class="btn btn-outline-warning btn-sm font-weight-bold px-3 py-2">
+              View Squad &rarr;
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Related Articles -->
+    {% if related_posts %}
+      <div class="mt-5 pt-4" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
+        <h3 class="text-white font-weight-bold mb-4">More from the Dev Log</h3>
+        <div class="row">
+          {% for rpost in related_posts %}
+            {{ blog_card(rpost) }}
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</article>
+{% endblock %}

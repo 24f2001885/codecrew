@@ -84,14 +84,20 @@
       });
     }
 
-    // 8. Magnific Popup for static project links
-    if ($.fn.magnificPopup) {
-      $(".js-project-popup").magnificPopup({
-        type: "inline",
-        gallery: { enabled: true },
-        mainClass: "mfp-fade"
-      });
-    }
+    // 8. Magnific Popup for project links (supports both static and dynamically injected cards)
+    $(document).on("click", ".js-project-popup", function (e) {
+      e.preventDefault();
+      var target = $(this).attr("href") || $(this).data("mfp-src");
+      if (target && $(target).length && $.fn.magnificPopup) {
+        $.magnificPopup.open({
+          items: {
+            src: target,
+            type: "inline"
+          },
+          mainClass: "mfp-fade"
+        });
+      }
+    });
 
     // 9. Delegated handler for member popups (supports dynamically injected cards)
     $(document).on("click", ".js-member-popup", function (e) {

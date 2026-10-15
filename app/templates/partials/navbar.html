@@ -15,8 +15,14 @@
         <li class="nav-item {% if request.endpoint == 'public.groups' %}active{% endif %}">
           <a href="{{ url_for('public.groups') }}" class="nav-link">Groups</a>
         </li>
+        <li class="nav-item {% if request.endpoint == 'public.projects' %}active{% endif %}">
+          <a href="{{ url_for('public.projects') }}" class="nav-link">Projects</a>
+        </li>
         <li class="nav-item {% if request.endpoint == 'public.members' %}active{% endif %}">
           <a href="{{ url_for('public.members') }}" class="nav-link">Our Members</a>
+        </li>
+        <li class="nav-item {% if request.endpoint in ['public.blog', 'public.blog_detail'] %}active{% endif %}">
+          <a href="{{ url_for('public.blog') }}" class="nav-link">Dev Log</a>
         </li>
         <li class="nav-item cta mr-md-2 {% if request.endpoint == 'requests.request_project' %}active{% endif %}">
           <a href="{{ url_for('requests.request_project') }}" class="nav-link"><span>Request a Project</span></a>
