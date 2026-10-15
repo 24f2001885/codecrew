@@ -83,6 +83,103 @@
         <h6 class="font-weight-bold mb-2">Project Brief:</h6>
         <div class="p-3 bg-light rounded mb-4" style="white-space: pre-wrap; font-family: inherit;">{{ opportunity.description }}</div>
 
+        <!-- Active Contract & Sprint Delivery Board -->
+        {% if milestones or opportunity.status in ['assigned', 'completed'] or (existing_offer and existing_offer.status == 'accepted') %}
+          <div class="card border border-success mt-4 mb-4" style="border-radius: 12px; overflow: hidden;">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center py-2 px-3">
+              <span class="font-weight-bold"><span class="mr-1">🚀</span> Squad Sprint Delivery Board & Milestones</span>
+              <span class="badge badge-light text-success font-weight-bold">
+                {{ milestones|selectattr('status', 'equalto', 'completed')|list|length }} / {{ milestones|length }} Completed
+              </span>
+            </div>
+
+            <div class="card-body p-3">
+              {% if milestones %}
+                <div class="list-group mb-3">
+                  {% for ms in milestones %}
+                    <div class="list-group-item list-group-item-action flex-column align-items-start p-3 mb-2 rounded border {% if ms.status == 'completed' %}border-success bg-light{% elif ms.status == 'submitted' %}border-info bg-light{% else %}border-warning{% endif %}">
+                      <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                        <h6 class="mb-1 font-weight-bold text-dark">{{ ms.title }}</h6>
+                        {% if ms.status == 'completed' %}
+                          <span class="badge badge-success px-2 py-1">✅ Approved by Client</span>
+                        {% elif ms.status == 'submitted' %}
+                          <span class="badge badge-info px-2 py-1">📦 Under Client Review</span>
+                        {% else %}
+                          <span class="badge badge-warning text-dark px-2 py-1">⚡ In Development</span>
+                        {% endif %}
+                      </div>
+
+                      {% if ms.description %}
+                        <p class="mb-2 text-muted small">{{ ms.description }}</p>
+                      {% endif %}
+
+                      {% if ms.deliverable_url %}
+                        <div class="small mb-2">
+                          <strong>Deliverable:</strong> <a href="{{ ms.deliverable_url }}" target="_blank" class="text-primary font-weight-bold">{{ ms.deliverable_url }} &nearr;</a>
+                        </div>
+                      {% endif %}
+                      {% if ms.deliverable_notes %}
+                        <div class="small text-muted mb-2 font-italic">
+                          Note: {{ ms.deliverable_notes }}
+                        </div>
+                      {% endif %}
+
+                      {% if ms.status != 'completed' %}
+                        <details class="mt-2">
+                          <summary class="small text-primary font-weight-bold" style="cursor: pointer;">
+                            Submit or Update Deliverable Link & Notes &rarr;
+                          </summary>
+                          <form method="POST" action="{{ url_for('coder.submit_milestone', request_id=opportunity.id, milestone_id=ms.id) }}" class="mt-2 p-2 bg-white rounded border">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="form-group mb-2">
+                              <label class="small font-weight-bold mb-1">Deliverable URL (PR, Demo, Staging link)</label>
+                              <input type="url" name="deliverable_url" class="form-control form-control-sm" placeholder="https://github.com/... or https://demo.example.com" value="{{ ms.deliverable_url or '' }}" required>
+                            </div>
+                            <div class="form-group mb-2">
+                              <label class="small font-weight-bold mb-1">Deliverable Notes / Changelog</label>
+                              <input type="text" name="deliverable_notes" class="form-control form-control-sm" placeholder="e.g. Sprint 1 APIs completed and unit tests passed." value="{{ ms.deliverable_notes or '' }}">
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-primary font-weight-bold">
+                              Submit Deliverable to Client
+                            </button>
+                          </form>
+                        </details>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p class="text-muted small mb-3">No milestones yet. Create your first sprint milestone below to coordinate project delivery.</p>
+              {% endif %}
+
+              <!-- Add Milestone Form -->
+              <details class="mt-3">
+                <summary class="btn btn-sm btn-outline-success font-weight-bold">
+                  + Add New Sprint Milestone
+                </summary>
+                <form method="POST" action="{{ url_for('coder.add_milestone', request_id=opportunity.id) }}" class="mt-3 p-3 bg-light rounded border">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <div class="form-group mb-2">
+                    <label class="small font-weight-bold">Milestone Title <span class="text-danger">*</span></label>
+                    <input type="text" name="title" class="form-control form-control-sm" placeholder="e.g. Sprint 2: Core Business Logic & Admin Panel" required>
+                  </div>
+                  <div class="form-group mb-2">
+                    <label class="small font-weight-bold">Description (Optional)</label>
+                    <textarea name="description" rows="2" class="form-control form-control-sm" placeholder="Key deliverables and acceptance criteria..."></textarea>
+                  </div>
+                  <div class="form-group mb-2">
+                    <label class="small font-weight-bold">Initial Deliverable Link (Optional)</label>
+                    <input type="url" name="deliverable_url" class="form-control form-control-sm" placeholder="https://github.com/... or https://figma.com/...">
+                  </div>
+                  <button type="submit" class="btn btn-sm btn-success font-weight-bold">
+                    Add Milestone
+                  </button>
+                </form>
+              </details>
+            </div>
+          </div>
+        {% endif %}
+
         <!-- Project Discussion / Client Chat Stream -->
         <div class="card border border-primary mt-4" style="border-radius: 12px; overflow: hidden;">
           <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2 px-3">

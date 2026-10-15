@@ -40,5 +40,17 @@ class ProjectRequest(db.Model):
     def accepted_offer(self):
         return self.offers.filter_by(status="accepted").first()
 
+    @property
+    def progress_percentage(self):
+        total = self.milestones.count()
+        if total == 0:
+            return 0
+        completed = self.milestones.filter_by(status="completed").count()
+        return int((completed / total) * 100)
+
+    @property
+    def active_milestones(self):
+        return self.milestones.all()
+
     def __repr__(self):
         return f"<ProjectRequest from {self.name} ({self.status})>"

@@ -573,3 +573,162 @@ select:focus-visible {
   opacity: 0;
   transform: scale(0.96) translateY(10px);
 }
+
+/* ==========================================================================
+   Next-Gen Cyber-Sleek Studio Enhancements (Phase 2 & Delivery Tracker)
+   ========================================================================== */
+
+/* Shimmer animation for tech progress & hero accents */
+@keyframes cc-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.cc-shimmer-bar {
+  background: linear-gradient(90deg, #f59e0b 0%, #fde047 50%, #f59e0b 100%);
+  background-size: 200% 100%;
+  animation: cc-shimmer 3s ease-in-out infinite;
+}
+
+/* HUD-style cyber stats */
+.cc-hud-box {
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 1.5rem 1rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.cc-hud-box::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #f59e0b, transparent);
+  opacity: 0.6;
+}
+
+.cc-hud-box:hover {
+  transform: translateY(-4px);
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 158, 11, 0.15);
+}
+
+.cc-hud-metric {
+  font-family: var(--cc-font-mono);
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.03em;
+  text-shadow: 0 0 16px rgba(245, 158, 11, 0.3);
+}
+
+.cc-hud-label {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* Milestone Delivery Timeline */
+.cc-milestone-timeline {
+  position: relative;
+  padding-left: 2rem;
+  margin-top: 1.5rem;
+}
+
+.cc-milestone-timeline::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 11px;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cc-milestone-item {
+  position: relative;
+  margin-bottom: 1.75rem;
+}
+
+.cc-milestone-marker {
+  position: absolute;
+  left: -2rem;
+  top: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #0f172a;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: bold;
+  z-index: 2;
+  transition: all 0.2s ease;
+}
+
+.cc-milestone-item.is-completed .cc-milestone-marker {
+  background: #10b981;
+  border-color: #34d399;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+}
+
+.cc-milestone-item.is-submitted .cc-milestone-marker {
+  background: #0284c7;
+  border-color: #38bdf8;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+}
+
+.cc-milestone-item.is-in-progress .cc-milestone-marker {
+  background: #f59e0b;
+  border-color: #fbbf24;
+  color: #0f172a;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+}
+
+.cc-milestone-card {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: border-color 0.2s ease;
+}
+
+.cc-milestone-card:hover {
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.cc-milestone-card.card-completed {
+  border-left: 3px solid #10b981;
+}
+
+.cc-milestone-card.card-submitted {
+  border-left: 3px solid #38bdf8;
+}
+
+.cc-milestone-card.card-in-progress {
+  border-left: 3px solid #f59e0b;
+}
+
+/* Glass Navbar Elevation */
+.navbar-glass-sleek {
+  background: rgba(8, 12, 20, 0.85) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+

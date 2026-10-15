@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timezone
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import current_user
 from app.extensions import db
@@ -8,6 +9,7 @@ from app.models.coder_user import CoderUser
 from app.models.group_chat_message import GroupChatMessage
 from app.models.project_offer import ProjectOffer
 from app.models.project_discussion import ProjectDiscussionMessage
+from app.models.project_milestone import ProjectMilestone
 from app.security.decorators import coder_required, apply_guard_to_blueprint
 from app.services.slugs import unique_slug
 from app.services.uploads import save_upload, delete_upload, replace_upload, UploadError
@@ -303,6 +305,7 @@ def opportunity_detail(request_id):
         ).first()
 
     discussion_messages = req_obj.discussion_messages.order_by(ProjectDiscussionMessage.created_at.asc()).all()
+    milestones = req_obj.milestones.all()
 
     return render_template(
         "coder/opportunity_detail.html",
@@ -310,6 +313,7 @@ def opportunity_detail(request_id):
         grant=grant_obj,
         existing_offer=existing_offer,
         discussion_messages=discussion_messages,
+        milestones=milestones,
     )
 
 
@@ -395,3 +399,67 @@ def opportunity_attachment(request_id):
     ext = os.path.splitext(req_obj.attachment_path)[1]
     download_name = f"request_{req_obj.id}{ext}"
     return send_private("requests", req_obj.attachment_path, download_name=download_name)
+    
+
+@coder_bp.route("/opportunities/<request_id>/milestones", methods=["POST"])
+def add_milestone(request_id):
+    req_obj, _ = get_granted_request_or_404(current_user, request_id)
+    title = request.form.get("title", "").strip()
+    description = request.form.get("description", "").strip()
+    deliverable_url = request.form.get("deliverable_url", "").strip()
+
+    if not title:
+        flash("Milestone title is required.", "danger")
+        return redirect(url_for("coder.opportunity_detail", request_id=request_id))
+
+    milestone = ProjectMilestone(
+        project_request_id=req_obj.id,
+        created_by_coder_id=current_user.id,
+        title=title,
+        description=description if description else None,
+        deliverable_url=deliverable_url if deliverable_url else None,
+        status="in_progress",
+    )
+    db.session.add(milestone)
+
+    disc_msg = ProjectDiscussionMessage(
+        project_request_id=req_obj.id,
+        sender_type="system",
+        sender_name="Platform System",
+        content=f"📌 New sprint milestone added: '{title}'.",
+    )
+    db.session.add(disc_msg)
+    db.session.commit()
+    flash(f"Milestone '{title}' added to delivery roadmap.", "success")
+    return redirect(url_for("coder.opportunity_detail", request_id=request_id))
+
+
+@coder_bp.route("/opportunities/<request_id>/milestones/<milestone_id>/submit", methods=["POST"])
+def submit_milestone(request_id, milestone_id):
+    req_obj, _ = get_granted_request_or_404(current_user, request_id)
+    milestone = db.session.get(ProjectMilestone, milestone_id) or abort(404)
+    if milestone.project_request_id != req_obj.id:
+        abort(400)
+
+    deliverable_url = request.form.get("deliverable_url", "").strip()
+    deliverable_notes = request.form.get("deliverable_notes", "").strip()
+
+    if deliverable_url:
+        milestone.deliverable_url = deliverable_url
+    if deliverable_notes:
+        milestone.deliverable_notes = deliverable_notes
+
+    milestone.status = "submitted"
+    milestone.submitted_at = datetime.now(timezone.utc)
+
+    disc_msg = ProjectDiscussionMessage(
+        project_request_id=req_obj.id,
+        sender_type="system",
+        sender_name="Platform System",
+        content=f"🚀 Deliverable submitted for milestone '{milestone.title}'! Ready for client review & sign-off.",
+    )
+    db.session.add(disc_msg)
+    db.session.commit()
+    flash(f"Milestone '{milestone.title}' deliverables submitted for client sign-off.", "success")
+    return redirect(url_for("coder.opportunity_detail", request_id=request_id))
+

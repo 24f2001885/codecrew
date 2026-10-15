@@ -1162,6 +1162,7 @@ def project_request_detail(id):
     active_coders = CoderUser.query.filter_by(status="active").order_by(CoderUser.username.asc()).all()
     offers = req_item.offers.order_by(ProjectOffer.created_at.desc()).all()
     discussion_messages = req_item.discussion_messages.order_by(ProjectDiscussionMessage.created_at.asc()).all()
+    milestones = req_item.milestones.all()
 
     form = GrantAccessForm()
     form.coder_id.choices = [(c.id, f"{c.username} ({c.email})") for c in active_coders]
@@ -1174,6 +1175,7 @@ def project_request_detail(id):
         active_coders=active_coders,
         offers=offers,
         discussion_messages=discussion_messages,
+        milestones=milestones,
     )
 
 

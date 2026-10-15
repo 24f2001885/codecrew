@@ -12,7 +12,7 @@ class RequestAccessGrant(db.Model):
     coder_id = db.Column(db.String(36), db.ForeignKey("coder_users.id", ondelete="CASCADE"), nullable=False, index=True)
     scope = db.Column(db.String(30), nullable=False, default="brief_only")  # 'brief_only' or 'brief_and_contact'
     expires_at = db.Column(db.DateTime, nullable=True)
-    granted_by_admin_id = db.Column(db.String(36), db.ForeignKey("admin_users.id"), nullable=False)
+    granted_by_admin_id = db.Column(db.String(36), db.ForeignKey("admin_users.id"), nullable=True)
     granted_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     revoked_at = db.Column(db.DateTime, nullable=True, index=True)
     revoked_by_admin_id = db.Column(db.String(36), db.ForeignKey("admin_users.id"), nullable=True)

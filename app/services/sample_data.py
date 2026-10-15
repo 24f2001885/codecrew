@@ -10,6 +10,7 @@ from app.models.request_access_grant import RequestAccessGrant
 from app.models.group_chat_message import GroupChatMessage
 from app.models.project_offer import ProjectOffer
 from app.models.project_discussion import ProjectDiscussionMessage
+from app.models.project_milestone import ProjectMilestone
 
 
 def create_sample_data():
@@ -494,6 +495,41 @@ def create_sample_coder(admin=None, username=None, password=None, email=None):
             db.session.add(d2)
             db.session.commit()
             print(f"[SAMPLE CODER] Seeded sample squad proposal and discussion thread for project '{sample_req.name}'.")
+
+        # Seed sample sprint milestones
+        if sample_req.milestones.count() == 0:
+            ms1 = ProjectMilestone(
+                project_request_id=sample_req.id,
+                created_by_coder_id=coder.id,
+                title="Sprint 1: Architecture Specification & Database Schema",
+                description="Designed normalized relational models, API contract endpoints, and system sequence diagrams.",
+                deliverable_url="https://github.com/example/acme-cloudpulse/pull/1",
+                deliverable_notes="Schema migration scripts verified on local PostgreSQL test harness.",
+                status="completed",
+                completed_at=datetime.now(timezone.utc),
+            )
+            ms2 = ProjectMilestone(
+                project_request_id=sample_req.id,
+                created_by_coder_id=coder.id,
+                title="Sprint 2: Merchant API & Telemetry Pipeline",
+                description="High-throughput ingestion endpoints with JWT authentication and Redis rate limiting.",
+                deliverable_url="https://staging.cloudpulse.example/api/v1/health",
+                deliverable_notes="Staging endpoint deployed and load-tested up to 5,000 req/sec.",
+                status="submitted",
+                submitted_at=datetime.now(timezone.utc),
+            )
+            ms3 = ProjectMilestone(
+                project_request_id=sample_req.id,
+                created_by_coder_id=coder.id,
+                title="Sprint 3: Interactive Dashboard UI & Live Telemetry",
+                description="Next.js telemetry dashboard with real-time WebSockets graph streams and alert thresholds.",
+                status="in_progress",
+            )
+            db.session.add(ms1)
+            db.session.add(ms2)
+            db.session.add(ms3)
+            db.session.commit()
+            print(f"[SAMPLE CODER] Seeded sprint delivery milestones for project '{sample_req.name}'.")
 
     return coder
 

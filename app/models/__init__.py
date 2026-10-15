@@ -15,6 +15,7 @@ from app.models.domain_alert_delivery import DomainAlertDelivery
 from app.models.group_chat_message import GroupChatMessage
 from app.models.project_offer import ProjectOffer
 from app.models.project_discussion import ProjectDiscussionMessage
+from app.models.project_milestone import ProjectMilestone
 
 __all__ = [
     "AdminUser",
@@ -34,5 +35,6 @@ __all__ = [
     "GroupChatMessage",
     "ProjectOffer",
     "ProjectDiscussionMessage",
+    "ProjectMilestone",
 ]
 

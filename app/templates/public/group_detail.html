@@ -306,72 +306,144 @@
     <div class="row justify-content-center">
       <div class="col-md-8" data-aos="fade-up">
         <div class="card bg-white text-dark shadow-lg border-0 p-4 p-md-5" style="border-radius: 16px;">
-          <h3 class="font-weight-bold mb-2">Connect with {{ group.name }}</h3>
-          <p class="text-muted mb-4">Have an inquiry, project proposal, or collaboration request? Send a message directly to this squad.</p>
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <h3 class="font-weight-bold mb-0">Connect with {{ group.name }}</h3>
+            <span class="badge badge-success px-3 py-1 font-mono">● Squad Available</span>
+          </div>
+          <p class="text-muted mb-4">Choose whether you want to start a live negotiation chat with the squad representative or send a standard message.</p>
 
-          <form action="{{ url_for('contact.contact', slug=group.slug) }}" method="POST" novalidate>
-            {% if form is defined and form.hidden_tag %}
-              {{ form.hidden_tag() }}
-            {% endif %}
+          <!-- Contact Tabs -->
+          <ul class="nav nav-pills mb-4" id="contactTabs" role="tablist" style="background: rgba(15, 23, 42, 0.05); padding: 4px; border-radius: 10px;">
+            <li class="nav-item flex-fill text-center" role="presentation">
+              <a class="nav-link active font-weight-bold py-2" id="chat-tab" data-toggle="pill" href="#chat-rep" role="tab" aria-controls="chat-rep" aria-selected="true" style="border-radius: 8px;">
+                💬 Chat with Squad Representative
+              </a>
+            </li>
+            <li class="nav-item flex-fill text-center" role="presentation">
+              <a class="nav-link font-weight-bold py-2 text-muted" id="email-tab" data-toggle="pill" href="#email-contact" role="tab" aria-controls="email-contact" aria-selected="false" style="border-radius: 8px;">
+                ✉️ Send Message
+              </a>
+            </li>
+          </ul>
 
-            <!-- Honeypot anti-spam field (hidden from view) -->
-            <div style="display: none !important;" aria-hidden="true">
-              <label for="website">Website</label>
-              <input type="text" name="website" id="website" tabindex="-1" autocomplete="off">
+          <div class="tab-content" id="contactTabsContent">
+            <!-- Tab 1: Live Chat with Squad Representative -->
+            <div class="tab-pane fade show active" id="chat-rep" role="tabpanel" aria-labelledby="chat-tab">
+              <div class="p-3 mb-4 rounded" style="background: #eff6ff; border-left: 4px solid #3b82f6;">
+                <p class="small text-primary mb-0 font-weight-bold">
+                  🚀 Instant Squad Negotiation Room: Submitting this form opens your private Project Hub where you can chat directly with {{ group.name }}'s coders and discuss bids, timelines, and technical requirements.
+                </p>
+              </div>
+
+              <form action="{{ url_for('requests.chat_representative', slug=group.slug) }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="rep_name" class="font-weight-bold small">Your Name <span class="text-danger">*</span></label>
+                    <input type="text" id="rep_name" name="name" class="form-control" placeholder="e.g. Alex Smith" required>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="rep_email" class="font-weight-bold small">Your Email <span class="text-danger">*</span></label>
+                    <input type="email" id="rep_email" name="email" class="form-control" placeholder="alex@company.example" required>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="rep_type" class="font-weight-bold small">Project / Inquiry Type</label>
+                    <select id="rep_type" name="project_type" class="form-control">
+                      <option value="web_app">Full-Stack Web Application</option>
+                      <option value="mobile_app">Mobile App (iOS / Android)</option>
+                      <option value="api_backend">Backend & API Microservice</option>
+                      <option value="consulting">Technical Consulting & Code Audit</option>
+                      <option value="other">Other Squad Collaboration</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="rep_budget" class="font-weight-bold small">Estimated Budget Range</label>
+                    <input type="text" id="rep_budget" name="budget_range" class="form-control" placeholder="e.g. $5,000 - $15,000">
+                  </div>
+                </div>
+
+                <div class="form-group mb-4">
+                  <label for="rep_message" class="font-weight-bold small">Message / Requirements for Squad <span class="text-danger">*</span></label>
+                  <textarea id="rep_message" name="message" class="form-control" rows="4" placeholder="Describe your product idea or questions for this squad..." required></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block font-weight-bold py-3 shadow">
+                  💬 Start Live Chat with {{ group.name }} Representative &rarr;
+                </button>
+              </form>
             </div>
 
-            <div class="form-group mb-3">
-              <label for="contact_name" class="font-weight-bold small">Your Name <span class="text-danger">*</span></label>
-              {% if form is defined and form.name %}
-                {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), id="contact_name", placeholder="Jane Doe") }}
-                {% for error in form.name.errors %}
-                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
-                {% endfor %}
-              {% else %}
-                <input type="text" id="contact_name" name="name" class="form-control" placeholder="Jane Doe" required>
-              {% endif %}
-            </div>
+            <!-- Tab 2: Standard Contact Form (Preserved for tests & general contact) -->
+            <div class="tab-pane fade" id="email-contact" role="tabpanel" aria-labelledby="email-tab">
+              <form action="{{ url_for('contact.contact', slug=group.slug) }}" method="POST" novalidate>
+                {% if form is defined and form.hidden_tag %}
+                  {{ form.hidden_tag() }}
+                {% endif %}
 
-            <div class="form-group mb-3">
-              <label for="contact_email" class="font-weight-bold small">Email Address <span class="text-danger">*</span></label>
-              {% if form is defined and form.email %}
-                {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), id="contact_email", placeholder="jane@example.com") }}
-                {% for error in form.email.errors %}
-                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
-                {% endfor %}
-              {% else %}
-                <input type="email" id="contact_email" name="email" class="form-control" placeholder="jane@example.com" required>
-              {% endif %}
-            </div>
+                <!-- Honeypot anti-spam field (hidden from view) -->
+                <div style="display: none !important;" aria-hidden="true">
+                  <label for="website">Website</label>
+                  <input type="text" name="website" id="website" tabindex="-1" autocomplete="off">
+                </div>
 
-            <div class="form-group mb-3">
-              <label for="contact_subject" class="font-weight-bold small">Subject</label>
-              {% if form is defined and form.subject %}
-                {{ form.subject(class="form-control" + (" is-invalid" if form.subject.errors else ""), id="contact_subject", placeholder="Project Inquiry") }}
-                {% for error in form.subject.errors %}
-                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
-                {% endfor %}
-              {% else %}
-                <input type="text" id="contact_subject" name="subject" class="form-control" placeholder="Project Inquiry">
-              {% endif %}
-            </div>
+                <div class="form-group mb-3">
+                  <label for="contact_name" class="font-weight-bold small">Your Name <span class="text-danger">*</span></label>
+                  {% if form is defined and form.name %}
+                    {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), id="contact_name", placeholder="Jane Doe") }}
+                    {% for error in form.name.errors %}
+                      <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                    {% endfor %}
+                  {% else %}
+                    <input type="text" id="contact_name" name="name" class="form-control" placeholder="Jane Doe" required>
+                  {% endif %}
+                </div>
 
-            <div class="form-group mb-4">
-              <label for="contact_message" class="font-weight-bold small">Message <span class="text-danger">*</span></label>
-              {% if form is defined and form.message %}
-                {{ form.message(class="form-control" + (" is-invalid" if form.message.errors else ""), id="contact_message", rows=4, placeholder="Briefly describe your request...") }}
-                {% for error in form.message.errors %}
-                  <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
-                {% endfor %}
-              {% else %}
-                <textarea id="contact_message" name="message" class="form-control" rows="4" placeholder="Briefly describe your request..." required></textarea>
-              {% endif %}
-            </div>
+                <div class="form-group mb-3">
+                  <label for="contact_email" class="font-weight-bold small">Email Address <span class="text-danger">*</span></label>
+                  {% if form is defined and form.email %}
+                    {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), id="contact_email", placeholder="jane@example.com") }}
+                    {% for error in form.email.errors %}
+                      <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                    {% endfor %}
+                  {% else %}
+                    <input type="email" id="contact_email" name="email" class="form-control" placeholder="jane@example.com" required>
+                  {% endif %}
+                </div>
 
-            <button type="submit" class="btn btn-warning btn-block font-weight-bold py-3 text-dark shadow-sm">
-              Send Message to {{ group.name }} &rarr;
-            </button>
-          </form>
+                <div class="form-group mb-3">
+                  <label for="contact_subject" class="font-weight-bold small">Subject</label>
+                  {% if form is defined and form.subject %}
+                    {{ form.subject(class="form-control" + (" is-invalid" if form.subject.errors else ""), id="contact_subject", placeholder="Project Inquiry") }}
+                    {% for error in form.subject.errors %}
+                      <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                    {% endfor %}
+                  {% else %}
+                    <input type="text" id="contact_subject" name="subject" class="form-control" placeholder="Project Inquiry">
+                  {% endif %}
+                </div>
+
+                <div class="form-group mb-4">
+                  <label for="contact_message" class="font-weight-bold small">Message <span class="text-danger">*</span></label>
+                  {% if form is defined and form.message %}
+                    {{ form.message(class="form-control" + (" is-invalid" if form.message.errors else ""), id="contact_message", rows=4, placeholder="Briefly describe your request...") }}
+                    {% for error in form.message.errors %}
+                      <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+                    {% endfor %}
+                  {% else %}
+                    <textarea id="contact_message" name="message" class="form-control" rows="4" placeholder="Briefly describe your request..." required></textarea>
+                  {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-warning btn-block font-weight-bold py-3 text-dark shadow-sm">
+                  Send Message to {{ group.name }} &rarr;
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     </div>
