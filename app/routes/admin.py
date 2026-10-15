@@ -163,14 +163,24 @@ def group_create():
             cover_path = save_upload(form.cover_image.data, "covers", "image") if form.cover_image.data else None
             tags, levels = form.parse_tags_with_levels()
 
+            socials = {}
+            if form.github_url.data:
+                socials["github"] = form.github_url.data.strip()
+            if form.website_url.data:
+                socials["website"] = form.website_url.data.strip()
+            if form.linkedin_url.data:
+                socials["linkedin"] = form.linkedin_url.data.strip()
+
             group = Group(
                 name=form.name.data.strip(),
                 slug=slug,
                 tagline=form.tagline.data.strip() if form.tagline.data else None,
                 description=form.description.data.strip() if form.description.data else None,
+                location=form.location.data.strip() if form.location.data else None,
                 founded_year=form.founded_year.data,
                 tech_tags=tags,
                 skills_proficiencies=levels,
+                social_links=socials,
                 featured=form.featured.data,
                 logo=logo_path,
                 cover_image=cover_path,
@@ -195,6 +205,10 @@ def group_edit(id):
     form = GroupForm(obj=group)
 
     if request.method == "GET":
+        if group.social_links:
+            form.github_url.data = group.social_links.get("github")
+            form.website_url.data = group.social_links.get("website")
+            form.linkedin_url.data = group.social_links.get("linkedin")
         if group.tech_tags:
             parts = []
             for t in group.tech_tags:
@@ -211,10 +225,20 @@ def group_edit(id):
             group.slug = unique_slug(Group, form.name.data, exclude_id=group.id)
             group.tagline = form.tagline.data.strip() if form.tagline.data else None
             group.description = form.description.data.strip() if form.description.data else None
+            group.location = form.location.data.strip() if form.location.data else None
             group.founded_year = form.founded_year.data
             tags, levels = form.parse_tags_with_levels()
             group.tech_tags = tags
             group.skills_proficiencies = levels
+
+            socials = {}
+            if form.github_url.data:
+                socials["github"] = form.github_url.data.strip()
+            if form.website_url.data:
+                socials["website"] = form.website_url.data.strip()
+            if form.linkedin_url.data:
+                socials["linkedin"] = form.linkedin_url.data.strip()
+            group.social_links = socials
             group.featured = form.featured.data
 
             if form.logo.data and hasattr(form.logo.data, "filename") and form.logo.data.filename:

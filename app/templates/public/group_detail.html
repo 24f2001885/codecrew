@@ -1,17 +1,17 @@
 {% extends "base.html" %}
-{% from "partials/_macros.html" import member_card, project_card %}
+{% from "partials/_macros.html" import member_card, project_card, blog_card %}
 
-{% block title %}{{ group.name }} — CodeCrews{% endblock %}
+{% block title %}{{ group.name }} — Engineering Collective Portfolio{% endblock %}
 {% block meta_description %}{{ group.tagline or (group.description[:150] if group.description else 'Active student engineering team at CodeCrews.') }}{% endblock %}
 
-{% block og_title %}{{ group.name }} — CodeCrews{% endblock %}
+{% block og_title %}{{ group.name }} — CodeCrews Collective{% endblock %}
 {% block og_description %}{{ group.tagline or (group.description[:150] if group.description else 'Active student engineering team at CodeCrews.') }}{% endblock %}
 
 {% block extra_head %}
 {# Schema.org JSON-LD for Organization #}
 {% set same_as_links = [] %}
-{% if group.links %}
-  {% for key, val in group.links.items() %}
+{% if group.social_links %}
+  {% for key, val in group.social_links.items() %}
     {% if val and val.startswith('http') %}
       {% set _ = same_as_links.append(val) %}
     {% endif %}
@@ -31,42 +31,74 @@
 {% endblock %}
 
 {% block content %}
-<!-- Group Hero Section -->
-<section class="hero-wrap hero-wrap-2 js-fullheight position-relative overflow-hidden" data-stellar-background-ratio="0.5" style="background: #080c14; min-height: 60vh;">
-  <div class="overlay" style="position: absolute; top:0; left:0; right:0; bottom:0; background: radial-gradient(circle at center, rgba(8, 12, 20, 0.7) 0%, rgba(8, 12, 20, 0.95) 100%);"></div>
-  <div class="container position-relative" style="z-index: 2; padding-top: 90px; padding-bottom: 50px;">
+<!-- Group Landing Page Hero Section -->
+<section class="hero-wrap hero-wrap-2 position-relative overflow-hidden" data-stellar-background-ratio="0.5" style="background: #080c14; min-height: 65vh; {% if group.cover_image %}background-image: url('{{ url_for('static', filename=group.cover_image) }}'); background-size: cover; background-position: center;{% endif %}">
+  <div class="overlay" style="position: absolute; top:0; left:0; right:0; bottom:0; background: radial-gradient(circle at center, rgba(8, 12, 20, 0.72) 0%, rgba(8, 12, 20, 0.96) 100%);"></div>
+  <div class="container position-relative" style="z-index: 2; padding-top: 100px; padding-bottom: 60px;">
     <div class="row align-items-center">
-      <div class="col-md-8" data-aos="fade-up">
-        {% if group.featured %}
-          <div class="mb-2">
-            <span class="badge badge-warning cc-badge-featured font-weight-bold d-inline-flex align-items-center">
+      <div class="col-lg-8" data-aos="fade-up">
+        <!-- Badges Bar -->
+        <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+          {% if group.featured %}
+            <span class="badge badge-warning cc-badge-featured font-weight-bold d-inline-flex align-items-center mr-2">
               <span class="cc-radar-dot mr-1"></span>Featured Collective
             </span>
+          {% endif %}
+          {% if group.location %}
+            <span class="badge badge-dark text-muted mr-2 py-1 px-2" style="background: rgba(255, 255, 255, 0.08); font-size: 0.8rem; border: 1px solid rgba(255, 255, 255, 0.1);">
+              📍 {{ group.location }}
+            </span>
+          {% endif %}
+          {% if group.founded_year %}
+            <span class="badge badge-dark text-muted mr-2 py-1 px-2" style="background: rgba(255, 255, 255, 0.08); font-size: 0.8rem; border: 1px solid rgba(255, 255, 255, 0.1);">
+              🗓️ Est. {{ group.founded_year }}
+            </span>
+          {% endif %}
+          <span class="badge cc-badge-status badge-success py-1 px-2 d-inline-flex align-items-center" style="background: rgba(160, 246, 105, 0.2); color: #a0f669; border: 1px solid rgba(160, 246, 105, 0.4); font-size: 0.8rem;">
+            <span class="cc-radar-dot mr-1"></span>Active Engineering Squad
+          </span>
+        </div>
+
+        <h1 class="display-3 text-white font-weight-bold mb-2 cc-gradient-heading">{{ group.name }}</h1>
+        <p class="lead text-light mb-4" style="color: #94a3b8 !important; font-size: 1.25rem; max-width: 720px; line-height: 1.6;">
+          {{ group.tagline or 'High-performing student software engineering team at CodeCrews.' }}
+        </p>
+
+        <!-- Social / External Links -->
+        {% if group.social_links and group.social_links|length > 0 %}
+          <div class="group-socials d-flex flex-wrap gap-2 mb-4">
+            {% for network, url in group.social_links.items() %}
+              {% if url %}
+                <a href="{{ url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary text-light px-3 py-1 font-mono" style="border-radius: 6px; font-size: 0.85rem; background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.15);">
+                  {{ network|capitalize }} &nearr;
+                </a>
+              {% endif %}
+            {% endfor %}
           </div>
         {% endif %}
-        <h1 class="display-4 text-white font-weight-bold mb-2 cc-gradient-heading">{{ group.name }}</h1>
-        <p class="lead text-light mb-4" style="color: #94a3b8 !important; font-size: 1.2rem;">{{ group.tagline or 'Student Engineering Squad' }}</p>
 
-        <!-- In-page Navigation Anchors -->
+        <!-- Landing In-Page Navigation Pills -->
         <div class="group-nav-pills d-flex flex-wrap gap-2 pt-2">
-          <a href="#about" class="btn btn-sm btn-outline-warning mr-2 mb-2 px-3 py-2">About</a>
-          <a href="#team" class="btn btn-sm btn-outline-warning mr-2 mb-2 px-3 py-2">Team</a>
-          <a href="#tech-stack" class="btn btn-sm btn-outline-warning mr-2 mb-2 px-3 py-2">Tech Stack</a>
-          <a href="#projects" class="btn btn-sm btn-outline-warning mr-2 mb-2 px-3 py-2">Projects</a>
-          {% if blog_posts %}
-            <a href="#blog" class="btn btn-sm btn-outline-warning mr-2 mb-2 px-3 py-2">Blog</a>
-          {% endif %}
-          <a href="#contact" class="btn btn-sm btn-warning font-weight-bold mb-2 mr-2 px-3 py-2">Contact</a>
-          <button type="button" class="btn btn-sm btn-outline-light mb-2 px-3 py-2 js-copy-link" data-url="{{ request.base_url }}" aria-label="Share this group">
+          <a href="#about" class="btn btn-sm btn-outline-warning mr-2 mb-2 px-3 py-2 font-weight-medium">About</a>
+          <a href="#team" class="btn btn-sm btn-outline-warning mr-2 mb-2 px-3 py-2 font-weight-medium">Team ({{ members|length }})</a>
+          <a href="#tech-stack" class="btn btn-sm btn-outline-warning mr-2 mb-2 px-3 py-2 font-weight-medium">Tech Stack</a>
+          <a href="#projects" class="btn btn-sm btn-outline-warning mr-2 mb-2 px-3 py-2 font-weight-medium">Projects ({{ projects|length }})</a>
+          <a href="#blog" class="btn btn-sm btn-outline-warning mr-2 mb-2 px-3 py-2 font-weight-medium">Dev Log ({{ blog_posts|length }})</a>
+          <a href="#contact" class="btn btn-sm btn-warning font-weight-bold mb-2 mr-2 px-3 py-2">Contact Squad</a>
+          <button type="button" class="btn btn-sm btn-outline-light mb-2 px-3 py-2 js-copy-link" data-url="{{ request.base_url }}" aria-label="Share this group landing page">
             🔗 Share Squad
           </button>
         </div>
       </div>
-      <div class="col-md-4 text-center d-none d-md-block" data-aos="fade-left">
+
+      <!-- Group Logo Avatar with Cyber Glow -->
+      <div class="col-lg-4 text-center d-none d-lg-block" data-aos="fade-left">
         {% if group.logo %}
-          <img src="{{ url_for('static', filename=group.logo) }}" alt="{{ group.name }} logo" class="img-fluid rounded-circle" style="max-height: 180px; width: 180px; object-fit: cover; border: 3px solid #f1b24b; box-shadow: 0 0 35px rgba(241, 178, 75, 0.35);">
+          <div class="position-relative d-inline-block">
+            <img src="{{ url_for('static', filename=group.logo) }}" alt="{{ group.name }} logo" class="img-fluid rounded-circle" style="max-height: 190px; width: 190px; object-fit: cover; border: 3px solid #f59e0b; box-shadow: 0 0 40px rgba(245, 158, 11, 0.35);">
+          </div>
         {% else %}
-          <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-dark text-warning h1 mb-0" style="width: 180px; height: 180px; border: 3px solid #f1b24b; box-shadow: 0 0 35px rgba(241, 178, 75, 0.35);">
+          <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-warning h1 mb-0" style="width: 190px; height: 190px; background: rgba(15, 23, 42, 0.9); border: 3px solid #f59e0b; box-shadow: 0 0 40px rgba(245, 158, 11, 0.35);">
             {{ group.name[:2]|upper }}
           </div>
         {% endif %}
@@ -75,32 +107,32 @@
   </div>
 </section>
 
-<!-- Stat Strip (4 Counters) with Glass HUD tiles -->
-<section class="ftco-section py-4 border-top border-bottom border-secondary" style="background: rgba(8, 12, 20, 0.6); border-color: rgba(255, 255, 255, 0.06) !important;">
+<!-- HUD Stat Strip (4 Live Counters) -->
+<section class="ftco-section py-4 border-top border-bottom border-secondary" style="background: rgba(8, 12, 20, 0.7); border-color: rgba(255, 255, 255, 0.06) !important;">
   <div class="container">
     <div class="row">
-      <div class="col-6 col-md-3 text-center mb-3 mb-md-0">
+      <div class="col-6 col-md-3 text-center mb-3 mb-md-0" data-aos="fade-up">
         <div class="cc-hud-tile py-3">
           <h3 class="font-weight-bold cc-stat cc-hud-number mb-0 number" data-number="{{ stats.completed_projects }}">{{ stats.completed_projects }}</h3>
-          <span class="text-muted small text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Projects Completed</span>
+          <span class="text-muted small text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Completed Projects</span>
         </div>
       </div>
-      <div class="col-6 col-md-3 text-center mb-3 mb-md-0">
+      <div class="col-6 col-md-3 text-center mb-3 mb-md-0" data-aos="fade-up" data-aos-delay="100">
         <div class="cc-hud-tile py-3">
           <h3 class="font-weight-bold cc-stat cc-hud-number mb-0 number" data-number="{{ stats.members }}">{{ stats.members }}</h3>
-          <span class="text-muted small text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Members</span>
+          <span class="text-muted small text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Active Engineers</span>
         </div>
       </div>
-      <div class="col-6 col-md-3 text-center">
+      <div class="col-6 col-md-3 text-center" data-aos="fade-up" data-aos-delay="200">
         <div class="cc-hud-tile py-3">
           <h3 class="font-weight-bold cc-stat cc-hud-number mb-0 number" data-number="{{ stats.years_active }}">{{ stats.years_active }}</h3>
           <span class="text-muted small text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Years Active</span>
         </div>
       </div>
-      <div class="col-6 col-md-3 text-center">
+      <div class="col-6 col-md-3 text-center" data-aos="fade-up" data-aos-delay="300">
         <div class="cc-hud-tile py-3">
-          <h3 class="font-weight-bold cc-stat cc-hud-number mb-0 number" data-number="{{ stats.total_projects }}">{{ stats.total_projects }}</h3>
-          <span class="text-muted small text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Total Projects</span>
+          <h3 class="font-weight-bold cc-stat cc-hud-number mb-0 number" data-number="{{ stats.total_posts }}">{{ stats.total_posts }}</h3>
+          <span class="text-muted small text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Dev Log Articles</span>
         </div>
       </div>
     </div>
@@ -113,16 +145,25 @@
     <div class="row justify-content-center mb-4">
       <div class="col-md-10" data-aos="fade-up">
         <div class="cc-hud-tile p-4 p-md-5">
-          <h2 class="text-white font-weight-bold mb-3 border-left pl-3" style="border-left: 4px solid #f1b24b !important;">
+          <h2 class="text-white font-weight-bold mb-3 border-left pl-3" style="border-left: 4px solid #f59e0b !important;">
             About {{ group.name }}
           </h2>
-          <div class="text-light lead" style="white-space: pre-line; font-size: 1.1rem; line-height: 1.8; color: #cbd5e1 !important;">
+          <div class="text-light lead" style="white-space: pre-line; font-size: 1.12rem; line-height: 1.85; color: #cbd5e1 !important;">
             {{ group.description or 'No description provided yet.' }}
           </div>
-          <div class="mt-4 pt-3 text-muted d-flex align-items-center flex-wrap" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
-            <span>Founded: <strong class="text-light">{{ group.founded_year or 'N/A' }}</strong></span>
-            <span class="mx-3">&bull;</span>
-            <span class="d-inline-flex align-items-center">Status: <span class="cc-radar-pill ml-2"><span class="cc-radar-dot"></span>Active Squad</span></span>
+          <div class="mt-4 pt-3 text-muted d-flex align-items-center justify-content-between flex-wrap gap-2" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
+            <div class="d-flex align-items-center flex-wrap gap-3">
+              <span>Founded: <strong class="text-light">{{ group.founded_year or 'N/A' }}</strong></span>
+              {% if group.location %}
+                <span>&bull;</span>
+                <span>Base: <strong class="text-light">{{ group.location }}</strong></span>
+              {% endif %}
+              <span>&bull;</span>
+              <span class="d-inline-flex align-items-center">Squad Status: <span class="cc-radar-pill ml-2"><span class="cc-radar-dot"></span>Production Active</span></span>
+            </div>
+            <a href="#contact" class="btn btn-warning btn-sm font-weight-bold px-3 py-2">
+              Work with {{ group.name }} &rarr;
+            </a>
           </div>
         </div>
       </div>
@@ -135,10 +176,10 @@
   <div class="container">
     <div class="row mb-4">
       <div class="col-12" data-aos="fade-up">
-        <h2 class="text-white font-weight-bold mb-1 border-left pl-3" style="border-left: 4px solid #f1b24b !important;">
-          Our Team
+        <h2 class="text-white font-weight-bold mb-1 border-left pl-3" style="border-left: 4px solid #f59e0b !important;">
+          Our Team <span class="badge badge-warning text-dark ml-2 small" style="font-size: 0.85rem; vertical-align: middle;">{{ members|length }}</span>
         </h2>
-        <p class="text-muted mb-0">Engineers, architects, and designers contributing to this collective.</p>
+        <p class="text-muted mb-0">Engineers, architects, and creators driving software production for {{ group.name }}.</p>
       </div>
     </div>
 
@@ -149,7 +190,8 @@
         {% endfor %}
       {% else %}
         <div class="col-12 text-center py-5 cc-hud-tile my-3">
-          <p class="h5 text-muted font-weight-normal mb-0">No members yet.</p>
+          <p class="h5 text-muted font-weight-normal mb-1">No members yet.</p>
+          <p class="text-muted small mb-0">No member profiles listed for this squad yet.</p>
         </div>
       {% endif %}
     </div>
@@ -161,10 +203,10 @@
   <div class="container">
     <div class="row mb-4">
       <div class="col-12" data-aos="fade-up">
-        <h2 class="text-white font-weight-bold mb-1 border-left pl-3" style="border-left: 4px solid #f1b24b !important;">
-          Tech Stack
+        <h2 class="text-white font-weight-bold mb-1 border-left pl-3" style="border-left: 4px solid #f59e0b !important;">
+          Tech Stack & Core Proficiencies
         </h2>
-        <p class="text-muted mb-0">Core languages, frameworks, and deployment environments utilized by this crew.</p>
+        <p class="text-muted mb-0">Languages, frameworks, systems, and deployment tooling mastered by this collective.</p>
       </div>
     </div>
 
@@ -177,7 +219,7 @@
               <span class="text-light font-weight-bold text-uppercase small" style="letter-spacing: 0.5px;">{{ skill.name }}</span>
               <span class="text-warning small font-weight-bold font-mono">{{ skill.level }}%</span>
             </div>
-            <div class="progress" style="height: 9px; background-color: #111827;">
+            <div class="progress" style="height: 10px; background-color: #111827; border-radius: 6px; overflow: hidden;">
               <div class="progress-bar bg-warning progress-bar-shimmer" role="progressbar" style="width: {{ skill.level }}%;" aria-valuenow="{{ skill.level }}" aria-valuemin="0" aria-valuemax="100"></div>
             </div>
           </div>
@@ -190,14 +232,14 @@
               <span class="text-light font-weight-bold text-uppercase small" style="letter-spacing: 0.5px;">{{ tag }}</span>
               <span class="text-warning small font-weight-bold font-mono">{{ proficiency }}%</span>
             </div>
-            <div class="progress" style="height: 9px; background-color: #111827;">
+            <div class="progress" style="height: 10px; background-color: #111827; border-radius: 6px; overflow: hidden;">
               <div class="progress-bar bg-warning progress-bar-shimmer" role="progressbar" style="width: {{ proficiency }}%;" aria-valuenow="{{ proficiency }}" aria-valuemin="0" aria-valuemax="100"></div>
             </div>
           </div>
         {% endfor %}
       {% else %}
         <div class="col-12 text-center py-4 cc-hud-tile my-3">
-          <p class="text-muted mb-0">No tech tags configured.</p>
+          <p class="text-muted mb-0">No tech tags configured yet.</p>
         </div>
       {% endif %}
     </div>
@@ -209,10 +251,10 @@
   <div class="container">
     <div class="row mb-4">
       <div class="col-12" data-aos="fade-up">
-        <h2 class="text-white font-weight-bold mb-1 border-left pl-3" style="border-left: 4px solid #f1b24b !important;">
-          Projects Showcase
+        <h2 class="text-white font-weight-bold mb-1 border-left pl-3" style="border-left: 4px solid #f59e0b !important;">
+          Projects Showcase <span class="badge badge-warning text-dark ml-2 small" style="font-size: 0.85rem; vertical-align: middle;">{{ projects|length }}</span>
         </h2>
-        <p class="text-muted mb-0">Production deployments, prototypes, and open source releases.</p>
+        <p class="text-muted mb-0">Production deployments, client applications, and open source releases authored by {{ group.name }}.</p>
       </div>
     </div>
 
@@ -223,93 +265,49 @@
         {% endfor %}
       {% else %}
         <div class="col-12 text-center py-5 cc-hud-tile my-3">
-          <p class="h5 text-muted font-weight-normal mb-0">No projects yet.</p>
+          <p class="h5 text-muted font-weight-normal mb-1">No projects yet.</p>
+          <p class="text-muted small mb-0">{{ group.name }} is currently engineering their initial release.</p>
         </div>
       {% endif %}
     </div>
   </div>
 </section>
 
-{% if blog_posts %}
-<!-- Blog Section (Dev Log) -->
+<!-- Dev Log & Articles Section -->
 <section class="ftco-section py-5" id="blog">
   <div class="container">
     <div class="row mb-4">
       <div class="col-12" data-aos="fade-up">
-        <h2 class="text-white font-weight-bold mb-1 border-left pl-3" style="border-left: 4px solid #f1b24b !important;">
-          Dev Log
+        <h2 class="text-white font-weight-bold mb-1 border-left pl-3" style="border-left: 4px solid #f59e0b !important;">
+          Dev Log & Articles <span class="badge badge-warning text-dark ml-2 small" style="font-size: 0.85rem; vertical-align: middle;">{{ blog_posts|length }}</span>
         </h2>
-        <p class="text-muted mb-0">Engineering insights, updates, and articles from {{ group.name }}.</p>
+        <p class="text-muted mb-0">Engineering insights, architectural post-mortems, and release notes from {{ group.name }}.</p>
       </div>
     </div>
 
     <div class="row">
-      {% for post in blog_posts %}
-        <div class="col-md-6 col-lg-4 mb-4" data-aos="fade-up">
-          <div class="card h-100 cc-card border-0 shadow-sm overflow-hidden">
-            {% if post.cover_image_path %}
-              <div class="card-img-wrapper" style="height: 180px; overflow: hidden; background: #1e293b;">
-                <img src="{{ url_for('static', filename=post.cover_image_path) }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ post.title }}">
-              </div>
-            {% endif %}
-            <div class="card-body d-flex flex-column p-4">
-              <span class="text-warning small mb-1">{{ post.published_at.strftime('%b %d, %Y') if post.published_at else post.created_at.strftime('%b %d, %Y') }}</span>
-              <h5 class="font-weight-bold text-white mb-2">
-                <a href="#blog-modal-{{ post.id }}" class="js-blog-popup text-white text-decoration-none">
-                  {{ post.title }}
-                </a>
-              </h5>
-              <p class="text-muted small flex-grow-1 mb-3">
-                {{ (post.content[:160] ~ '...') if post.content|length > 160 else post.content }}
-              </p>
-
-              {% if post.tags %}
-                <div class="blog-tags mb-3">
-                  {% for t in post.tags[:3] %}
-                    <span class="badge cc-tag mr-1 mb-1">{{ t }}</span>
-                  {% endfor %}
-                </div>
-              {% endif %}
-
-              <div class="mt-auto pt-2">
-                <a href="#blog-modal-{{ post.id }}" class="js-blog-popup text-warning small font-weight-bold">Read Post &rarr;</a>
-              </div>
-            </div>
-          </div>
-
-          {# Inline Magnific Popup for full post #}
-          <div id="blog-modal-{{ post.id }}" class="mfp-hide text-white p-4 p-md-5 mx-auto rounded shadow-lg" style="max-width: 750px; text-align: left; background: rgba(17, 24, 39, 0.96); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px;">
-            {% if post.cover_image_path %}
-              <div class="mb-4" style="max-height: 280px; overflow: hidden; border-radius: 8px;">
-                <img src="{{ url_for('static', filename=post.cover_image_path) }}" class="w-100" style="object-fit: cover;" alt="{{ post.title }}">
-              </div>
-            {% endif %}
-            <span class="text-warning small font-weight-bold text-uppercase" style="letter-spacing: 0.5px;">{{ post.published_at.strftime('%B %d, %Y') if post.published_at else post.created_at.strftime('%B %d, %Y') }}</span>
-            <h3 class="font-weight-bold text-white mt-1 mb-3">{{ post.title }}</h3>
-            {% if post.tags %}
-              <div class="mb-4">
-                {% for t in post.tags %}
-                  <span class="badge cc-tag mr-1 mb-1">{{ t }}</span>
-                {% endfor %}
-              </div>
-            {% endif %}
-            <div class="blog-content text-light mb-4" style="line-height: 1.8; white-space: pre-line; color: #cbd5e1 !important;">{{ post.content }}</div>
-          </div>
+      {% if blog_posts %}
+        {% for post in blog_posts %}
+          {{ blog_card(post) }}
+        {% endfor %}
+      {% else %}
+        <div class="col-12 text-center py-5 cc-hud-tile my-3">
+          <p class="h5 text-muted font-weight-normal mb-1">No dev log entries published yet.</p>
+          <p class="text-muted small mb-0">{{ group.name }} is heads-down building. Check back soon for their technical breakdowns!</p>
         </div>
-      {% endfor %}
+      {% endif %}
     </div>
   </div>
 </section>
-{% endif %}
 
-<!-- Contact Form Section -->
-<section class="ftco-section py-5" id="contact">
+<!-- Direct Contact Section -->
+<section class="ftco-section py-5" id="contact" style="background: rgba(17, 24, 39, 0.3);">
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-md-8" data-aos="fade-up">
         <div class="card bg-white text-dark shadow-lg border-0 p-4 p-md-5" style="border-radius: 16px;">
           <h3 class="font-weight-bold mb-2">Connect with {{ group.name }}</h3>
-          <p class="text-muted mb-4">Have an inquiry or collaboration proposal? Send a message directly to the team.</p>
+          <p class="text-muted mb-4">Have an inquiry, project proposal, or collaboration request? Send a message directly to this squad.</p>
 
           <form action="{{ url_for('contact.contact', slug=group.slug) }}" method="POST" novalidate>
             {% if form is defined and form.hidden_tag %}
@@ -370,8 +368,8 @@
               {% endif %}
             </div>
 
-            <button type="submit" class="btn btn-warning btn-block font-weight-bold py-3" style="border-radius: 8px;">
-              Send Message
+            <button type="submit" class="btn btn-warning btn-block font-weight-bold py-3 text-dark shadow-sm">
+              Send Message to {{ group.name }} &rarr;
             </button>
           </form>
         </div>

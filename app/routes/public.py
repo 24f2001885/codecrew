@@ -172,7 +172,6 @@ def group_detail(slug):
             BlogPost.published_at <= now,
         )
         .order_by(BlogPost.published_at.desc())
-        .limit(3)
         .all()
     )
 
@@ -180,10 +179,11 @@ def group_detail(slug):
     years_active = max(1, current_year - group.founded_year) if group.founded_year else 1
 
     stats = {
-        "completed_projects": len(projects_list),
+        "completed_projects": sum(1 for p in projects_list if getattr(p, 'status', None) == 'completed') if any(getattr(p, 'status', None) == 'completed' for p in projects_list) else len(projects_list),
         "members": len(members_list),
         "years_active": years_active,
         "total_projects": len(projects_list),
+        "total_posts": len(blog_posts),
     }
 
     form = ContactForm()
