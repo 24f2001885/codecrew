@@ -1,0 +1,123 @@
+name: CodeCrew Production Deployment Pipeline
+
+on:
+  push:
+    branches:
+      - MAIN
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy-to-vps:
+    name: Deploy CodeCrew to AWS Student EC2 VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH to VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.AWS_HOST || secrets.AWS_EC2_HOST || secrets.EC2_HOST || secrets.VPS_HOST }}
+          username: ${{ secrets.AWS_USER || secrets.AWS_EC2_USER || secrets.EC2_USER || secrets.VPS_USER || 'ubuntu' }}
+          key: ${{ secrets.AWS_SSH_KEY || secrets.AWS_EC2_SSH_KEY || secrets.EC2_SSH_KEY || secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.AWS_SSH_PORT || secrets.AWS_PORT || secrets.EC2_PORT || secrets.VPS_PORT || 22 }}
+          timeout: 180s
+          command_timeout: 30m
+          script: |
+            set -euo pipefail
+            echo "=========================================================="
+            echo "Starting CodeCrew Deployment on $(hostname) at $(date)"
+            echo "=========================================================="
+
+            TARGET_DIR=""
+            for d in /home/ubuntu/codecrew /home/ubuntu/web/src /home/ubuntu/src /var/www/codecrew; do
+              if [ -d "$d/.git" ]; then
+                TARGET_DIR="$d"
+                break
+              fi
+            done
+
+            if [ -z "$TARGET_DIR" ]; then
+              echo "Cloning repository to /home/ubuntu/codecrew..."
+              TARGET_DIR="/home/ubuntu/codecrew"
+              mkdir -p /home/ubuntu
+              git clone https://github.com/24f2001885/codecrew.git "$TARGET_DIR"
+            fi
+
+            cd "$TARGET_DIR"
+            echo "Target working directory: $TARGET_DIR"
+
+            # 1. Fetch & checkout latest release
+            git fetch origin MAIN || git fetch origin main || git fetch origin
+            git checkout -f MAIN 2>/dev/null || git checkout -f main
+            git reset --hard origin/MAIN 2>/dev/null || git reset --hard origin/main
+
+            # 2. Configure Production .env
+            if [ ! -f .env ]; then
+              echo "Creating initial production .env..."
+              if [ -f .env.production ]; then
+                cp .env.production .env
+              else
+                cp .env.prod.example .env
+                RAND_SECRET=$(openssl rand -hex 32)
+                RAND_CSRF=$(openssl rand -hex 32)
+                sed -i "s/SECRET_KEY=.*/SECRET_KEY=${RAND_SECRET}/" .env
+                sed -i "s/WTF_CSRF_SECRET_KEY=.*/WTF_CSRF_SECRET_KEY=${RAND_CSRF}/" .env
+              fi
+            fi
+
+            # Ensure production settings are strictly configured
+            sed -i "s/FLASK_ENV=.*/FLASK_ENV=production/" .env
+            sed -i "s|APP_BASE_URL=.*|APP_BASE_URL=https://codecrew.abhishekpathak.site|" .env
+            sed -i "s/SESSION_COOKIE_SECURE=.*/SESSION_COOKIE_SECURE=True/" .env
+            sed -i "s/TRUSTED_PROXY_COUNT=.*/TRUSTED_PROXY_COUNT=1/" .env
+
+            # 3. Configure Host Nginx
+            if [ -f deploy/codecrew_production.conf ]; then
+              echo "Installing Nginx virtual host configuration..."
+              sudo cp deploy/codecrew_production.conf /etc/nginx/sites-available/codecrew.conf
+              sudo ln -sf /etc/nginx/sites-available/codecrew.conf /etc/nginx/sites-enabled/codecrew.conf
+              sudo mkdir -p /var/www/certbot
+              sudo chown -R www-data:www-data /var/www/certbot
+            fi
+
+            # 4. Restart Docker container stack (Port 5003)
+            echo "Rebuilding and restarting CodeCrew Docker containers..."
+            docker compose -f docker-compose.prod.yml down --remove-orphans || true
+            docker compose -f docker-compose.prod.yml up -d --build
+
+            echo "Awaiting application readiness..."
+            sleep 8
+
+            # 5. Verify container health on internal port 5003
+            echo "Verifying container health on 127.0.0.1:5003..."
+            HEALTH_OK=false
+            for i in $(seq 1 15); do
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:5003/" || echo "000")
+              if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
+                echo "CodeCrew application responded HTTP $HTTP_CODE on internal port 5003!"
+                HEALTH_OK=true
+                break
+              fi
+              echo "Waiting for app container to start (attempt $i/15 - returned $HTTP_CODE)..."
+              sleep 2
+            done
+
+            if [ "$HEALTH_OK" != "true" ]; then
+              echo "Error: CodeCrew container failed health check on http://127.0.0.1:5003/"
+              docker compose -f docker-compose.prod.yml logs --tail=50
+              exit 1
+            fi
+
+            # 6. Database schema migration & initial seed
+            echo "Initializing database schema and sample seed..."
+            docker compose -f docker-compose.prod.yml exec -T web python seed.py --sample --coder || true
+
+            # 7. Reload Host Nginx
+            if command -v nginx >/dev/null 2>&1; then
+              echo "Validating and reloading Host Nginx..."
+              sudo nginx -t && sudo systemctl reload nginx
+            fi
+
+            echo "=========================================================="
+            echo "🚀 CodeCrew Deployment Succeeded! Live at https://codecrew.abhishekpathak.site"
+            echo "=========================================================="
