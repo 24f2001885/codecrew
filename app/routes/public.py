@@ -38,7 +38,13 @@ class SearchPagination:
 
 
 @public_bp.route("/")
+@public_bp.route("/index.html")
+@public_bp.route("/index")
 def index():
+    if request.path in ("/index.html", "/index"):
+        from flask import redirect, url_for
+        return redirect(url_for("public.index"), code=301)
+
     featured_groups = (
         Group.query.filter_by(featured=True)
         .order_by(Group.created_at.desc())
