@@ -19,13 +19,14 @@ def run():
 
         # Migrate new columns if missing in existing dev SQLite database
         try:
-            with db.engine.connect() as conn:
-                cols = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(project_milestones)").fetchall()]
-                if cols and "escrow_amount" not in cols:
-                    conn.exec_driver_sql("ALTER TABLE project_milestones ADD COLUMN escrow_amount FLOAT DEFAULT 0.0")
-                if cols and "escrow_status" not in cols:
-                    conn.exec_driver_sql("ALTER TABLE project_milestones ADD COLUMN escrow_status VARCHAR(20) DEFAULT 'unfunded'")
-                conn.commit()
+            if db.engine.name == "sqlite":
+                with db.engine.connect() as conn:
+                    cols = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(project_milestones)").fetchall()]
+                    if cols and "escrow_amount" not in cols:
+                        conn.exec_driver_sql("ALTER TABLE project_milestones ADD COLUMN escrow_amount FLOAT DEFAULT 0.0")
+                    if cols and "escrow_status" not in cols:
+                        conn.exec_driver_sql("ALTER TABLE project_milestones ADD COLUMN escrow_status VARCHAR(20) DEFAULT 'unfunded'")
+                    conn.commit()
         except Exception as e:
             print(f"[MIGRATE] Warning: {e}")
 

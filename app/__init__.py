@@ -162,18 +162,14 @@ def create_app(config_name=None):
     from app.cli import register_cli_commands
     register_cli_commands(flask_app)
 
-    # Ensure models are loaded for SQLAlchemy & Flask-Migrate
+    # Ensure models are loaded for SQLAlchemy & auto-create tables if missing
     with flask_app.app_context():
         from app import models as _models  # noqa: F401
         try:
-            with db.engine.connect() as conn:
-                cols = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(project_milestones)").fetchall()]
-                if cols and "escrow_amount" not in cols:
-                    conn.exec_driver_sql("ALTER TABLE project_milestones ADD COLUMN escrow_amount FLOAT DEFAULT 0.0")
-                if cols and "escrow_status" not in cols:
-                    conn.exec_driver_sql("ALTER TABLE project_milestones ADD COLUMN escrow_status VARCHAR(20) DEFAULT 'unfunded'")
-                conn.commit()
-        except Exception:
-            pass
+            db.create_all()
+            from app.models.site_settings import SiteSettings
+            SiteSettings.get_settings()
+        except Exception as e:
+            flask_app.logger.warning("Auto db.create_all warning: %s", e)
 
     return flask_app
